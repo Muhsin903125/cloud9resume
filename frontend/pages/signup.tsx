@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Button from '../components/Button'
 import Card from '../components/Card'
+import { api } from '../lib/api'
 
 const SignupPage: NextPage = () => {
   const router = useRouter()
@@ -13,16 +14,17 @@ const SignupPage: NextPage = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    acceptTerms: false
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }))
   }
 
@@ -44,16 +46,28 @@ const SignupPage: NextPage = () => {
       return
     }
 
+    if (!formData.acceptTerms) {
+      setError('You must accept the terms and conditions')
+      setIsLoading(false)
+      return
+    }
+
     try {
-      // TODO: Implement actual user registration
-      console.log('Signup attempt:', formData)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Redirect to dashboard on success
-      router.push('/dashboard')
-    } catch {
+      const response = await api.signUp(formData.email, formData.password, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        acceptTerms: true // Assuming terms are accepted in the form
+      })
+
+      if (!response.success) {
+        setError(response.error || 'Failed to create account')
+        return
+      }
+
+      // Show success message and redirect to login or dashboard
+      alert('Account created successfully! Please check your email to verify your account.')
+      router.push('/login')
+    } catch (err) {
       setError('Failed to create account. Please try again.')
     } finally {
       setIsLoading(false)
@@ -181,9 +195,11 @@ const SignupPage: NextPage = () => {
               <div className="flex items-center">
                 <input
                   id="terms"
-                  name="terms"
+                  name="acceptTerms"
                   type="checkbox"
                   required
+                  checked={formData.acceptTerms}
+                  onChange={handleInputChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Button from '../components/Button'
 import Card from '../components/Card'
+import { signIn } from '../lib/authUtils'
 
 const LoginPage: NextPage = () => {
   const router = useRouter()
@@ -29,16 +30,19 @@ const LoginPage: NextPage = () => {
     setError('')
 
     try {
-      // TODO: Implement actual authentication
-      console.log('Login attempt:', formData)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
+      // Call the signin function from authUtils
+      const result = await signIn(formData.email, formData.password)
+
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+
       // Redirect to dashboard on success
       router.push('/dashboard')
-    } catch {
-      setError('Invalid email or password. Please try again.')
+    } catch (err) {
+      setError('An error occurred. Please try again.')
+      console.error('Login error:', err)
     } finally {
       setIsLoading(false)
     }

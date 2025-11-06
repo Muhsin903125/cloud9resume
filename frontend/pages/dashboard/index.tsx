@@ -1,17 +1,52 @@
 import { NextPage } from 'next'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import Button from '../../components/Button'
-import Card from '../../components/Card'
+import { useAuth } from '../../lib/authUtils'
+import {
+  DocumentIcon,
+  PaletteIcon,
+  CheckCircleIcon,
+  BoltIcon,
+  SaveIcon,
+  ActivityIcon,
+  DashboardIcon,
+  CreditCardIcon,
+  ArrowRightIcon
+} from '../../components/Icons'
 
 const DashboardPage: NextPage = () => {
+  const router = useRouter()
+  const { user, isLoading, isAuthenticated, logout } = useAuth()
   const [stats] = useState({
     resumesCreated: 3,
     portfoliosCreated: 1,
     atsScores: 5,
     creditsRemaining: 75
   })
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login')
+    }
+  }, [isLoading, isAuthenticated, router])
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-gray-900"></div>
+      </div>
+    )
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return null
+  }
 
   const recentActivity = [
     {
@@ -39,41 +74,37 @@ const DashboardPage: NextPage = () => {
 
   const quickActions = [
     {
-      title: 'Create New Resume',
-      description: 'Start building a professional resume with AI assistance',
+      title: 'Create Resume',
+      description: 'Build a professional resume',
       href: '/dashboard/resume',
-      icon: '📄',
-      color: 'bg-blue-500'
+      icon: DocumentIcon
     },
     {
       title: 'Build Portfolio',
-      description: 'Showcase your work with a stunning portfolio',
+      description: 'Showcase your projects',
       href: '/dashboard/portfolio',
-      icon: '🎨',
-      color: 'bg-purple-500'
+      icon: PaletteIcon
     },
     {
-      title: 'Check ATS Score',
-      description: 'Optimize your resume for applicant tracking systems',
+      title: 'ATS Check',
+      description: 'Optimize for tracking systems',
       href: '/dashboard/ats',
-      icon: '🎯',
-      color: 'bg-green-500'
+      icon: CheckCircleIcon
     },
     {
       title: 'Manage Credits',
-      description: 'View usage and refill your credits',
-      href: '/dashboard/credits',
-      icon: '⚡',
-      color: 'bg-yellow-500'
+      description: 'View and refill credits',
+      href: '/plans',
+      icon: CreditCardIcon
     }
   ]
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'resume': return '📄'
-      case 'portfolio': return '🎨'
-      case 'ats': return '🎯'
-      default: return '📋'
+      case 'resume': return <DocumentIcon className="w-5 h-5" />
+      case 'portfolio': return <PaletteIcon className="w-5 h-5" />
+      case 'ats': return <CheckCircleIcon className="w-5 h-5" />
+      default: return <ActivityIcon className="w-5 h-5" />
     }
   }
 
@@ -85,145 +116,148 @@ const DashboardPage: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-white flex flex-col h-full">
         {/* Header */}
-        <div className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-600">Welcome back! Here&apos;s what&apos;s happening with your career tools.</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
-                  Credits: <span className="font-semibold text-blue-600">{stats.creditsRemaining}</span>
-                </span>
-                <Link href="/dashboard/credits">
-                  <Button variant="secondary" size="small">
-                    Refill Credits
-                  </Button>
-                </Link>
-              </div>
+        <div className="border-b border-gray-200 px-8 py-6 sticky top-0 z-40 bg-white">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600 mt-1">
+                Welcome back, <span className="font-semibold text-gray-900">{user?.profile?.first_name || 'User'}</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link href="/plans">
+                <Button variant="secondary" size="small">
+                  Upgrade Plan
+                </Button>
+              </Link>
+              <button
+                onClick={logout}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Stats Overview */}
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <Card className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-lg">📄</span>
-                  </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-8 py-8">
+            {/* Credits Section */}
+            <div className="mb-8 p-8 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl text-white">
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-gray-300 text-sm font-medium mb-2">Available Credits</p>
+                  <p className="text-5xl font-bold">{user?.profile?.credits || stats.creditsRemaining}</p>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Resumes Created</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.resumesCreated}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <span className="text-lg">🎨</span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Portfolios</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.portfoliosCreated}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-lg">🎯</span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">ATS Checks</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.atsScores}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <span className="text-lg">⚡</span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Credits Left</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.creditsRemaining}</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Quick Actions */}
-            <div className="lg:col-span-2">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {quickActions.map((action, index) => (
-                  <Link key={index} href={action.href}>
-                    <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
-                      <div className="flex items-start">
-                        <div className={`flex-shrink-0 w-10 h-10 ${action.color} rounded-lg flex items-center justify-center`}>
-                          <span className="text-lg">{action.icon}</span>
-                        </div>
-                        <div className="ml-4">
-                          <h3 className="text-lg font-medium text-gray-900 mb-1">
-                            {action.title}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {action.description}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
-                ))}
+                <Link href="/plans">
+                  <Button variant="primary" size="small" className="bg-white text-gray-900 hover:bg-gray-100">
+                    Buy Credits
+                  </Button>
+                </Link>
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-              <Card className="p-6">
-                <div className="space-y-4">
-                  {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        <span className="text-lg">{getActivityIcon(activity.type)}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
-                          {activity.title}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">Resumes Created</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.resumesCreated}</p>
+                  </div>
+                  <DocumentIcon className="w-8 h-8 text-gray-300" />
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">Portfolios</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.portfoliosCreated}</p>
+                  </div>
+                  <PaletteIcon className="w-8 h-8 text-gray-300" />
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">ATS Checks</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.atsScores}</p>
+                  </div>
+                  <CheckCircleIcon className="w-8 h-8 text-gray-300" />
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-medium">Saved Templates</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">8</p>
+                  </div>
+                  <SaveIcon className="w-8 h-8 text-gray-300" />
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Quick Actions */}
+              <div className="lg:col-span-2">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {quickActions.map((action, index) => (
+                    <Link key={index} href={action.href}>
+                      <div className="group bg-white border border-gray-200 rounded-xl p-6 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer">
+                        <div className="mb-4 inline-block group-hover:scale-110 transition-transform text-gray-900">
+                          <action.icon className="w-8 h-8" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                          {action.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                          {action.description}
                         </p>
-                        <p className="text-sm text-gray-600">
-                          {activity.action} • {activity.timestamp}
-                        </p>
+                        <div className="flex items-center text-sm font-medium text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                          Get Started <ArrowRightIcon className="ml-2 w-4 h-4" />
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
-                <div className="mt-6 pt-4 border-t border-gray-200">
+              </div>
+
+              {/* Recent Activity */}
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="divide-y divide-gray-200">
+                    {recentActivity.map((activity) => (
+                      <div key={activity.id} className="p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex gap-3">
+                          <span className="text-gray-900 flex-shrink-0 mt-0.5">{getActivityIcon(activity.type)}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900">
+                              {activity.title}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              {activity.action} • {activity.timestamp}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                   <Link href="/dashboard/history">
-                    <Button variant="secondary" size="small" className="w-full">
-                      View All Activity
-                    </Button>
+                    <div className="p-4 bg-gray-50 text-center border-t border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer">
+                      <p className="text-sm font-medium text-gray-700">View all activity</p>
+                    </div>
                   </Link>
                 </div>
-              </Card>
+              </div>
             </div>
           </div>
         </div>

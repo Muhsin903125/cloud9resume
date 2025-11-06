@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "projectSettings": {
+    "sourceFilesOutsideRootDirectory": true
+  },
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/next@latest",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "zeroConfig": true
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/frontend/pages/api/$1",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"]
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@next-public-api-url",
+    "SUPABASE_URL": "@supabase-url",
+    "SUPABASE_ANON_KEY": "@supabase-anon-key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
+    "NODE_ENV": "production"
+  },
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/.next",
+  "installCommand": "npm install --legacy-peer-deps",
+  "framework": "nextjs"
+}
+
