@@ -1,17 +1,6 @@
 {
-  "version": 2,
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "installCommand": "npm install --prefix frontend && npm install --prefix backend",
+  "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/.next",
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/backend/api/$1.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend$1"
-    }
-  ]
+  "installCommand": "cd frontend && npm install"
 }
 
