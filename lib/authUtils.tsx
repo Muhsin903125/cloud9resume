@@ -64,6 +64,27 @@ export async function signIn(email: string, password: string) {
   return result
 }
 
+// Forgot password function
+export async function forgotPassword(email: string) {
+  return apiClient.post('/auth/forgot-password', { email })
+}
+
+// Update password with token
+export async function updatePasswordWithToken(token: string, password: string) {
+  return apiClient.post('/auth/update-password', { token, password })
+}
+
+// Validate email - check if user exists
+export async function validateEmail(email: string) {
+  return apiClient.post('/auth/validate-email', { email })
+}
+
+// Email format validation (client-side)
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
 // Sign out function
 export async function signOut() {
   const result = await apiClient.post('/auth/signout', {})

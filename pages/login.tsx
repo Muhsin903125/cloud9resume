@@ -1,5 +1,5 @@
 import { NextPage } from 'next'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -12,8 +12,19 @@ const LoginPage: NextPage = () => {
     email: '',
     password: ''
   })
+  const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Load saved email if remember me was enabled
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail')
+    const wasRemembered = localStorage.getItem('rememberMeEnabled') === 'true'
+    if (savedEmail && wasRemembered) {
+      setFormData(prev => ({ ...prev, email: savedEmail }))
+      setRememberMe(true)
+    }
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -29,6 +40,15 @@ const LoginPage: NextPage = () => {
     setError('')
 
     try {
+      // Handle remember me
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', formData.email)
+        localStorage.setItem('rememberMeEnabled', 'true')
+      } else {
+        localStorage.removeItem('rememberedEmail')
+        localStorage.setItem('rememberMeEnabled', 'false')
+      }
+
       // Call the signin function from authUtils
       const result = await signIn(formData.email, formData.password)
 
@@ -125,6 +145,8 @@ const LoginPage: NextPage = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 text-blue-600 bg-gray-50 border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600">
