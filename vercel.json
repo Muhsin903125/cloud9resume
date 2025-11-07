@@ -1,11 +1,33 @@
 {
   "version": 2,
-  "github": {
-    "enabled": true,
-    "autoAlias": true
-  },
-  "buildCommand": "npm run build",
-  "installCommand": "npm install --legacy-peer-deps",
-  "outputDirectory": ".next"
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/pages/api/$1.ts",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      }
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/pages/$1.tsx",
+      "continue": true
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
 
