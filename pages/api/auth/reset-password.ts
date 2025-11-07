@@ -24,8 +24,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Send password reset email
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:3000`
+    const redirectUrl = `${appUrl}/reset-password`
+    
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_API_URL}/reset-password`,
+      redirectTo: redirectUrl,
     })
 
     if (error) {

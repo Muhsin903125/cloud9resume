@@ -85,6 +85,80 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email)
 }
 
+// Google OAuth Sign In
+export async function signInWithGoogle(idToken: string) {
+  return apiClient.post('/auth/signin-google', { idToken })
+}
+
+// Google OAuth Sign Up
+export async function signUpWithGoogle(idToken: string) {
+  return apiClient.post('/auth/signup-google', { idToken })
+}
+
+// Get Google OAuth URL for login/signup
+export function getGoogleOAuthUrl(mode: 'signin' | 'signup' = 'signin'): string {
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+  const redirectUri = `${window.location.origin}/api/auth/callback/google`
+  const scope = 'openid profile email'
+  const responseType = 'id_token'
+  const nonce = generateNonce()
+  
+  // Store nonce in session storage for verification
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('oauth_nonce', nonce)
+  }
+
+  const params = new URLSearchParams({
+    client_id: clientId || '',
+    redirect_uri: redirectUri,
+    response_type: responseType,
+    scope,
+    nonce,
+    prompt: 'select_account',
+  })
+
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+}
+
+// Generate nonce for OAuth security
+function generateNonce(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+}
+
+// Handle Google OAuth callback
+export async function handleGoogleCallback(idToken: string, mode: 'signin' | 'signup' = 'signin') {
+  try {
+    // Verify nonce
+    const storedNonce = typeof window !== 'undefined' ? sessionStorage.getItem('oauth_nonce') : null
+    if (!storedNonce) {
+      throw new Error('OAuth nonce not found')
+    }
+
+    const result = mode === 'signin' 
+      ? await signInWithGoogle(idToken)
+      : await signUpWithGoogle(idToken)
+
+    if (result.data && result.data.user?.id) {
+      // Store session data
+      localStorage.setItem('auth_token', result.data.session?.access_token || '')
+      localStorage.setItem('user_id', result.data.user.id)
+      localStorage.setItem('user_email', result.data.user.email)
+
+      // Clear nonce
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('oauth_nonce')
+      }
+
+      return { success: true, user: result.data.user }
+    }
+
+    return { success: false, error: result.error || 'Authentication failed' }
+  } catch (error) {
+    console.error('Google callback error:', error)
+    return { success: false, error: 'Authentication failed' }
+  }
+}
+
 // Sign out function
 export async function signOut() {
   const result = await apiClient.post('/auth/signout', {})

@@ -4,7 +4,8 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Button from '../components/Button'
-import { signIn } from '../lib/authUtils'
+import GoogleOAuthButton from '../components/GoogleOAuthButton'
+import { signIn, getGoogleOAuthUrl } from '../lib/authUtils'
 
 const LoginPage: NextPage = () => {
   const router = useRouter()
@@ -15,6 +16,7 @@ const LoginPage: NextPage = () => {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   // Load saved email if remember me was enabled
   useEffect(() => {
@@ -65,6 +67,12 @@ const LoginPage: NextPage = () => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleGoogleSignIn = () => {
+    setGoogleLoading(true)
+    // Redirect to Google OAuth
+    window.location.href = getGoogleOAuthUrl('signin')
   }
 
   return (
@@ -163,6 +171,23 @@ const LoginPage: NextPage = () => {
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Google Sign In Button */}
+            <GoogleOAuthButton
+              mode="signin"
+              onClick={handleGoogleSignIn}
+              isLoading={googleLoading}
+            />
           </form>
 
           {/* Sign Up Link */}

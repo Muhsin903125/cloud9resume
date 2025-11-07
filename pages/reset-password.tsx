@@ -24,15 +24,22 @@ const ResetPasswordPage: NextPage = () => {
       const hash = window.location.hash
       const params = new URLSearchParams(hash.substring(1))
       const accessToken = params.get('access_token')
+      const type = params.get('type')
       
       // Also check query parameters in case redirectUri uses query string
       const queryToken = (router.query.token as string) || (router.query.access_token as string)
+      const queryType = router.query.type as string
       
       const foundToken = accessToken || queryToken
+      const tokenType = type || queryType
 
-      if (foundToken) {
+      // Token is valid if it's a recovery type token, or if it's any token and we're on the reset page
+      if (foundToken && (tokenType === 'recovery' || !tokenType)) {
         setToken(foundToken)
         setTokenValid(true)
+        console.log('Password reset token found:', { hasToken: !!foundToken, tokenType })
+      } else {
+        console.log('No valid token found:', { hasToken: !!foundToken, tokenType })
       }
       
       setCheckingToken(false)

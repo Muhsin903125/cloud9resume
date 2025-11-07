@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Button from '../components/Button'
 import Card from '../components/Card'
+import GoogleOAuthButton from '../components/GoogleOAuthButton'
 import { api } from '../lib/api'
-import { validateEmail, isValidEmail } from '../lib/authUtils'
+import { validateEmail, isValidEmail, getGoogleOAuthUrl } from '../lib/authUtils'
 
 const SignupPage: NextPage = () => {
   const router = useRouter()
@@ -23,6 +24,7 @@ const SignupPage: NextPage = () => {
   const [emailError, setEmailError] = useState('')
   const [emailValidating, setEmailValidating] = useState(false)
   const [emailValid, setEmailValid] = useState<boolean | null>(null)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   // Validate email when it changes
   useEffect(() => {
@@ -136,6 +138,12 @@ const SignupPage: NextPage = () => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleGoogleSignUp = () => {
+    setGoogleLoading(true)
+    // Redirect to Google OAuth
+    window.location.href = getGoogleOAuthUrl('signup')
   }
 
   return (
@@ -319,6 +327,23 @@ const SignupPage: NextPage = () => {
               >
                 {isLoading ? 'Creating account...' : 'Create account'}
               </Button>
+
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or sign up with</span>
+                </div>
+              </div>
+
+              {/* Google Sign Up Button */}
+              <GoogleOAuthButton
+                mode="signup"
+                onClick={handleGoogleSignUp}
+                isLoading={googleLoading}
+              />
             </form>
 
             <div className="mt-6">
