@@ -22,6 +22,7 @@ const LoginPage: NextPage = () => {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showEmailForm, setShowEmailForm] = useState(false)
 
   // Load saved email if remember me was enabled, and check for OAuth errors
   useEffect(() => {
@@ -93,143 +94,147 @@ const LoginPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Login - Cloud9 Resume</title>
+        <title>Sign In - Cloud9 Resume</title>
         <meta name="description" content="Sign in to your Cloud9 Resume account" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
-          <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
-            <Image
-              src="/logo-icon.png"
-              alt="Cloud9 Resume Logo"
-              width={40}
-              height={40}
-              className="rounded-lg"
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-block mb-6">
+              <Image
+                src="/logo.png"
+                alt="Cloud9 Resume"
+                width={160}
+                height={48}
+                className="h-auto"
+              />
+            </Link>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Welcome back</h1>
+            <p className="text-sm text-gray-600">Sign in to continue to your account</p>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* OAuth Buttons */}
+          <div className="space-y-3 mb-8">
+            <OAuthButton
+              provider="google"
+              mode="signin"
+              getOAuthUrl={() => getGoogleOAuthUrl('signin')}
             />
-            <span className="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-              Cloud9 Resume
-            </span>
-          </Link>
-          <h1 className="mt-4 text-2xl font-light text-gray-900">
-            Welcome back
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Sign in to your account to continue
-          </p>
-        </div>
+            <OAuthButton
+              provider="linkedin"
+              mode="signin"
+              getOAuthUrl={() => getLinkedInOAuthUrl('signin')}
+            />
+            <OAuthButton
+              provider="github"
+              mode="signin"
+              getOAuthUrl={() => getGitHubOAuthUrl('signin')}
+            />
+          </div>
 
-        {/* Form Container */}
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-xs font-medium text-gray-700 uppercase tracking-wide mb-2">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:bg-white focus:border-gray-400"
-                placeholder="you@example.com"
-              />
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
             </div>
+            <div className="relative flex justify-center text-xs">
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(!showEmailForm)}
+                className="px-3 bg-white text-gray-500 hover:text-gray-700 font-medium transition-colors"
+              >
+                {showEmailForm ? 'Hide email sign in' : 'Or sign in with email'}
+              </button>
+            </div>
+          </div>
 
-            {/* Password Field */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-xs font-medium text-gray-700 uppercase tracking-wide">
-                  Password
+          {/* Email Form - Collapsible */}
+          {showEmailForm && (
+            <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Email
                 </label>
-                <Link href="/forgot-password" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
-                  Forgot?
-                </Link>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="you@example.com"
+                />
               </div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:bg-white focus:border-gray-400"
-                placeholder="••••••••"
-              />
-            </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-blue-600 bg-gray-50 border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600">
-                Keep me signed in
-              </label>
-            </div>
-
-            {/* Sign In Button */}
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full mt-6"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </Button>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
+                    Forgot?
+                  </Link>
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="••••••••"
+                />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
 
-            {/* OAuth Buttons */}
-            <div className="space-y-3">
-              <OAuthButton
-                provider="google"
-                mode="signin"
-                getOAuthUrl={() => getGoogleOAuthUrl('signin')}
-              />
-              <OAuthButton
-                provider="linkedin"
-                mode="signin"
-                getOAuthUrl={() => getLinkedInOAuthUrl('signin')}
-              />
-              <OAuthButton
-                provider="github"
-                mode="signin"
-                getOAuthUrl={() => getGitHubOAuthUrl('signin')}
-              />
-            </div>
-          </form>
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600">
+                  Remember me
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors disabled:opacity-50"
+              >
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </form>
+          )}
 
           {/* Sign Up Link */}
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600">
             Don't have an account?{' '}
-            <Link href="/signup" className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
-              Sign up
+            <Link href="/signup" className="font-semibold text-blue-600 hover:text-blue-700">
+              Sign up free
             </Link>
+          </p>
+
+          {/* Footer */}
+          <p className="mt-8 text-center text-xs text-gray-500">
+            <a href="#" className="hover:text-gray-700">Terms</a>
+            {' · '}
+            <a href="#" className="hover:text-gray-700">Privacy</a>
           </p>
         </div>
       </div>
