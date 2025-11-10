@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Footer() {
   return (
@@ -6,7 +7,16 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Cloud9 Resume</h3>
+            <div className="flex items-center space-x-2 mb-4">
+              <Image
+                src="/logo.png"
+                alt="Cloud9 Resume Logo"
+                width={120}
+                height={36}
+                className="rounded-lg"
+              />
+              {/* <h3 className="text-lg font-semibold">Cloud9 Resume</h3> */}
+            </div>
             <p className="text-gray-400 mb-4">
               Build professional resumes and portfolios with AI-powered tools.
             </p>

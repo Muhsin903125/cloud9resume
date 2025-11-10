@@ -122,6 +122,72 @@ export function getGoogleOAuthUrl(mode: 'signin' | 'signup' = 'signin'): string 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
 }
 
+// LinkedIn OAuth Sign In
+export async function signInWithLinkedIn(code: string) {
+  return apiClient.post('/auth/signin-linkedin', { code })
+}
+
+// LinkedIn OAuth Sign Up
+export async function signUpWithLinkedIn(code: string) {
+  return apiClient.post('/auth/signup-linkedin', { code })
+}
+
+// Get LinkedIn OAuth URL for login/signup
+export function getLinkedInOAuthUrl(mode: 'signin' | 'signup' = 'signin'): string {
+  const clientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID
+  const redirectUri = `${window.location.origin}/api/auth/callback/linkedin`
+  const scope = 'openid profile email'
+  const state = generateNonce()
+
+  // Store state in session storage for verification
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('linkedin_oauth_state', state)
+  }
+
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: clientId || '',
+    redirect_uri: redirectUri,
+    scope,
+    state,
+  })
+
+  return `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`
+}
+
+// GitHub OAuth Sign In
+export async function signInWithGitHub(code: string) {
+  return apiClient.post('/auth/signin-github', { code })
+}
+
+// GitHub OAuth Sign Up
+export async function signUpWithGitHub(code: string) {
+  return apiClient.post('/auth/signup-github', { code })
+}
+
+// Get GitHub OAuth URL for login/signup
+export function getGitHubOAuthUrl(mode: 'signin' | 'signup' = 'signin'): string {
+  const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
+  const redirectUri = `${window.location.origin}/api/auth/callback/github`
+  const scope = 'user:email'
+  const state = generateNonce()
+
+  // Store state in session storage for verification
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('github_oauth_state', state)
+  }
+
+  const params = new URLSearchParams({
+    client_id: clientId || '',
+    redirect_uri: redirectUri,
+    scope,
+    state,
+    allow_signup: 'true',
+  })
+
+  return `https://github.com/login/oauth/authorize?${params.toString()}`
+}
+
 // Generate nonce for OAuth security
 function generateNonce(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)

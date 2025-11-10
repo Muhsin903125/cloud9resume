@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
 
@@ -17,7 +18,14 @@ export default function Navbar() {
     <nav className="fixed top-0 w-full bg-white shadow-sm z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
+            <Image
+              src="/logo-icon.png"
+              alt="Cloud9 Resume Logo"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
             <Link href="/" className="text-xl font-bold text-blue-600">
               Cloud9 Resume
             </Link>

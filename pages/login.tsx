@@ -2,10 +2,16 @@ import { NextPage } from 'next'
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import Button from '../components/Button'
-import GoogleOAuthButton from '../components/GoogleOAuthButton'
-import { signIn, getGoogleOAuthUrl } from '../lib/authUtils'
+import OAuthButton from '../components/OAuthButton'
+import { 
+  signIn, 
+  getGoogleOAuthUrl,
+  getLinkedInOAuthUrl,
+  getGitHubOAuthUrl
+} from '../lib/authUtils'
 
 const LoginPage: NextPage = () => {
   const router = useRouter()
@@ -16,7 +22,6 @@ const LoginPage: NextPage = () => {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [googleLoading, setGoogleLoading] = useState(false)
 
   // Load saved email if remember me was enabled, and check for OAuth errors
   useEffect(() => {
@@ -81,8 +86,7 @@ const LoginPage: NextPage = () => {
   }
 
   const handleGoogleSignIn = () => {
-    setGoogleLoading(true)
-    // Redirect to Google OAuth
+    // This is now handled by OAuthButton component
     window.location.href = getGoogleOAuthUrl('signin')
   }
 
@@ -97,8 +101,15 @@ const LoginPage: NextPage = () => {
       <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
-          <Link href="/">
-            <span className="text-xl font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors">
+          <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
+            <Image
+              src="/logo-icon.png"
+              alt="Cloud9 Resume Logo"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
+            <span className="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors">
               Cloud9 Resume
             </span>
           </Link>
@@ -193,12 +204,24 @@ const LoginPage: NextPage = () => {
               </div>
             </div>
 
-            {/* Google Sign In Button */}
-            <GoogleOAuthButton
-              mode="signin"
-              onClick={handleGoogleSignIn}
-              isLoading={googleLoading}
-            />
+            {/* OAuth Buttons */}
+            <div className="space-y-3">
+              <OAuthButton
+                provider="google"
+                mode="signin"
+                getOAuthUrl={() => getGoogleOAuthUrl('signin')}
+              />
+              <OAuthButton
+                provider="linkedin"
+                mode="signin"
+                getOAuthUrl={() => getLinkedInOAuthUrl('signin')}
+              />
+              <OAuthButton
+                provider="github"
+                mode="signin"
+                getOAuthUrl={() => getGitHubOAuthUrl('signin')}
+              />
+            </div>
           </form>
 
           {/* Sign Up Link */}
