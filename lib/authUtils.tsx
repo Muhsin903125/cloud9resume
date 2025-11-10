@@ -152,7 +152,17 @@ export function getLinkedInOAuthUrl(mode: 'signin' | 'signup' = 'signin'): strin
     state,
   })
 
-  return `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`
+  const authUrl = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`
+  
+  // Debug logging
+  console.log('LinkedIn OAuth Request:', {
+    clientId,
+    redirectUri,
+    scope,
+    fullUrl: authUrl
+  })
+
+  return authUrl
 }
 
 // GitHub OAuth Sign In
