@@ -1,9 +1,37 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import nodemailer from 'nodemailer'
 
 interface EmailReportResponse {
   success: boolean
   message?: string
   error?: string
+}
+
+// Create Nodemailer transporter
+let transporter: nodemailer.Transporter | null = null
+
+function getTransporter() {
+  if (transporter) {
+    return transporter
+  }
+
+  // Check if email configuration is set up
+  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    console.warn('Email configuration not set up. Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASSWORD in .env')
+    return null
+  }
+
+  transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT || '587'),
+    secure: process.env.EMAIL_PORT === '465', // true for 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
+    }
+  })
+
+  return transporter
 }
 
 export default async function handler(
@@ -36,11 +64,31 @@ export default async function handler(
     // Generate HTML email content
     const htmlContent = generateEmailHTML(name, analysisData)
 
-    // Send email using your preferred email service
-    // For now, we'll log it and return success
-    // In production, integrate with SendGrid, Mailgun, or similar
+    // Get transporter
+    const transport = getTransporter()
 
-    console.log(`Email report sent to: ${email}`)
+    if (!transport) {
+      console.warn('Email service not configured. Logging email instead.')
+      console.log(`[EMAIL LOG] To: ${email}`)
+      console.log(`[EMAIL LOG] Subject: Your ATS Analysis Report`)
+      console.log(`[EMAIL LOG] Content: ${htmlContent.substring(0, 200)}...`)
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Email service not configured. Please set up email credentials in .env file.'
+      })
+    }
+
+    // Send email
+    await transport.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: email,
+      subject: 'Your ATS Analysis Report - Cloud9Resume',
+      html: htmlContent,
+      text: `Your ATS analysis report is ready. Please check the HTML version for full details.`
+    })
+
+    console.log(`✓ Email report sent to: ${email}`)
 
     res.status(200).json({
       success: true,
@@ -48,9 +96,15 @@ export default async function handler(
     })
   } catch (error) {
     console.error('Email report error:', error)
+    
+    let errorMessage = 'Failed to send email report'
+    if (error instanceof Error) {
+      errorMessage = error.message
+    }
+
     res.status(500).json({
       success: false,
-      error: 'Failed to send email report'
+      error: errorMessage
     })
   }
 }
@@ -59,10 +113,13 @@ function generateEmailHTML(name: string, data: any): string {
   const {
     score,
     matchPercentage,
-    keywords,
-    sections,
-    issues,
-    atsScore
+    matchedKeywords = [],
+    missingKeywords = [],
+    sections = {},
+    insights = [],
+    strengths = [],
+    weaknesses = [],
+    recommendations = []
   } = data
 
   return `
@@ -227,49 +284,58 @@ function generateEmailHTML(name: string, data: any): string {
           <p style="margin: 10px 0 0 0; color: #4b5563;">Keyword Match: ${matchPercentage}%</p>
         </div>
 
-        <h3 style="color: #1f2937;">Detected Keywords</h3>
+        <h3 style="color: #1f2937;">Keyword Analysis</h3>
         <div class="keywords-list">
           <div class="keyword-group">
-            <h3 style="color: #059669;">✓ Present (${keywords.present.length})</h3>
+            <h3 style="color: #059669;">✓ Matched (${matchedKeywords.length})</h3>
             <div>
-              ${keywords.present.slice(0, 10).map((k: string) => `<span class="keyword-tag">${k}</span>`).join('')}
-              ${keywords.present.length > 10 ? `<span class="keyword-tag">+${keywords.present.length - 10} more</span>` : ''}
+              ${matchedKeywords.slice(0, 10).map((k: string) => `<span class="keyword-tag">${k}</span>`).join('')}
+              ${matchedKeywords.length > 10 ? `<span class="keyword-tag">+${matchedKeywords.length - 10} more</span>` : ''}
             </div>
           </div>
           <div class="keyword-group">
-            <h3 style="color: #dc2626;">✗ Missing (${keywords.missing.length})</h3>
+            <h3 style="color: #dc2626;">✗ Missing (${missingKeywords.length})</h3>
             <div>
-              ${keywords.missing.slice(0, 10).map((k: string) => `<span class="keyword-tag missing">${k}</span>`).join('')}
-              ${keywords.missing.length > 10 ? `<span class="keyword-tag missing">+${keywords.missing.length - 10} more</span>` : ''}
+              ${missingKeywords.slice(0, 10).map((k: string) => `<span class="keyword-tag missing">${k}</span>`).join('')}
+              ${missingKeywords.length > 10 ? `<span class="keyword-tag missing">+${missingKeywords.length - 10} more</span>` : ''}
             </div>
           </div>
         </div>
 
         <div class="issues">
-          ${issues.critical.length > 0 ? `
+          ${insights.length > 0 ? `
             <div class="issue-type">
-              <h4 style="color: #dc2626;">🔴 Critical Issues</h4>
+              <h4 style="color: #2563eb;">� Insights</h4>
               <ul class="issue-list">
-                ${issues.critical.map((i: string) => `<li class="issue-critical">${i}</li>`).join('')}
+                ${insights.map((i: string) => `<li>${i}</li>`).join('')}
               </ul>
             </div>
           ` : ''}
 
-          ${issues.warnings.length > 0 ? `
+          ${strengths.length > 0 ? `
             <div class="issue-type">
-              <h4 style="color: #f97316;">🟡 Warnings</h4>
+              <h4 style="color: #22c55e;">✅ Strengths</h4>
               <ul class="issue-list">
-                ${issues.warnings.map((i: string) => `<li class="issue-warning">${i}</li>`).join('')}
+                ${strengths.map((s: string) => `<li>${s}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${weaknesses.length > 0 ? `
+            <div class="issue-type">
+              <h4 style="color: #f97316;">⚠️ Areas to Improve</h4>
+              <ul class="issue-list">
+                ${weaknesses.map((w: string) => `<li>${w}</li>`).join('')}
               </ul>
             </div>
           ` : ''}
         </div>
 
-        ${issues.suggestions.length > 0 ? `
+        ${recommendations.length > 0 ? `
           <div class="recommendations">
-            <h3>💡 Suggestions to Improve Your Score</h3>
+            <h3>🎯 Recommendations</h3>
             <ul>
-              ${issues.suggestions.map((s: string) => `<li>${s}</li>`).join('')}
+              ${recommendations.map((r: string) => `<li>${r}</li>`).join('')}
             </ul>
           </div>
         ` : ''}

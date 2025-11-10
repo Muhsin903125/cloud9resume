@@ -1,10 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createWorker } from 'tesseract.js'
 import vision from '@google-cloud/vision'
+import { extractPdfText, extractDocxText, normalizeText, extractKeywords, extractPhrases } from '@/lib/backend/textExtraction'
 
 interface ExtractTextResponse {
   success: boolean
   text?: string
+  keywords?: string[]
+  phrases?: string[]
   error?: string
   usedOCR?: boolean
   ocrMethod?: 'tesseract' | 'google-vision' | 'none'
@@ -59,8 +62,8 @@ const parseMultipartForm = async (req: NextApiRequest): Promise<{ file: Buffer, 
   })
 }
 
-// Simple PDF text extraction
-const extractPDFText = (buffer: Buffer): string => {
+// Simple PDF text extraction (fallback for non-standard PDFs)
+const simplePDFExtract = (buffer: Buffer): string => {
   try {
     const text = buffer.toString('utf-8')
     
@@ -99,32 +102,6 @@ const extractPDFText = (buffer: Buffer): string => {
     return result
   } catch (error) {
     throw new Error('Failed to extract text from PDF')
-  }
-}
-
-// Extract text from DOCX (Word document)
-const extractDOCXText = (buffer: Buffer): string => {
-  try {
-    const text = buffer.toString('utf-8')
-    
-    // Extract text from XML tags
-    const matches = text.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
-    const extracted = matches
-      .map(m => m.replace(/<[^>]*>/g, ''))
-      .filter(t => t.trim())
-      .join(' ')
-    
-    if (extracted.trim() && extracted.length > 20) {
-      return extracted
-    }
-    
-    // Fallback: extract readable text
-    return text
-      .replace(/[^\x20-\x7E\s]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  } catch (error) {
-    throw new Error('Failed to extract text from DOCX')
   }
 }
 
@@ -220,7 +197,14 @@ export default async function handler(
     let ocrMethod: 'tesseract' | 'google-vision' | 'none' = 'none'
 
     if (mimetype.includes('pdf')) {
-      extractedText = extractPDFText(file)
+      try {
+        // Try pdf-parse first for better extraction
+        extractedText = await extractPdfText(file)
+      } catch (e) {
+        // Fall back to simple extraction
+        console.log('pdf-parse failed, using simple extraction')
+        extractedText = simplePDFExtract(file)
+      }
       
       // If extraction yields very little text, try OCR for scanned PDFs
       if (!extractedText || extractedText.length < 100) {
@@ -239,7 +223,12 @@ export default async function handler(
       mimetype.includes('wordprocessingml') ||
       mimetype.includes('msword')
     ) {
-      extractedText = extractDOCXText(file)
+      try {
+        extractedText = await extractDocxText(file)
+      } catch (e) {
+        console.error('DOCX extraction failed:', e)
+        throw new Error('Failed to extract text from DOCX file')
+      }
     } else {
       return res.status(400).json({ 
         success: false, 
@@ -254,9 +243,15 @@ export default async function handler(
       })
     }
 
+    // Extract keywords and phrases from the text
+    const keywords = extractKeywords(extractedText)
+    const phrases = extractPhrases(extractedText)
+
     return res.status(200).json({ 
       success: true, 
       text: extractedText,
+      keywords,
+      phrases,
       usedOCR,
       ocrMethod
     })
