@@ -4,6 +4,22 @@
 
 Cloud9Resume is a lightweight, responsive, and user-friendly platform to build resumes, portfolios, and check ATS compatibility. Supports Free, Starter, Pro, and Pro+ plans with a credit-based AI system. Designed for global users, SEO-friendly, and scalable.
 
+## 🎯 Key Features
+
+### ATS Resume Checker (NEW!)
+- **File Upload Support**: PDF, DOC, DOCX with drag-and-drop
+- **Advanced OCR**: 
+  - **Hybrid OCR System**: Google Vision API (primary) + Tesseract.js (fallback)
+  - Extracts text from scanned/image-based PDFs
+  - Automatic detection of text-based vs scanned documents
+- **Comprehensive Analysis**: 
+  - Keyword matching with job descriptions
+  - ATS compatibility scoring
+  - Section detection (contact, education, experience, skills)
+  - Missing keyword identification
+  - Formatting recommendations
+- **Email Reports**: Send detailed analysis to your email
+
 ## Tech Stack
 
 * Frontend: Next.js (Page Router) + Tailwind CSS
@@ -12,6 +28,28 @@ Cloud9Resume is a lightweight, responsive, and user-friendly platform to build r
 * Hosting: Vercel
 * Authentication: Email + OAuth (Google, LinkedIn, GitHub)
 * AI Integration: OpenAI API or similar token-based AI for resume generation, JD optimization, cover letters
+* OCR: Google Cloud Vision API + Tesseract.js
+
+## OCR Configuration
+
+The ATS checker uses a hybrid OCR approach for maximum accuracy:
+
+1. **Google Vision API** (Recommended)
+   - High accuracy for scanned documents
+   - Requires Google Cloud account & API key
+   - Free tier: 1,000 requests/month
+   - See [GOOGLE_VISION_SETUP.md](./GOOGLE_VISION_SETUP.md) for setup
+
+2. **Tesseract.js** (Fallback)
+   - Free and open-source
+   - No configuration needed
+   - Good for basic OCR tasks
+
+3. **Configuration**: Set in `.env.local`
+   ```env
+   OCR_STRATEGY=hybrid  # hybrid | google-vision | tesseract
+   GOOGLE_APPLICATION_CREDENTIALS=./google-vision-key.json
+   ```
 
 ## Authentication & Plans
 
