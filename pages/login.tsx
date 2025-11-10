@@ -18,7 +18,7 @@ const LoginPage: NextPage = () => {
   const [error, setError] = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
 
-  // Load saved email if remember me was enabled
+  // Load saved email if remember me was enabled, and check for OAuth errors
   useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail')
     const wasRemembered = localStorage.getItem('rememberMeEnabled') === 'true'
@@ -26,7 +26,18 @@ const LoginPage: NextPage = () => {
       setFormData(prev => ({ ...prev, email: savedEmail }))
       setRememberMe(true)
     }
-  }, [])
+
+    // Check if there's an error from Google OAuth callback
+    if (router.query.error) {
+      const errorMsg = Array.isArray(router.query.error) 
+        ? router.query.error[0] 
+        : router.query.error
+      setError(decodeURIComponent(errorMsg))
+      
+      // Clear error from URL
+      window.history.replaceState({}, '', '/login')
+    }
+  }, [router.query.error])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target

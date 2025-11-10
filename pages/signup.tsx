@@ -26,6 +26,19 @@ const SignupPage: NextPage = () => {
   const [emailValid, setEmailValid] = useState<boolean | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
 
+  // Check for errors from OAuth callback
+  useEffect(() => {
+    if (router.query.error) {
+      const errorMsg = Array.isArray(router.query.error) 
+        ? router.query.error[0] 
+        : router.query.error
+      setError(decodeURIComponent(errorMsg))
+      
+      // Clear error from URL
+      window.history.replaceState({}, '', '/signup')
+    }
+  }, [router.query.error])
+
   // Validate email when it changes
   useEffect(() => {
     const validateEmailAsync = async () => {

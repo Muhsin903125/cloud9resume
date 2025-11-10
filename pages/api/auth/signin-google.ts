@@ -117,10 +117,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
       return res.status(200).json({
-        user: {
-          id: existingUser.id,
-          email: existingUser.email,
-        },
+        id: existingUser.id,
+        email: existingUser.email,
+        name: name || email,
+        picture: picture || null,
         message: 'Login successful',
       })
     }

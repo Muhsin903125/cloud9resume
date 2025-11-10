@@ -20,12 +20,31 @@ import {
 const DashboardPage: NextPage = () => {
   const router = useRouter()
   const { user, isLoading, isAuthenticated, logout } = useAuth()
+  const [displayName, setDisplayName] = useState<string>('User')
+  
   const [stats] = useState({
     resumesCreated: 3,
     portfoliosCreated: 1,
     atsScores: 5,
     creditsRemaining: 75
   })
+
+  // Get display name from user data
+  useEffect(() => {
+    if (user) {
+      // Try to get name in order of preference:
+      // 1. user.name (from Google OAuth)
+      // 2. user.profile?.first_name (from email auth)
+      // 3. Extract from email
+      // 4. Default to 'User'
+      const name = 
+        user.name ||
+        user.profile?.first_name ||
+        (user.email?.split('@')[0] || 'User')
+      
+      setDisplayName(name)
+    }
+  }, [user])
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -123,7 +142,7 @@ const DashboardPage: NextPage = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-600 mt-1">
-                Welcome back, <span className="font-semibold text-gray-900">{user?.profile?.first_name || 'User'}</span>
+                Welcome back, <span className="font-semibold text-gray-900">{displayName}</span>
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -132,12 +151,7 @@ const DashboardPage: NextPage = () => {
                   Upgrade Plan
                 </Button>
               </Link>
-              <button
-                onClick={logout}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                Sign Out
-              </button>
+               
             </div>
           </div>
         </div>

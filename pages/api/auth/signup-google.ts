@@ -140,11 +140,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     return res.status(201).json({
-      user: {
-        id: authData.user.id,
-        email: authData.user.email,
-        name: `${firstName} ${lastName}`.trim(),
-      },
+      id: authData.user.id,
+      email: authData.user.email,
+      name: `${firstName} ${lastName}`.trim(),
+      picture: picture || null,
       message: 'Registration successful',
     })
   } catch (error) {

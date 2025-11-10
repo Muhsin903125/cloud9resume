@@ -6,6 +6,8 @@ import { apiClient } from './apiClient'
 export interface User {
   id: string
   email: string
+  name?: string
+  picture?: string
   profile?: {
     first_name: string
     last_name: string
@@ -202,9 +204,11 @@ export function useAuth() {
   useEffect(() => {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
+      // Check for auth_token or user_id (OAuth users have user_id only)
       const token = localStorage.getItem('auth_token')
+      const userId = localStorage.getItem('user_id')
 
-      if (!token) {
+      if (!token && !userId) {
         setAuthState(prev => ({
           ...prev,
           isLoading: false,
@@ -214,23 +218,41 @@ export function useAuth() {
       }
 
       try {
-        const result = await getSession()
+        // If we have a token, validate the session
+        if (token) {
+          const result = await getSession()
 
-        if (result.data) {
+          if (result.data) {
+            setAuthState({
+              user: result.data.user,
+              session: result.data.session,
+              isLoading: false,
+              isAuthenticated: true,
+            })
+          } else {
+            // Token is invalid, clear it
+            localStorage.removeItem('auth_token')
+            setAuthState(prev => ({
+              ...prev,
+              isLoading: false,
+              isAuthenticated: false,
+            }))
+          }
+        } else if (userId) {
+          // OAuth user (only has user_id, not a full session)
+          // Trust the user_id for now and assume user is authenticated
           setAuthState({
-            user: result.data.user,
-            session: result.data.session,
+            user: {
+              id: userId,
+              email: localStorage.getItem('user_email') || '',
+              name: localStorage.getItem('user_name') || undefined,
+              picture: localStorage.getItem('user_picture') || undefined,
+              profile: undefined,
+            },
+            session: null,
             isLoading: false,
             isAuthenticated: true,
           })
-        } else {
-          // Token is invalid, clear it
-          localStorage.removeItem('auth_token')
-          setAuthState(prev => ({
-            ...prev,
-            isLoading: false,
-            isAuthenticated: false,
-          }))
         }
       } catch (error) {
         console.error('Auth check error:', error)
