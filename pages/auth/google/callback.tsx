@@ -36,30 +36,52 @@ export default function GoogleCallbackPage() {
           hasError: !!signInResult.error,
           error: signInResult.error,
           hasData: !!signInResult.data,
-          data: signInResult.data ? { id: signInResult.data.id, email: signInResult.data.email } : null,
+          data: signInResult.data,
         })
 
+        // Debug: log the full response
+        if (signInResult.data) {
+          console.log('Full signin response:', JSON.stringify(signInResult.data, null, 2))
+        }
+
         // Check if sign in was successful (no error and has user data)
-        if (!signInResult.error && signInResult.data?.id) {
-          console.log('Sign in successful, storing auth and redirecting to dashboard')
+        // New format: { success, accessToken, expiresIn, user: {id, email, plan, credits} }
+        if (!signInResult.error && signInResult.data?.user?.id && signInResult.data?.accessToken) {
+          console.log('✅ Sign in successful, storing auth and redirecting to dashboard')
           
-          // Store auth token if available
-          if (signInResult.data.access_token) {
-            localStorage.setItem('auth_token', signInResult.data.access_token)
-          }
+          // Store JWT token
+          localStorage.setItem('x_user_auth_token', signInResult.data.accessToken)
+          console.log('✅ Stored x_user_auth_token:', signInResult.data.accessToken.substring(0, 30) + '...')
           
-          // Store user info
-          localStorage.setItem('user_id', signInResult.data.id)
-          if (signInResult.data.email) {
-            localStorage.setItem('user_email', signInResult.data.email)
-          }
-          if (signInResult.data.name) {
-            localStorage.setItem('user_name', signInResult.data.name)
-          }
-          if (signInResult.data.picture) {
-            localStorage.setItem('user_picture', signInResult.data.picture)
+          // Store user info with x_ prefix
+          localStorage.setItem('x_user_id', signInResult.data.user.id)
+          console.log('✅ Stored x_user_id:', signInResult.data.user.id)
+          
+          if (signInResult.data.user.email) {
+            localStorage.setItem('x_user_email', signInResult.data.user.email)
+            console.log('✅ Stored x_user_email:', signInResult.data.user.email)
           }
           
+          // Store token expiry
+          const expiryTime = Date.now() + (signInResult.data.expiresIn * 1000)
+          localStorage.setItem('x_token_expiry', expiryTime.toString())
+          console.log('✅ Stored x_token_expiry:', {
+            expiryTime,
+            expiryReadable: new Date(expiryTime).toISOString(),
+            expiresIn: signInResult.data.expiresIn,
+            currentTime: Date.now(),
+            currentTimeReadable: new Date().toISOString()
+          })
+          
+          // Verify storage
+          console.log('✅ Verification - localStorage now contains:', {
+            token: localStorage.getItem('x_user_auth_token')?.substring(0, 30) + '...',
+            userId: localStorage.getItem('x_user_id'),
+            email: localStorage.getItem('x_user_email'),
+            expiry: localStorage.getItem('x_token_expiry')
+          })
+          
+          console.log('🚀 Redirecting to /dashboard')
           router.push('/dashboard')
           return
         }
@@ -73,28 +95,31 @@ export default function GoogleCallbackPage() {
             hasError: !!signUpResult.error,
             error: signUpResult.error,
             hasData: !!signUpResult.data,
+            data: signUpResult.data,
           })
 
+          // Debug: log the full response
+          if (signUpResult.data) {
+            console.log('Full signup response:', JSON.stringify(signUpResult.data, null, 2))
+          }
+
           // Check if sign up was successful (no error and has user data)
-          if (!signUpResult.error && signUpResult.data?.id) {
+          // New format: { success, accessToken, expiresIn, user: {id, email, plan, credits} }
+          if (!signUpResult.error && signUpResult.data?.user?.id && signUpResult.data?.accessToken) {
             console.log('Signup successful, storing auth and redirecting to dashboard')
             
-            // Store auth token if available
-            if (signUpResult.data.access_token) {
-              localStorage.setItem('auth_token', signUpResult.data.access_token)
+            // Store JWT token
+            localStorage.setItem('x_user_auth_token', signUpResult.data.accessToken)
+            
+            // Store user info with x_ prefix
+            localStorage.setItem('x_user_id', signUpResult.data.user.id)
+            if (signUpResult.data.user.email) {
+              localStorage.setItem('x_user_email', signUpResult.data.user.email)
             }
             
-            // Store user info
-            localStorage.setItem('user_id', signUpResult.data.id)
-            if (signUpResult.data.email) {
-              localStorage.setItem('user_email', signUpResult.data.email)
-            }
-            if (signUpResult.data.name) {
-              localStorage.setItem('user_name', signUpResult.data.name)
-            }
-            if (signUpResult.data.picture) {
-              localStorage.setItem('user_picture', signUpResult.data.picture)
-            }
+            // Store token expiry
+            const expiryTime = Date.now() + (signUpResult.data.expiresIn * 1000)
+            localStorage.setItem('x_token_expiry', expiryTime.toString())
             
             router.push('/dashboard')
             return

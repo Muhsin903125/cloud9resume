@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { google } from 'googleapis'
+import { generateToken } from '../../../lib/backend/utils/tokenService'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -25,6 +26,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { idToken } = req.body
 
+    if (!idToken) {
+      return res.status(400).json({
+        error: 'Missing ID token',
+        message: 'ID token is required'
+      })
+    }
+
     // Verify the ID token with Google
     const ticket = await oauth2Client.verifyIdToken({
       idToken,
@@ -40,95 +48,82 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    const googleId = payload.sub
     const email = payload.email
-    const name = payload.name || ''
-    const picture = payload.picture || ''
+    const name = payload.name || 'User'
 
-    // Check if user already exists
+    // Check if user exists
     const { data: existingUser, error: searchError } = await supabaseAdmin
-      .from('profiles')
-      .select('id, email, auth_method')
+      .from('users')
+      .select('id, email, plan, credits')
       .eq('email', email)
       .single()
 
-    if (searchError && searchError.code !== 'PGRST116') {
-      // PGRST116 = no rows returned
-      console.error('Profile search error:', searchError)
-    }
+    console.log('🔍 Google signin - User lookup:', {
+      email,
+      found: !!existingUser,
+      searchError: searchError?.message
+    })
 
-    // If user exists and is email auth, update to use Google
-    if (existingUser) {
-      if (existingUser.auth_method === 'email') {
-        // User signed up with email, now logging in with Google
-        const { error: updateError } = await supabaseAdmin
-          .from('profiles')
-          .update({
-            auth_method: 'google',
-            provider: 'google',
-            provider_id: googleId,
-            oauth_data: {
-              name,
-              picture,
-              email,
-            },
-            last_login_at: new Date().toISOString(),
-            login_count: (existingUser as any).login_count ? (existingUser as any).login_count + 1 : 1,
-          })
-          .eq('id', existingUser.id)
+    let user = existingUser
 
-        if (updateError) {
-          console.error('Profile update error:', updateError)
-        }
-      } else if (existingUser.auth_method === 'google') {
-        // User already has Google auth, just update login info
-        const { error: updateError } = await supabaseAdmin
-          .from('profiles')
-          .update({
-            last_login_at: new Date().toISOString(),
-            login_count: (existingUser as any).login_count ? (existingUser as any).login_count + 1 : 1,
-          })
-          .eq('id', existingUser.id)
+    // Create user if doesn't exist
+    if (!user) {
+      console.log('📝 Creating new user for email:', email)
+      
+      const { data: newUser, error: createError } = await supabaseAdmin
+        .from('users')
+        .insert([{
+          email,
+          name,
+          login_provider: 'google',
+          plan: 'free',
+          credits: 0,
+        }])
+        .select('id, email, plan, credits')
+        .single()
 
-        if (updateError) {
-          console.error('Login count update error:', updateError)
-        }
-      }
-
-      // Create auth session
-      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(
-        existingUser.id
-      )
-
-      if (authError || !authUser.user) {
-        return res.status(400).json({
-          error: 'Authentication failed',
-          message: 'Could not create session'
+      if (createError || !newUser) {
+        console.error('❌ User creation error:', createError)
+        return res.status(500).json({
+          error: 'Failed to create user',
+          message: 'Could not create account'
         })
       }
 
-      // Log OAuth login
-      await supabaseAdmin.from('oauth_audit_log').insert({
-        user_id: existingUser.id,
-        provider: 'google',
-        provider_id: googleId,
-        ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-        user_agent: req.headers['user-agent'],
+      console.log('✅ New user created:', {
+        id: newUser.id,
+        email: newUser.email,
+        plan: newUser.plan
       })
 
-      return res.status(200).json({
-        id: existingUser.id,
-        email: existingUser.email,
-        name: name || email,
-        picture: picture || null,
-        message: 'Login successful',
+      user = newUser
+    } else {
+      console.log('✅ Existing user found:', {
+        id: user.id,
+        email: user.email,
+        plan: user.plan
       })
     }
 
-    // User doesn't exist
-    return res.status(404).json({
-      error: 'User not found',
-      message: 'No account found with this email. Please sign up first.',
+    // Generate JWT token
+    const accessToken = await generateToken(user.id, user.email, user.plan)
+    
+    console.log('✅ JWT token generated for user:', {
+      userId: user.id,
+      email: user.email,
+      tokenLength: accessToken.length
+    })
+
+    return res.status(200).json({
+      success: true,
+      accessToken,
+      expiresIn: 86400,
+      user: {
+        id: user.id,
+        email: user.email,
+        plan: user.plan,
+        credits: user.credits,
+      },
     })
   } catch (error) {
     console.error('Google signin error:', error)

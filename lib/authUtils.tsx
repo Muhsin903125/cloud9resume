@@ -36,34 +36,95 @@ export async function signUp(
   lastName: string,
   acceptTerms: boolean
 ) {
-  return apiClient.post('/auth/signup', {
-    email,
-    password,
-    firstName,
-    lastName,
-    acceptTerms,
-  })
+  try {
+    const result = await apiClient.post('/auth/signup', {
+      email,
+      password,
+      firstName,
+      lastName,
+      acceptTerms,
+    })
+
+    // Handle new JWT format: {success, accessToken, expiresIn, user}
+    if (result.data && result.data.success && result.data.accessToken) {
+      const { accessToken, expiresIn, user } = result.data
+      
+      // Use new token storage system with x_ prefix
+      const tokenExpiry = Date.now() + (expiresIn * 1000) // Convert seconds to milliseconds
+      
+      localStorage.setItem('x_user_auth_token', accessToken)
+      localStorage.setItem('x_user_id', user.id)
+      localStorage.setItem('x_user_email', user.email)
+      localStorage.setItem('x_token_expiry', tokenExpiry.toString())
+
+      console.log('✅ Signup successful - tokens stored:', {
+        token: accessToken.substring(0, 20) + '...',
+        userId: user.id,
+        email: user.email,
+        expiresIn: `${expiresIn}s`,
+        expiryTime: new Date(tokenExpiry).toISOString()
+      })
+
+      return { data: result.data, error: null }
+    }
+
+    // Handle error response
+    return { 
+      data: null, 
+      error: result.data?.message || 'Signup failed' 
+    }
+  } catch (error: any) {
+    console.error('❌ Signup error:', error)
+    return { 
+      data: null, 
+      error: error.response?.data?.message || error.message || 'Signup failed' 
+    }
+  }
 }
 
 // Sign in function
 export async function signIn(email: string, password: string) {
-  const result = await apiClient.post('/auth/signin', {
-    email,
-    password,
-  })
+  try {
+    const result = await apiClient.post('/auth/signin', {
+      email,
+      password,
+    })
 
-  if (result.data && result.data.session?.access_token) {
-    // Store session data
-    localStorage.setItem('auth_token', result.data.session.access_token)
-    localStorage.setItem('user_id', result.data.user.id)
-    localStorage.setItem('user_email', result.data.user.email)
+    // Handle new JWT format: {success, accessToken, expiresIn, user}
+    if (result.data && result.data.success && result.data.accessToken) {
+      const { accessToken, expiresIn, user } = result.data
+      
+      // Use new token storage system with x_ prefix
+      const tokenExpiry = Date.now() + (expiresIn * 1000) // Convert seconds to milliseconds
+      
+      localStorage.setItem('x_user_auth_token', accessToken)
+      localStorage.setItem('x_user_id', user.id)
+      localStorage.setItem('x_user_email', user.email)
+      localStorage.setItem('x_token_expiry', tokenExpiry.toString())
 
-    if (result.data.user.profile) {
-      localStorage.setItem('user_profile', JSON.stringify(result.data.user.profile))
+      console.log('✅ Login successful - tokens stored:', {
+        token: accessToken.substring(0, 20) + '...',
+        userId: user.id,
+        email: user.email,
+        expiresIn: `${expiresIn}s`,
+        expiryTime: new Date(tokenExpiry).toISOString()
+      })
+
+      return { data: result.data, error: null }
+    }
+
+    // Handle error response
+    return { 
+      data: null, 
+      error: result.data?.message || 'Login failed' 
+    }
+  } catch (error: any) {
+    console.error('❌ Login error:', error)
+    return { 
+      data: null, 
+      error: error.response?.data?.message || error.message || 'Login failed' 
     }
   }
-
-  return result
 }
 
 // Forgot password function
@@ -217,10 +278,16 @@ export async function handleGoogleCallback(idToken: string, mode: 'signin' | 'si
       : await signUpWithGoogle(idToken)
 
     if (result.data && result.data.user?.id) {
-      // Store session data
-      localStorage.setItem('auth_token', result.data.session?.access_token || '')
-      localStorage.setItem('user_id', result.data.user.id)
-      localStorage.setItem('user_email', result.data.user.email)
+      // Store session data using new x_ prefix keys
+      localStorage.setItem('x_user_auth_token', result.data.session?.access_token || '')
+      localStorage.setItem('x_user_id', result.data.user.id)
+      localStorage.setItem('x_user_email', result.data.user.email)
+      
+      // If expiresIn is provided, store expiry time
+      if (result.data.session?.expires_in) {
+        const tokenExpiry = Date.now() + (result.data.session.expires_in * 1000)
+        localStorage.setItem('x_token_expiry', tokenExpiry.toString())
+      }
 
       // Clear nonce
       if (typeof window !== 'undefined') {
@@ -239,17 +306,35 @@ export async function handleGoogleCallback(idToken: string, mode: 'signin' | 'si
 
 // Sign out function
 export async function signOut() {
-  const result = await apiClient.post('/auth/signout', {})
+  try {
+    const result = await apiClient.post('/auth/signout', {})
 
-  // Clear session data
-  if (result.data) {
+    // Clear all authentication data using new x_ prefix keys
+    localStorage.removeItem('x_user_auth_token')
+    localStorage.removeItem('x_user_id')
+    localStorage.removeItem('x_user_email')
+    localStorage.removeItem('x_token_expiry')
+    
+    // Also clear old keys for backward compatibility
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_id')
     localStorage.removeItem('user_email')
     localStorage.removeItem('user_profile')
-  }
 
-  return result
+    return result
+  } catch (error) {
+    console.error('Signout error:', error)
+    // Clear tokens even if API call fails
+    localStorage.removeItem('x_user_auth_token')
+    localStorage.removeItem('x_user_id')
+    localStorage.removeItem('x_user_email')
+    localStorage.removeItem('x_token_expiry')
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_id')
+    localStorage.removeItem('user_email')
+    localStorage.removeItem('user_profile')
+    throw error
+  }
 }
 
 // Get current session
@@ -280,11 +365,30 @@ export function useAuth() {
   useEffect(() => {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
-      // Check for auth_token or user_id (OAuth users have user_id only)
-      const token = localStorage.getItem('auth_token')
-      const userId = localStorage.getItem('user_id')
+      console.log('🔐 useAuth: Checking authentication...')
+      
+      // Check for new x_ prefixed tokens first
+      const token = localStorage.getItem('x_user_auth_token')
+      const userId = localStorage.getItem('x_user_id')
+      const userEmail = localStorage.getItem('x_user_email')
+      const tokenExpiry = localStorage.getItem('x_token_expiry')
 
-      if (!token && !userId) {
+      console.log('🔐 useAuth: Found tokens:', {
+        hasToken: !!token,
+        hasUserId: !!userId,
+        hasEmail: !!userEmail,
+        hasExpiry: !!tokenExpiry
+      })
+
+      // Fallback to old token keys for backward compatibility
+      const oldToken = !token ? localStorage.getItem('auth_token') : null
+      const oldUserId = !userId ? localStorage.getItem('user_id') : null
+
+      const authToken = token || oldToken
+      const authUserId = userId || oldUserId
+
+      if (!authToken && !authUserId) {
+        console.log('❌ useAuth: No token found')
         setAuthState(prev => ({
           ...prev,
           isLoading: false,
@@ -293,12 +397,58 @@ export function useAuth() {
         return
       }
 
+      // Check token expiry
+      if (tokenExpiry) {
+        const expiryTime = parseInt(tokenExpiry, 10)
+        const currentTime = Date.now()
+        
+        // Check if token is expired
+        const isExpired = expiryTime > 32503680000000 
+          ? currentTime >= expiryTime  // milliseconds
+          : currentTime >= (expiryTime * 1000) // seconds
+        
+        if (isExpired) {
+          console.log('❌ useAuth: Token expired, clearing auth data')
+          localStorage.removeItem('x_user_auth_token')
+          localStorage.removeItem('x_user_id')
+          localStorage.removeItem('x_user_email')
+          localStorage.removeItem('x_token_expiry')
+          setAuthState(prev => ({
+            ...prev,
+            isLoading: false,
+            isAuthenticated: false,
+          }))
+          return
+        }
+      }
+
       try {
-        // If we have a token, validate the session
-        if (token) {
+        // For users with new JWT tokens (x_ prefix), trust the token without session validation
+        // The session endpoint expects Supabase tokens, not our custom JWT tokens
+        if (token && userId) {
+          console.log('✅ useAuth: Found new JWT token, trusting without session validation')
+          setAuthState({
+            user: {
+              id: userId,
+              email: userEmail || localStorage.getItem('user_email') || '',
+              name: localStorage.getItem('user_name') || undefined,
+              picture: localStorage.getItem('user_picture') || undefined,
+              profile: undefined,
+            },
+            session: null,
+            isLoading: false,
+            isAuthenticated: true,
+          })
+          return
+        }
+
+        // For old auth_token users, validate with session endpoint
+        if (authToken) {
+          console.log('🔍 useAuth: Validating old token with session endpoint')
           const result = await getSession()
 
           if (result.data) {
+            console.log('✅ useAuth: Session validation successful')
             setAuthState({
               user: result.data.user,
               session: result.data.session,
@@ -306,7 +456,9 @@ export function useAuth() {
               isAuthenticated: true,
             })
           } else {
+            console.log('❌ useAuth: Session validation failed, clearing token')
             // Token is invalid, clear it
+            localStorage.removeItem('x_user_auth_token')
             localStorage.removeItem('auth_token')
             setAuthState(prev => ({
               ...prev,
@@ -314,13 +466,14 @@ export function useAuth() {
               isAuthenticated: false,
             }))
           }
-        } else if (userId) {
+        } else if (authUserId) {
+          console.log('✅ useAuth: Found user ID only, trusting for OAuth')
           // OAuth user (only has user_id, not a full session)
           // Trust the user_id for now and assume user is authenticated
           setAuthState({
             user: {
-              id: userId,
-              email: localStorage.getItem('user_email') || '',
+              id: authUserId,
+              email: localStorage.getItem('x_user_email') || localStorage.getItem('user_email') || '',
               name: localStorage.getItem('user_name') || undefined,
               picture: localStorage.getItem('user_picture') || undefined,
               profile: undefined,

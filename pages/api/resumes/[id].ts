@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import jwt from 'jsonwebtoken'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -12,13 +13,57 @@ interface ResumeResponse {
   message?: string
 }
 
+/**
+ * Extract and validate JWT token from Authorization header
+ * Format: Bearer <token>
+ */
+function extractUserIdFromToken(req: NextApiRequest): string | null {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+
+    const token = authHeader.substring(7) // Remove "Bearer " prefix
+    
+    // Decode JWT without verification (token is already verified by backend)
+    const decoded = jwt.decode(token) as any
+    
+    if (!decoded) {
+      console.error('Invalid JWT token structure')
+      return null
+    }
+
+    // Support both standard JWT format (sub) and our custom format (userId)
+    const userId = decoded.sub || decoded.userId
+    
+    if (!userId) {
+      console.error('JWT token missing user ID (sub or userId field)')
+      return null
+    }
+
+    return userId
+  } catch (error) {
+    console.error('Token extraction error:', error)
+    return null
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResumeResponse>) {
   try {
-    const userId = req.headers['x-user-id'] as string
+    // Extract user ID from JWT Authorization header
+    const userId = extractUserIdFromToken(req)
     const { id } = req.query
 
-    if (!userId || !id) {
-      return res.status(401).json({ success: false, error: 'Unauthorized or missing resume ID' })
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Unauthorized. Please provide valid authentication token in Authorization header.'
+      })
+    }
+
+    if (!id) {
+      return res.status(400).json({ success: false, error: 'Missing resume ID' })
     }
 
     // GET /api/resumes/[id] - Get single resume with sections

@@ -152,12 +152,12 @@ const ResumeEditor = () => {
       case 'personal_info':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <FormField label="Full Name" value={currentData.name} onChange={(v) => handleInputChange('name', v)} />
-            <FormField label="Email" type="email" value={currentData.email} onChange={(v) => handleInputChange('email', v)} />
-            <FormField label="Phone" value={currentData.phone} onChange={(v) => handleInputChange('phone', v)} />
-            <FormField label="Location" value={currentData.location} onChange={(v) => handleInputChange('location', v)} />
-            <FormField label="Portfolio URL" value={currentData.portfolio} onChange={(v) => handleInputChange('portfolio', v)} />
-            <FormField label="LinkedIn" value={currentData.linkedin} onChange={(v) => handleInputChange('linkedin', v)} />
+            <FormField label="Full Name" value={currentData.name} onChange={(v: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleInputChange('name', v)} />
+            <FormField label="Email" type="email" value={currentData.email} onChange={(v: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleInputChange('email', v)} />
+            <FormField label="Phone" value={currentData.phone} onChange={(v: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleInputChange('phone', v)} />
+            <FormField label="Location" value={currentData.location} onChange={(v: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleInputChange('location', v)} />
+            <FormField label="Portfolio URL" value={currentData.portfolio} onChange={(v: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleInputChange('portfolio', v)} />
+            <FormField label="LinkedIn" value={currentData.linkedin} onChange={(v: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleInputChange('linkedin', v)} />
           </div>
         )
 
@@ -168,7 +168,7 @@ const ResumeEditor = () => {
               label="Professional Summary"
               textarea
               value={currentData.text}
-              onChange={(v) => handleInputChange('text', v)}
+              onChange={(v: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleInputChange('text', v)}
               placeholder="Write a brief professional summary..."
             />
           </div>
@@ -187,14 +187,14 @@ const ResumeEditor = () => {
                 { name: 'endDate', label: 'End Date', type: 'text', placeholder: 'e.g., Present' },
                 { name: 'description', label: 'Description', type: 'textarea' }
               ]}
-              onItemChange={(idx, field, val) => {
+              onItemChange={(idx: number, field: string, val: any) => {
                 const items = currentData.items || []
                 const updated = [...items]
                 updated[idx] = { ...updated[idx], [field]: val }
                 handleInputChange('items', updated)
               }}
               onAddItem={() => handleAddArrayItem('items')}
-              onRemoveItem={(idx) => {
+              onRemoveItem={(idx: number) => {
                 const items = currentData.items || []
                 handleInputChange('items', items.filter((_: any, i: number) => i !== idx))
               }}
@@ -214,14 +214,14 @@ const ResumeEditor = () => {
                 { name: 'field', label: 'Field of Study', type: 'text' },
                 { name: 'graduationDate', label: 'Graduation Date', type: 'text', placeholder: 'e.g., May 2020' }
               ]}
-              onItemChange={(idx, field, val) => {
+              onItemChange={(idx: number, field: string, val: any) => {
                 const items = currentData.items || []
                 const updated = [...items]
                 updated[idx] = { ...updated[idx], [field]: val }
                 handleInputChange('items', updated)
               }}
               onAddItem={() => handleAddArrayItem('items')}
-              onRemoveItem={(idx) => {
+              onRemoveItem={(idx: number) => {
                 const items = currentData.items || []
                 handleInputChange('items', items.filter((_: any, i: number) => i !== idx))
               }}
@@ -235,9 +235,9 @@ const ResumeEditor = () => {
             <ListFieldEditor
               label="Skills (one per line)"
               items={currentData.items || []}
-              onItemChange={(idx, val) => handleArrayFieldChange(idx, 'items', val)}
+              onItemChange={(idx: number, val: any) => handleArrayFieldChange(idx, 'items', val)}
               onAddItem={() => handleAddArrayItem('items')}
-              onRemoveItem={(idx) => handleRemoveArrayItem('items', idx)}
+              onRemoveItem={(idx: number) => handleRemoveArrayItem('items', idx)}
             />
           </div>
         )
@@ -252,14 +252,14 @@ const ResumeEditor = () => {
                 { name: 'language', label: 'Language', type: 'text' },
                 { name: 'proficiency', label: 'Proficiency', type: 'select', options: ['Native', 'Fluent', 'Intermediate', 'Basic'] }
               ]}
-              onItemChange={(idx, field, val) => {
+              onItemChange={(idx: number, field: string, val: any) => {
                 const items = currentData.items || []
                 const updated = [...items]
                 updated[idx] = { ...updated[idx], [field]: val }
                 handleInputChange('items', updated)
               }}
               onAddItem={() => handleAddArrayItem('items')}
-              onRemoveItem={(idx) => {
+              onRemoveItem={(idx: number) => {
                 const items = currentData.items || []
                 handleInputChange('items', items.filter((_: any, i: number) => i !== idx))
               }}
@@ -275,9 +275,9 @@ const ResumeEditor = () => {
             <ListFieldEditor
               label={`${sectionTypes.find(s => s.id === activeTab)?.label} (one per line)`}
               items={currentData.items || []}
-              onItemChange={(idx, val) => handleArrayFieldChange(idx, 'items', val)}
+              onItemChange={(idx: number, val: any) => handleArrayFieldChange(idx, 'items', val)}
               onAddItem={() => handleAddArrayItem('items')}
-              onRemoveItem={(idx) => handleRemoveArrayItem('items', idx)}
+              onRemoveItem={(idx: number) => handleRemoveArrayItem('items', idx)}
             />
           </div>
         )

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { generateToken } from '../../../lib/backend/utils/tokenService'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -26,13 +27,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Exchange code for access token
     const redirectUri = `${appUrl}/api/auth/callback/linkedin`
-    
-    console.log('LinkedIn token exchange attempt:', {
-      appUrl,
-      redirectUri,
-      clientId: linkedinClientId ? '***' : 'MISSING',
-      clientSecret: linkedinClientSecret ? '***' : 'MISSING',
-    })
 
     const tokenResponse = await fetch(
       'https://www.linkedin.com/oauth/v2/accessToken',
@@ -54,11 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json()
       console.error('LinkedIn token exchange error:', errorData)
-      console.error('Request parameters used:', { redirectUri, clientId: linkedinClientId })
       return res.status(400).json({
         error: 'Token exchange failed',
         message: 'Failed to exchange authorization code for access token',
-        debug: process.env.NODE_ENV === 'development' ? { redirectUri, hasClientId: !!linkedinClientId, hasSecret: !!linkedinClientSecret } : undefined
       })
     }
 
@@ -73,7 +65,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Get user profile using OpenID Connect /v2/userinfo endpoint
-    // This endpoint returns standard OpenID Connect claims
     const userInfoResponse = await fetch(
       'https://api.linkedin.com/v2/userinfo',
       {
@@ -94,13 +85,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const userInfo = await userInfoResponse.json()
-    
+
     // Extract user data from OpenID Connect response
-    // Standard OpenID Connect claims from LinkedIn
     const email = userInfo.email
-    const linkedinId = userInfo.sub // subject claim contains user ID (urn:li:person:xxxxxxxx)
     const name = userInfo.name || `${userInfo.given_name || ''} ${userInfo.family_name || ''}`.trim()
-    const picture = userInfo.picture || ''
 
     if (!email) {
       return res.status(400).json({
@@ -109,55 +97,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Check if user already exists
-    const { data: existingUser, error: searchError } = await supabaseAdmin
-      .from('profiles')
-      .select('id, email, auth_method')
+    // Check if user exists
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id, email, plan, credits')
       .eq('email', email)
       .single()
 
-    if (searchError && searchError.code !== 'PGRST116') {
-      console.error('Profile search error:', searchError)
-    }
+    let user = existingUser
 
-    // If user exists, update auth method if needed
-    if (existingUser) {
-      if (existingUser.auth_method !== 'linkedin') {
-        const { error: updateError } = await supabaseAdmin
-          .from('profiles')
-          .update({
-            auth_method: 'linkedin',
-            provider: 'linkedin',
-            provider_id: linkedinId,
-            oauth_data: {
-              name,
-              picture,
-              email,
-            },
-            last_login_at: new Date().toISOString(),
-            login_count: (existingUser as any).login_count ? (existingUser as any).login_count + 1 : 1,
-          })
-          .eq('id', existingUser.id)
+    // Create user if doesn't exist
+    if (!user) {
+      const { data: newUser, error: createError } = await supabaseAdmin
+        .from('users')
+        .insert([{
+          email,
+          name,
+          login_provider: 'linkedin',
+          plan: 'free',
+          credits: 0,
+        }])
+        .select('id, email, plan, credits')
+        .single()
 
-        if (updateError) {
-          console.error('Profile update error:', updateError)
-        }
+      if (createError || !newUser) {
+        console.error('User creation error:', createError)
+        return res.status(500).json({
+          error: 'Failed to create user',
+          message: 'Could not create account'
+        })
       }
 
-      return res.status(200).json({
-        id: existingUser.id,
-        email: existingUser.email,
-        name: name || email,
-        picture: picture || null,
-        provider: 'linkedin',
-        message: 'Login successful',
-      })
+      user = newUser
     }
 
-    // User doesn't exist
-    return res.status(404).json({
-      error: 'User not found',
-      message: 'No account found with this email. Please sign up first.',
+    // Generate JWT token
+    const accessTokenJwt = await generateToken(user.id, user.email, user.plan)
+
+    return res.status(200).json({
+      success: true,
+      accessToken: accessTokenJwt,
+      expiresIn: 86400,
+      user: {
+        id: user.id,
+        email: user.email,
+        plan: user.plan,
+        credits: user.credits,
+      },
     })
   } catch (error) {
     console.error('LinkedIn signin error:', error)

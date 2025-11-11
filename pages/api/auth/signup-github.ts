@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { generateToken } from '../../../lib/backend/utils/tokenService'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -96,15 +97,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Check if user already exists
-    const { data: existingUser, error: searchError } = await supabaseAdmin
-      .from('profiles')
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
       .select('id, email')
       .eq('email', primaryEmail)
       .single()
-
-    if (searchError && searchError.code !== 'PGRST116') {
-      console.error('Profile search error:', searchError)
-    }
 
     if (existingUser) {
       return res.status(409).json({
@@ -113,66 +110,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    const githubId = profileData.id.toString()
-    const nameArray = (profileData.name || profileData.login).split(' ')
-    const firstName = nameArray[0]
-    const lastName = nameArray.slice(1).join(' ') || ''
-    const picture = profileData.avatar_url || ''
+    const name = profileData.name || profileData.login
 
-    // Create Supabase Auth user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: primaryEmail,
-      email_confirm: true,
-      user_metadata: {
-        provider: 'github',
-        provider_id: githubId,
-        full_name: profileData.name || profileData.login,
-        avatar_url: picture,
-      }
-    })
-
-    if (authError || !authData.user) {
-      console.error('Auth user creation error:', authError)
-      throw new Error('Failed to create user account')
-    }
-
-    // Create profile
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
+    // Create user
+    const { data: newUser, error: createError } = await supabaseAdmin
+      .from('users')
+      .insert([{
         email: primaryEmail,
-        first_name: firstName,
-        last_name: lastName,
-        provider: 'github',
-        provider_id: githubId,
-        auth_method: 'github',
-        oauth_data: {
-          name: profileData.name || profileData.login,
-          picture: picture,
-          email: primaryEmail,
-        },
-        credits: 5, // Free credits for new users
-        last_login_at: new Date().toISOString(),
-        login_count: 1,
-        created_at: new Date().toISOString(),
-      })
+        name,
+        login_provider: 'github',
+        plan: 'free',
+        credits: 0,
+      }])
+      .select('id, email, plan, credits')
+      .single()
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError)
-      
-      // Clean up the auth user if profile creation fails
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-      throw new Error('Failed to create user profile')
+    if (createError || !newUser) {
+      console.error('User creation error:', createError)
+      return res.status(500).json({
+        error: 'Failed to create user',
+        message: 'Could not create account'
+      })
     }
+
+    // Generate JWT token
+    const accessTokenJwt = await generateToken(newUser.id, newUser.email, newUser.plan)
 
     return res.status(201).json({
-      id: authData.user.id,
-      email: primaryEmail,
-      name: profileData.name || profileData.login,
-      picture: picture || null,
-      provider: 'github',
-      message: 'Account created successfully',
+      success: true,
+      accessToken: accessTokenJwt,
+      expiresIn: 86400,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        plan: newUser.plan,
+        credits: newUser.credits,
+      },
     })
   } catch (error) {
     console.error('GitHub signup error:', error)

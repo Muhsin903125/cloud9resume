@@ -7,13 +7,12 @@ import Button from '../../components/Button'
 import { useAuth } from '../../lib/authUtils'
 import {
   DocumentIcon,
-  PaletteIcon,
-  CheckCircleIcon,
-  BoltIcon,
   SaveIcon,
   ActivityIcon,
-  DashboardIcon,
-  CreditCardIcon,
+  TemplateIcon,
+  PortfolioIcon,
+  AIIcon,
+  AnalyticsIcon,
   ArrowRightIcon
 } from '../../components/Icons'
 
@@ -102,28 +101,28 @@ const DashboardPage: NextPage = () => {
       title: 'Build Portfolio',
       description: 'Showcase your projects',
       href: '/dashboard/portfolio',
-      icon: PaletteIcon
+      icon: PortfolioIcon
     },
     {
       title: 'ATS Check',
       description: 'Optimize for tracking systems',
       href: '/dashboard/ats',
-      icon: CheckCircleIcon
+      icon: AnalyticsIcon
     },
     {
       title: 'Manage Credits',
       description: 'View and refill credits',
       href: '/plans',
-      icon: CreditCardIcon
+      icon: DocumentIcon
     }
   ]
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'resume': return <DocumentIcon className="w-5 h-5" />
-      case 'portfolio': return <PaletteIcon className="w-5 h-5" />
-      case 'ats': return <CheckCircleIcon className="w-5 h-5" />
-      default: return <ActivityIcon className="w-5 h-5" />
+      case 'resume': return <DocumentIcon size={20} />
+      case 'portfolio': return <PortfolioIcon size={20} />
+      case 'ats': return <AnalyticsIcon size={20} />
+      default: return <ActivityIcon size={20} />
     }
   }
 
@@ -182,7 +181,7 @@ const DashboardPage: NextPage = () => {
                     <p className="text-gray-600 text-sm font-medium">Resumes Created</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">{stats.resumesCreated}</p>
                   </div>
-                  <DocumentIcon className="w-8 h-8 text-gray-300" />
+                  <DocumentIcon size={32} color="#d1d5db" />
                 </div>
               </div>
 
@@ -192,7 +191,7 @@ const DashboardPage: NextPage = () => {
                     <p className="text-gray-600 text-sm font-medium">Portfolios</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">{stats.portfoliosCreated}</p>
                   </div>
-                  <PaletteIcon className="w-8 h-8 text-gray-300" />
+                  <PortfolioIcon size={32} color="#d1d5db" />
                 </div>
               </div>
 
@@ -202,7 +201,7 @@ const DashboardPage: NextPage = () => {
                     <p className="text-gray-600 text-sm font-medium">ATS Checks</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">{stats.atsScores}</p>
                   </div>
-                  <CheckCircleIcon className="w-8 h-8 text-gray-300" />
+                  <AnalyticsIcon size={32} color="#d1d5db" />
                 </div>
               </div>
 
@@ -212,7 +211,7 @@ const DashboardPage: NextPage = () => {
                     <p className="text-gray-600 text-sm font-medium">Saved Templates</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">8</p>
                   </div>
-                  <SaveIcon className="w-8 h-8 text-gray-300" />
+                  <TemplateIcon size={32} color="#d1d5db" />
                 </div>
               </div>
             </div>
@@ -227,7 +226,7 @@ const DashboardPage: NextPage = () => {
                     <Link key={index} href={action.href}>
                       <div className="group bg-white border border-gray-200 rounded-xl p-6 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer">
                         <div className="mb-4 inline-block group-hover:scale-110 transition-transform text-gray-900">
-                          <action.icon className="w-8 h-8" />
+                          <action.icon size={32} />
                         </div>
                         <h3 className="font-semibold text-gray-900 text-lg mb-1">
                           {action.title}
@@ -236,7 +235,7 @@ const DashboardPage: NextPage = () => {
                           {action.description}
                         </p>
                         <div className="flex items-center text-sm font-medium text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                          Get Started <ArrowRightIcon className="ml-2 w-4 h-4" />
+                          Get Started <ArrowRightIcon size={16} />
                         </div>
                       </div>
                     </Link>

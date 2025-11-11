@@ -1,0 +1,313 @@
+{
+  "projectName": "Cloud9 Resume",
+  "version": "1.0.0",
+  "devGuidelines": {
+    "codeStyle": {
+      "description": "Code quality and organization standards",
+      "rules": [
+        "Remove all emoji icons - use SVG icons only",
+        "Remove all markdown documentation files on routine updates",
+        "Only generate .md files if explicitly requested by user",
+        "Use professional typography and spacing",
+        "Implement minimal, user-friendly designs with smooth effects",
+        "All UI components must be mobile-responsive",
+        "Use inline CSS for consistency - maintain monochromatic palette (black/gray/blue)",
+        "Remove all unused imports and dead code",
+        "Consolidate duplicate functionality into reusable components"
+      ]
+    },
+    "routing": {
+      "description": "Next.js routing standards",
+      "rules": [
+        "Use consistent dynamic route parameters (prefer [id] over [itemId], [slug], etc.)",
+        "Map all routes clearly in a centralized routes config",
+        "Avoid conflicting slug names in same directory",
+        "Remove duplicate route handlers",
+        "Document all routes with purpose"
+      ]
+    },
+    "testing": {
+      "description": "Testing strategy",
+      "rules": [
+        "Create comprehensive test cases but DO NOT run them automatically",
+        "Tests run only on user request (e.g., before deployment)",
+        "Common test suite: __tests__/api.integration.test.ts (manual run only)",
+        "Unit tests: Create alongside features but don't execute by default",
+        "User will explicitly request test runs at specific periods (pre-deployment, production)"
+      ]
+    },
+    "ui": {
+      "description": "User interface standards",
+      "rules": [
+        "No emoji icons anywhere",
+        "Use SVG icons for all interactive elements",
+        "Professional color palette: black (#000), gray (#666), blue (#3b82f6)",
+        "Minimal aesthetic: clean spacing, simple typography",
+        "Mobile-responsive: test all breakpoints (320px, 768px, 1024px, 1440px)",
+        "Smooth transitions and hover effects",
+        "Consistent form styling across all screens",
+        "Accessible color contrasts (WCAG AA minimum)"
+      ]
+    },
+    "documentation": {
+      "description": "Documentation rules",
+      "rules": [
+        "No automatic .md file generation",
+        "Only create documentation when user explicitly requests",
+        "If uncertainty exists, ask user for clarification before implementing",
+        "Offer multiple options/suggestions when architectural decisions needed",
+        "Document implementation decisions in code comments instead"
+      ]
+    },
+    "projectCleaning": {
+      "description": "Code cleanup requirements",
+      "rules": [
+        "Remove unused components and files",
+        "Consolidate duplicate API logic",
+        "Merge similar UI patterns into shared components",
+        "Clean up unused dependencies",
+        "Remove test mock data from production code",
+        "Delete orphaned files and directories"
+      ]
+    },
+    "userInteraction": {
+      "description": "How to interact with user",
+      "rules": [
+        "Always ask for clarification on ambiguous requests",
+        "Present multiple design/architecture options before implementing",
+        "Confirm major changes before proceeding",
+        "Provide rationale for suggestions",
+        "Brief confirmation messages - no long explanations unless asked"
+      ]
+    }
+  },
+  "routes": {
+    "public": [
+      {
+        "path": "/",
+        "file": "pages/index.tsx",
+        "purpose": "Home/landing page",
+        "auth": false
+      },
+      {
+        "path": "/login",
+        "file": "pages/login.tsx",
+        "purpose": "User login",
+        "auth": false
+      },
+      {
+        "path": "/signup",
+        "file": "pages/signup.tsx",
+        "purpose": "User registration",
+        "auth": false
+      },
+      {
+        "path": "/portfolio/[slug]",
+        "file": "pages/portfolio/[slug].tsx",
+        "purpose": "Public portfolio view (password optional)",
+        "auth": false
+      }
+    ],
+    "authenticated": [
+      {
+        "path": "/dashboard/resumes",
+        "file": "pages/dashboard/resumes.tsx",
+        "purpose": "Resume list, search, create, delete",
+        "auth": true
+      },
+      {
+        "path": "/dashboard/resume/[id]",
+        "file": "pages/dashboard/resume/[id]/index.tsx",
+        "purpose": "Resume editor hub with navigation tabs",
+        "auth": true
+      },
+      {
+        "path": "/dashboard/resume/[id]/edit",
+        "file": "pages/dashboard/resume/[id]/edit.tsx",
+        "purpose": "Multi-section form editor (9 sections)",
+        "auth": true
+      },
+      {
+        "path": "/dashboard/resume/[id]/templates",
+        "file": "pages/dashboard/resume/[id]/templates.tsx",
+        "purpose": "Template selector with filtering",
+        "auth": true
+      },
+      {
+        "path": "/dashboard/resume/[id]/export",
+        "file": "pages/dashboard/resume/[id]/export.tsx",
+        "purpose": "Export manager (PDF, DOCX, JSON)",
+        "auth": true
+      },
+      {
+        "path": "/dashboard/resume/[id]/portfolio",
+        "file": "pages/dashboard/resume/[id]/portfolio.tsx",
+        "purpose": "Portfolio link management",
+        "auth": true
+      },
+      {
+        "path": "/dashboard/resume/[id]/analytics",
+        "file": "pages/dashboard/resume/[id]/analytics.tsx",
+        "purpose": "Portfolio and ATS analytics",
+        "auth": true
+      },
+      {
+        "path": "/dashboard/resume/[id]/ai-tools",
+        "file": "pages/dashboard/resume/[id]/ai-tools.tsx",
+        "purpose": "AI enhancement features",
+        "auth": true
+      }
+    ],
+    "api": [
+      {
+        "path": "/api/resumes",
+        "methods": ["GET", "POST"],
+        "file": "pages/api/resumes/index.ts",
+        "purpose": "Resume CRUD - list all, create new"
+      },
+      {
+        "path": "/api/resumes/[id]",
+        "methods": ["GET", "PATCH", "DELETE"],
+        "file": "pages/api/resumes/[id].ts",
+        "purpose": "Individual resume operations"
+      },
+      {
+        "path": "/api/resumes/[id]/sections",
+        "methods": ["POST", "GET", "DELETE"],
+        "file": "pages/api/resumes/[id]/sections.ts",
+        "purpose": "Resume section management"
+      },
+      {
+        "path": "/api/resumes/[id]/duplicate",
+        "methods": ["POST"],
+        "file": "pages/api/resumes/[id]/duplicate.ts",
+        "purpose": "Clone resume with all sections"
+      },
+      {
+        "path": "/api/resumes/[id]/versions",
+        "methods": ["GET", "POST"],
+        "file": "pages/api/resumes/[id]/versions.ts",
+        "purpose": "Version history and restore"
+      },
+      {
+        "path": "/api/resumes/[id]/share",
+        "methods": ["POST", "GET", "DELETE"],
+        "file": "pages/api/resumes/[id]/share.ts",
+        "purpose": "Resume sharing with tokens"
+      },
+      {
+        "path": "/api/resumes/[id]/ai",
+        "methods": ["POST"],
+        "file": "pages/api/resumes/[id]/ai.ts",
+        "purpose": "AI enhancement features (6 types)"
+      },
+      {
+        "path": "/api/resumes/templates",
+        "methods": ["GET"],
+        "file": "pages/api/resumes/templates.ts",
+        "purpose": "Template list with filtering"
+      },
+      {
+        "path": "/api/resumes/export",
+        "methods": ["POST", "GET"],
+        "file": "pages/api/resumes/export.ts",
+        "purpose": "Queue export job"
+      },
+      {
+        "path": "/api/resumes/export/status",
+        "methods": ["GET", "DELETE"],
+        "file": "pages/api/resumes/export/status.ts",
+        "purpose": "Check export status, cancel job"
+      },
+      {
+        "path": "/api/resumes/portfolio",
+        "methods": ["POST", "GET", "PATCH"],
+        "file": "pages/api/resumes/portfolio.ts",
+        "purpose": "Portfolio link management"
+      },
+      {
+        "path": "/api/portfolio/[slug]",
+        "methods": ["GET", "POST"],
+        "file": "pages/api/portfolio/[slug].ts",
+        "purpose": "Public portfolio access and analytics"
+      }
+    ]
+  },
+  "components": {
+    "shared": [
+      {
+        "name": "FormField",
+        "location": "components/FormField.tsx",
+        "purpose": "Reusable form input component",
+        "props": ["label", "value", "onChange", "type", "placeholder", "error"]
+      },
+      {
+        "name": "Button",
+        "location": "components/Button.tsx",
+        "purpose": "Reusable button with variants",
+        "props": ["children", "onClick", "variant", "size", "disabled", "icon"]
+      },
+      {
+        "name": "Card",
+        "location": "components/Card.tsx",
+        "purpose": "Container component for content sections",
+        "props": ["children", "title", "padding", "border"]
+      },
+      {
+        "name": "Modal",
+        "location": "components/Modal.tsx",
+        "purpose": "Dialog/modal component",
+        "props": ["isOpen", "onClose", "title", "children", "actions"]
+      },
+      {
+        "name": "Navbar",
+        "location": "components/Navbar.tsx",
+        "purpose": "Navigation header",
+        "props": ["user", "onLogout"]
+      },
+      {
+        "name": "Footer",
+        "location": "components/Footer.tsx",
+        "purpose": "App footer",
+        "props": ["links", "socialLinks"]
+      }
+    ]
+  },
+  "svgIcons": {
+    "usage": "Replace all emoji and text icons with SVG components",
+    "location": "components/Icons.tsx",
+    "required": [
+      "Edit (pencil)",
+      "Download (arrow down)",
+      "Upload (arrow up)",
+      "Delete (trash)",
+      "Share (share)",
+      "Analytics (chart)",
+      "Settings (gear)",
+      "Menu (hamburger)",
+      "Close (X)",
+      "Chevron (left/right/down)",
+      "Search (magnifying glass)",
+      "Plus (add)",
+      "Check (checkmark)",
+      "Alert (warning)",
+      "Copy (document)"
+    ]
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#3b82f6",
+    "border": "#e5e7eb",
+    "background": "#f9fafb",
+    "success": "#10b981",
+    "error": "#ef4444",
+    "warning": "#f59e0b"
+  },
+  "breakpoints": {
+    "mobile": "320px",
+    "tablet": "768px",
+    "desktop": "1024px",
+    "wide": "1440px"
+  }
+}

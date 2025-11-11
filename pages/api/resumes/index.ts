@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import jwt from 'jsonwebtoken'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -12,13 +13,85 @@ interface ResumeResponse {
   message?: string
 }
 
+/**
+ * Extract and validate JWT token from Authorization header
+ * Format: Bearer <token>
+ */
+function extractUserIdFromToken(req: NextApiRequest): string | null {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+
+    const token = authHeader.substring(7) // Remove "Bearer " prefix
+    
+    // Decode JWT without verification (token is already verified by backend)
+    const decoded = jwt.decode(token) as any
+    
+    if (!decoded) {
+      console.error('Invalid JWT token structure')
+      return null
+    }
+
+    // Support both standard JWT format (sub) and our custom format (userId)
+    const userId = decoded.sub || decoded.userId
+    
+    if (!userId) {
+      console.error('JWT token missing user ID (sub or userId field)')
+      return null
+    }
+
+    return userId
+  } catch (error) {
+    console.error('Token extraction error:', error)
+    return null
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResumeResponse>) {
   try {
-    const userId = req.headers['x-user-id'] as string
-
+    // Extract user ID from JWT Authorization header
+    const userId = extractUserIdFromToken(req)
+    
+    console.log('🔍 Resume API - Extracted userId from token:', userId)
+    
     if (!userId) {
-      return res.status(401).json({ success: false, error: 'Unauthorized' })
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Unauthorized. Please provide valid authentication token in Authorization header.'
+      })
     }
+
+    // Verify user exists in database
+    const { data: userCheck, error: userCheckError } = await supabase
+      .from('users')
+      .select('id, email, plan')
+      .eq('id', userId)
+      .single()
+
+    if (userCheckError || !userCheck) {
+      console.error('❌ User not found in database:', {
+        userId,
+        error: userCheckError,
+        errorCode: userCheckError?.code,
+        errorMessage: userCheckError?.message
+      })
+      
+      // User doesn't exist - token is invalid or stale
+      // Client should clear tokens and redirect to login
+      return res.status(401).json({
+        success: false,
+        error: 'User not found. Your session has expired. Please log in again.',
+        code: 'USER_NOT_FOUND'
+      })
+    }
+
+    console.log('✅ User verified in database:', {
+      userId: userCheck.id,
+      email: userCheck.email,
+      plan: userCheck.plan
+    })
 
     if (req.method === 'GET') {
       // GET /api/resumes - List all resumes
@@ -42,13 +115,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
 
       // Check resume limit based on plan
-      const { data: userPlan, error: planError } = await supabase
+      // Try user_profiles table first, then fallback to users table
+      let userPlan = null
+      
+      const { data: profileData, error: planError } = await supabase
         .from('user_profiles')
         .select('plan')
         .eq('id', userId)
         .single()
 
-      if (planError) throw planError
+      if (planError) {
+        console.log('ℹ️ user_profiles not found, checking users table...')
+        
+        // Fallback: Check users table instead
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('plan')
+          .eq('id', userId)
+          .single()
+        
+        if (userError) {
+          console.error('❌ Failed to fetch user plan:', userError)
+          throw new Error('Failed to fetch user plan')
+        }
+        
+        userPlan = userData
+        console.log('✅ Found user plan from users table:', userData?.plan)
+      } else {
+        userPlan = profileData
+        console.log('✅ Found user plan from user_profiles table:', profileData?.plan)
+      }
 
       const limits: Record<string, number> = { free: 1, starter: 3, pro: 10, pro_plus: 100 }
       const limit = limits[userPlan?.plan || 'free'] || 1
@@ -80,8 +176,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Failed to create resume:', error)
+        throw error
+      }
 
+      console.log('✅ Resume created successfully:', data)
       return res.status(201).json({ success: true, data, message: 'Resume created successfully' })
     }
 

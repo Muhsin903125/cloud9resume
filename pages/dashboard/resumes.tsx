@@ -1,25 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { Resume } from '../../lib/types'
+import { EditIcon, DeleteIcon, EyeIcon, PlusIcon, SearchIcon } from '../../components/Icons'
+import SharedButton from '../../components/SharedButton'
+import SharedCard from '../../components/SharedCard'
+import SharedModal from '../../components/SharedModal'
+import FormField from '../../components/FormField'
+import { colors } from '../../lib/constants'
 
 const ResumeDashboard = () => {
   const router = useRouter()
-  const [resumes, setResumes] = useState([])
+  const [resumes, setResumes] = useState<Resume[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [showNewModal, setShowNewModal] = useState(false)
   const [newResumeTitle, setNewResumeTitle] = useState('')
-
-  const colors = {
-    primary: '#000000',
-    secondary: '#666666',
-    accent: '#3b82f6',
-    success: '#10b981',
-    error: '#ef4444',
-    border: '#e5e7eb',
-    light: '#f9fafb'
-  }
 
   useEffect(() => {
     fetchResumes()
@@ -94,19 +91,19 @@ const ResumeDashboard = () => {
         <title>Resume Dashboard - Cloud9 Resume</title>
       </Head>
 
-      <div style={{ background: colors.light, minHeight: '100vh' }}>
+      <div style={{ background: colors.background.light, minHeight: '100vh' }}>
         {/* Header */}
         <div style={{ borderBottom: `1px solid ${colors.border}`, background: 'white', padding: '24px 16px' }}>
           <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h1 style={{ fontSize: '28px', fontWeight: '700', color: colors.primary, margin: 0 }}>
+              <h1 style={{ fontSize: '28px', fontWeight: '700', color: colors.primary.black, margin: 0 }}>
                 My Resumes
               </h1>
               <button
                 onClick={() => setShowNewModal(true)}
                 style={{
                   padding: '10px 20px',
-                  background: colors.accent,
+                  background: colors.primary.blue,
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
@@ -118,7 +115,7 @@ const ResumeDashboard = () => {
                 + New Resume
               </button>
             </div>
-            <p style={{ fontSize: '14px', color: colors.secondary, margin: 0 }}>
+            <p style={{ fontSize: '14px', color: colors.secondary.mediumGray, margin: 0 }}>
               {resumes.length} resume{resumes.length !== 1 ? 's' : ''} created
             </p>
           </div>
@@ -146,7 +143,7 @@ const ResumeDashboard = () => {
 
           {/* Error Message */}
           {error && (
-            <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: colors.error, borderRadius: '6px', marginBottom: '16px' }}>
+            <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: colors.accent.red, borderRadius: '6px', marginBottom: '16px' }}>
               {error}
             </div>
           )}
@@ -158,15 +155,15 @@ const ResumeDashboard = () => {
             </div>
           ) : filteredResumes.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '8px', border: `1px solid ${colors.border}` }}>
-              <p style={{ fontSize: '16px', fontWeight: '600', color: colors.primary, marginBottom: '8px' }}>No resumes yet</p>
-              <p style={{ fontSize: '14px', color: colors.secondary, marginBottom: '20px' }}>
+              <p style={{ fontSize: '16px', fontWeight: '600', color: colors.primary.black, marginBottom: '8px' }}>No resumes yet</p>
+              <p style={{ fontSize: '14px', color: colors.secondary.mediumGray, marginBottom: '20px' }}>
                 Create your first resume to get started
               </p>
               <button
                 onClick={() => setShowNewModal(true)}
                 style={{
                   padding: '10px 20px',
-                  background: colors.accent,
+                  background: colors.primary.blue,
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
@@ -195,23 +192,23 @@ const ResumeDashboard = () => {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '16px', fontWeight: '600', color: colors.primary, margin: '0 0 4px 0' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '600', color: colors.primary.black, margin: '0 0 4px 0' }}>
                         {resume.title}
                       </h3>
                       {resume.job_title && (
-                        <p style={{ fontSize: '12px', color: colors.secondary, margin: 0 }}>
+                        <p style={{ fontSize: '12px', color: colors.secondary.mediumGray, margin: 0 }}>
                           {resume.job_title}
                         </p>
                       )}
                     </div>
                     {resume.is_primary && (
-                      <span style={{ fontSize: '12px', background: colors.accent, color: 'white', padding: '2px 8px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '12px', background: colors.primary.blue, color: 'white', padding: '2px 8px', borderRadius: '4px' }}>
                         Primary
                       </span>
                     )}
                   </div>
 
-                  <p style={{ fontSize: '12px', color: colors.secondary, margin: 0 }}>
+                  <p style={{ fontSize: '12px', color: colors.secondary.mediumGray, margin: 0 }}>
                     Updated {new Date(resume.updated_at).toLocaleDateString()}
                   </p>
 
@@ -221,7 +218,7 @@ const ResumeDashboard = () => {
                       style={{
                         flex: 1,
                         padding: '8px 12px',
-                        background: colors.accent,
+                        background: colors.primary.blue,
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
@@ -237,8 +234,8 @@ const ResumeDashboard = () => {
                       style={{
                         flex: 1,
                         padding: '8px 12px',
-                        background: colors.light,
-                        color: colors.primary,
+                        background: colors.background.light,
+                        color: colors.primary.black,
                         border: `1px solid ${colors.border}`,
                         borderRadius: '4px',
                         fontSize: '12px',
@@ -253,8 +250,8 @@ const ResumeDashboard = () => {
                       style={{
                         padding: '8px 12px',
                         background: 'white',
-                        color: colors.error,
-                        border: `1px solid ${colors.error}`,
+                        color: colors.accent.red,
+                        border: `1px solid ${colors.accent.red}`,
                         borderRadius: '4px',
                         fontSize: '12px',
                         fontWeight: '600',
@@ -294,7 +291,7 @@ const ResumeDashboard = () => {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.primary, margin: '0 0 16px 0' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.primary.black, margin: '0 0 16px 0' }}>
                 Create New Resume
               </h2>
               <input
@@ -318,8 +315,8 @@ const ResumeDashboard = () => {
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: colors.light,
-                    color: colors.primary,
+                    background: colors.background.light,
+                    color: colors.primary.black,
                     border: `1px solid ${colors.border}`,
                     borderRadius: '6px',
                     fontSize: '14px',
@@ -335,7 +332,7 @@ const ResumeDashboard = () => {
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: newResumeTitle.trim() ? colors.accent : colors.border,
+                    background: newResumeTitle.trim() ? colors.primary.blue : colors.border,
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',

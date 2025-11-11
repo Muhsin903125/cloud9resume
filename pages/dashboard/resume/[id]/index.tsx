@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { EditIcon, DownloadIcon, CopyIcon, AIIcon, EyeIcon, ChevronLeftIcon } from '../../../../components/Icons'
+import { colors } from '../../../../lib/constants'
 
 const EnhancedResumeEditor = () => {
   const router = useRouter()
@@ -9,24 +11,16 @@ const EnhancedResumeEditor = () => {
   const [sections, setSections] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('personal_info')
+  const [activeTab, setActiveTab] = useState('edit')
   const [formData, setFormData] = useState<any>({})
 
-  const colors = {
-    primary: '#000000',
-    secondary: '#666666',
-    accent: '#3b82f6',
-    border: '#e5e7eb',
-    light: '#f9fafb'
-  }
-
   const navItems = [
-    { id: 'edit', label: '✏️ Edit', action: () => setActiveTab('personal_info') },
-    { id: 'templates', label: '🎨 Templates', action: () => router.push(`/dashboard/resume/${id}/templates`) },
-    { id: 'export', label: '⬇️ Export', action: () => router.push(`/dashboard/resume/${id}/export`) },
-    { id: 'portfolio', label: '📱 Portfolio', action: () => router.push(`/dashboard/resume/${id}/portfolio`) },
-    { id: 'analytics', label: '📊 Analytics', action: () => router.push(`/dashboard/resume/${id}/analytics`) },
-    { id: 'ai-tools', label: '✨ AI Tools', action: () => router.push(`/dashboard/resume/${id}/ai-tools`) }
+    { id: 'edit', label: 'Edit', icon: EditIcon, action: () => setActiveTab('edit') },
+    { id: 'templates', label: 'Templates', icon: DownloadIcon, action: () => router.push(`/dashboard/resume/${id}/templates`) },
+    { id: 'export', label: 'Export', icon: DownloadIcon, action: () => router.push(`/dashboard/resume/${id}/export`) },
+    { id: 'portfolio', label: 'Portfolio', icon: EyeIcon, action: () => router.push(`/dashboard/resume/${id}/portfolio`) },
+    { id: 'analytics', label: 'Analytics', icon: EditIcon, action: () => router.push(`/dashboard/resume/${id}/analytics`) },
+    { id: 'ai-tools', label: 'AI Tools', icon: AIIcon, action: () => router.push(`/dashboard/resume/${id}/ai-tools`) }
   ]
 
   useEffect(() => {
@@ -36,12 +30,10 @@ const EnhancedResumeEditor = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/resumes/${id}`, {
-        headers: { 'x-user-id': 'user-id-here' }
-      })
+      const response = await fetch(`/api/resumes/${id}`)
       const data = await response.json()
 
-      if (data.data) {
+      if (data.success && data.data) {
         setResume(data.data)
         setSections(data.data.resume_sections || [])
 
@@ -51,8 +43,11 @@ const EnhancedResumeEditor = () => {
           initialFormData[section.section_type] = section.section_data || {}
         })
         setFormData(initialFormData)
+      } else {
+        setError(data.error || 'Failed to load resume')
       }
     } catch (err) {
+      console.error('Fetch error:', err)
       setError('Failed to load resume')
     } finally {
       setLoading(false)
@@ -63,9 +58,11 @@ const EnhancedResumeEditor = () => {
     return (
       <>
         <Head>
-          <title>Edit Resume - Cloud9 Resume</title>
+          <title>Loading Resume - Cloud9 Resume</title>
         </Head>
-        <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>
+        <div style={{ padding: '40px', textAlign: 'center', color: colors.secondary.mediumGray }}>
+          Loading resume...
+        </div>
       </>
     )
   }
@@ -73,21 +70,32 @@ const EnhancedResumeEditor = () => {
   return (
     <>
       <Head>
-        <title>Edit {resume?.title} - Cloud9 Resume</title>
+        <title>{resume?.title ? `Edit ${resume.title}` : 'Resume'} - Cloud9 Resume</title>
       </Head>
 
-      <div style={{ background: colors.light, minHeight: '100vh' }}>
+      <div style={{ background: colors.background.light, minHeight: '100vh' }}>
         {/* Header */}
         <div style={{ background: 'white', borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button
-              onClick={() => router.push('/dashboard/resumes')}
-              style={{ fontSize: '14px', fontWeight: '600', color: colors.secondary, background: 'none', border: 'none', cursor: 'pointer' }}
+              onClick={() => router.push('/dashboard/resume')}
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px', 
+                fontWeight: '600', 
+                color: colors.primary.black, 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer'
+              }}
             >
-              ← Back to Dashboard
+              <ChevronLeftIcon size={18} color={colors.primary.black} />
+              Back
             </button>
-            <h1 style={{ fontSize: '20px', fontWeight: '700', margin: 0, color: colors.primary }}>
-              {resume?.title}
+            <h1 style={{ fontSize: '20px', fontWeight: '700', margin: 0, color: colors.primary.black }}>
+              {resume?.title || 'Resume'}
             </h1>
             <div style={{ width: '100px' }} />
           </div>
@@ -96,60 +104,98 @@ const EnhancedResumeEditor = () => {
         {/* Navigation Tabs */}
         <div style={{ background: 'white', borderBottom: `2px solid ${colors.border}`, overflowX: 'auto' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '4px', padding: '0 24px' }}>
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={item.action}
-                style={{
-                  padding: '12px 16px',
-                  background: activeTab === item.id ? colors.accent : 'transparent',
-                  color: activeTab === item.id ? 'white' : colors.primary,
-                  border: 'none',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  borderBottom: activeTab === item.id ? 'none' : `2px solid transparent`
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
+            {navItems.map((item) => {
+              const IconComponent = item.icon
+              return (
+                <button
+                  key={item.id}
+                  onClick={item.action}
+                  style={{
+                    padding: '12px 16px',
+                    background: activeTab === item.id ? colors.primary.blue : 'transparent',
+                    color: activeTab === item.id ? 'white' : colors.primary.black,
+                    border: 'none',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== item.id) {
+                      e.currentTarget.style.backgroundColor = colors.secondary.lightGray
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== item.id) {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }
+                  }}
+                >
+                  <IconComponent size={16} color={activeTab === item.id ? 'white' : colors.primary.black} />
+                  {item.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
         {/* Content Area */}
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
           <div style={{ background: 'white', borderRadius: '8px', padding: '24px', border: `1px solid ${colors.border}` }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: colors.primary, margin: '0 0 16px 0' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: colors.primary.black, margin: '0 0 16px 0' }}>
               Resume Editor
             </h2>
 
             {error && (
-              <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', borderRadius: '6px', marginBottom: '16px' }}>
-                {error}
+              <div style={{ 
+                padding: '12px 16px', 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                color: colors.accent.red, 
+                borderRadius: '6px', 
+                marginBottom: '16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>{error}</span>
+                <button
+                  onClick={() => setError('')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: colors.accent.red,
+                    cursor: 'pointer',
+                    fontSize: '18px'
+                  }}
+                >
+                  ×
+                </button>
               </div>
             )}
 
             {/* Quick Actions */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-              <QuickActionButton icon="📋" label="View Resume" onClick={() => window.open(`/portfolio/${resume?.id}`, '_blank')} />
-              <QuickActionButton icon="🔄" label="Duplicate Resume" onClick={() => alert('Duplicate functionality coming soon')} />
-              <QuickActionButton icon="📤" label="Download Export" onClick={() => router.push(`/dashboard/resume/${id}/export`)} />
-              <QuickActionButton icon="✨" label="AI Enhancement" onClick={() => router.push(`/dashboard/resume/${id}/ai-tools`)} />
+              <QuickActionButton icon={EyeIcon} label="View Resume" onClick={() => window.open(`/portfolio/${resume?.id}`, '_blank')} />
+              <QuickActionButton icon={CopyIcon} label="Duplicate Resume" onClick={() => alert('Duplicate functionality coming soon')} />
+              <QuickActionButton icon={DownloadIcon} label="Download Export" onClick={() => router.push(`/dashboard/resume/${id}/export`)} />
+              <QuickActionButton icon={AIIcon} label="AI Enhancement" onClick={() => router.push(`/dashboard/resume/${id}/ai-tools`)} />
             </div>
 
             {/* Navigation Suggestions */}
-            <div style={{ padding: '16px', background: colors.light, borderRadius: '6px', marginBottom: '24px' }}>
-              <p style={{ fontSize: '13px', color: colors.secondary, margin: 0 }}>
-                💡 <strong>Tip:</strong> Use the tabs above to access templates, export formats, portfolio links, analytics, and AI enhancement tools!
+            <div style={{ padding: '16px', background: colors.background.light, borderRadius: '6px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
+              <p style={{ fontSize: '13px', color: colors.secondary.mediumGray, margin: 0, lineHeight: '1.5' }}>
+                <strong>Tip:</strong> Use the tabs above to access templates, export formats, portfolio links, analytics, and AI enhancement tools!
               </p>
             </div>
 
             {/* Content */}
-            <div style={{ padding: '16px', background: colors.light, borderRadius: '6px', minHeight: '200px' }}>
-              <p style={{ fontSize: '14px', color: colors.secondary, margin: 0 }}>
-                📝 Click on the tabs above to navigate between different sections of your resume builder. Each section provides specialized tools for editing, exporting, publishing, and analyzing your resume.
+            <div style={{ padding: '16px', background: colors.background.light, borderRadius: '6px', minHeight: '200px', border: `1px solid ${colors.border}` }}>
+              <p style={{ fontSize: '14px', color: colors.secondary.mediumGray, margin: 0, lineHeight: '1.6' }}>
+                Click on the tabs above to navigate between different sections of your resume builder. Each section provides specialized tools for editing, exporting, publishing, and analyzing your resume.
               </p>
             </div>
           </div>
@@ -159,20 +205,16 @@ const EnhancedResumeEditor = () => {
   )
 }
 
-const QuickActionButton = ({ icon, label, onClick }: any) => {
-  const colors = {
-    accent: '#3b82f6',
-    border: '#e5e7eb',
-    secondary: '#666666'
-  }
+const QuickActionButton = ({ icon: IconComponent, label, onClick }: any) => {
+  const [isHovered, setIsHovered] = useState(false)
 
   return (
     <button
       onClick={onClick}
       style={{
         padding: '12px',
-        background: 'white',
-        border: `1px solid ${colors.border}`,
+        background: isHovered ? colors.primary.blue : 'white',
+        border: `1px solid ${isHovered ? colors.primary.blue : colors.border}`,
         borderRadius: '6px',
         fontSize: '13px',
         fontWeight: '600',
@@ -181,21 +223,14 @@ const QuickActionButton = ({ icon, label, onClick }: any) => {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '8px',
-        color: colors.secondary,
+        color: isHovered ? 'white' : colors.secondary.mediumGray,
         transition: 'all 0.2s'
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = colors.accent
-        e.currentTarget.style.color = 'white'
-        e.currentTarget.style.borderColor = colors.accent
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'white'
-        e.currentTarget.style.color = colors.secondary
-        e.currentTarget.style.borderColor = colors.border
-      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {icon} {label}
+      <IconComponent size={16} color={isHovered ? 'white' : colors.secondary.mediumGray} />
+      {label}
     </button>
   )
 }

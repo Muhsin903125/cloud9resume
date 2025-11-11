@@ -1,15 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { generateToken } from '../../../lib/backend/utils/tokenService'
+import bcrypt from 'bcryptjs'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-// Client for user authentication (uses anon key)
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Client for admin operations like profile creation (uses service role key)
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,20 +14,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { email, password, firstName, lastName, acceptTerms } = req.body
+    const { email, password, name, acceptTerms } = req.body
 
-    // Basic validation
-    if (!email || !password || !firstName || !lastName) {
+    // Validation
+    if (!email || !password || !name) {
       return res.status(400).json({
         error: 'Validation failed',
-        message: 'All fields are required'
+        message: 'Email, password, and name are required'
       })
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       return res.status(400).json({
         error: 'Validation failed',
-        message: 'Password must be at least 6 characters long'
+        message: 'Password must be at least 8 characters'
       })
     }
 
@@ -41,60 +38,68 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Sign up with Supabase
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          full_name: `${firstName} ${lastName}`,
-        }
-      }
-    })
+    // Check if user already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single()
 
-    if (error) {
-      return res.status(400).json({
-        error: 'Registration failed',
-        message: error.message
+    if (existingUser) {
+      return res.status(409).json({
+        error: 'User already exists',
+        message: 'This email is already registered'
       })
     }
 
-    // Create user profile using admin client
-    if (data.user) {
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          email: data.user.email,
-          first_name: firstName,
-          last_name: lastName,
-          credits: 5, // Free credits for new users
-          created_at: new Date().toISOString(),
-        })
+    // Hash password
+    const salt = await bcrypt.genSalt(10)
+    const passwordHash = await bcrypt.hash(password, salt)
 
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-        // Don't fail the signup if profile creation fails
-        // We'll log it but still return success
-      } else {
-        console.log('Profile created successfully for user:', data.user.id)
-      }
+    // Create user in 'users' table
+    const { data: newUser, error: createError } = await supabase
+      .from('users')
+      .insert([
+        {
+          email,
+          name,
+          password_hash: passwordHash,
+          login_provider: 'email',
+          plan: 'free', // Default plan
+          credits: 0    // Free users get 0 credits initially
+        }
+      ])
+      .select('id, email, plan, credits')
+      .single()
+
+    if (createError || !newUser) {
+      console.error('User creation error:', createError)
+      return res.status(500).json({
+        error: 'Signup failed',
+        message: 'Could not create user account'
+      })
     }
 
+    // Generate JWT token
+    const accessToken = await generateToken(newUser.id, newUser.email, newUser.plan)
+
     return res.status(201).json({
+      success: true,
+      accessToken,
+      expiresIn: 86400,
       user: {
-        id: data.user?.id,
-        email: data.user?.email,
+        id: newUser.id,
+        email: newUser.email,
+        plan: newUser.plan,
+        credits: newUser.credits
       },
-      message: 'Registration successful. Please check your email to verify your account.',
+      message: 'Account created successfully'
     })
   } catch (error) {
     console.error('Signup error:', error)
     return res.status(500).json({
       error: 'Internal server error',
-      message: 'Registration failed'
+      message: 'Signup failed'
     })
   }
 }

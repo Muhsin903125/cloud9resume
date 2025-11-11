@@ -1,6 +1,8 @@
 // API client for making requests to backend APIs
 // Usage: import { apiClient } from '@/lib/apiClient'
 
+import { USER_AUTH_TOKEN_KEY } from './token-keys'
+
 interface ApiResponse<T = any> {
   data?: T
   error?: string
@@ -20,7 +22,7 @@ class ApiClient {
     }
 
     // Add auth token if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    const token = typeof window !== 'undefined' ? localStorage.getItem(USER_AUTH_TOKEN_KEY) : null
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }

@@ -28,6 +28,27 @@ export default function LinkedInCallback() {
           code,
         })
 
+        console.log('LinkedIn signin response:', signInResponse)
+
+        // Check if signin was successful with new format: { success, accessToken, expiresIn, user: {...} }
+        if (!signInResponse.error && signInResponse.data?.user?.id && signInResponse.data?.accessToken) {
+          console.log('LinkedIn signin successful')
+          
+          // Store JWT token with x_ prefix
+          localStorage.setItem('x_user_auth_token', signInResponse.data.accessToken)
+          localStorage.setItem('x_user_id', signInResponse.data.user.id)
+          if (signInResponse.data.user.email) {
+            localStorage.setItem('x_user_email', signInResponse.data.user.email)
+          }
+          
+          // Store token expiry
+          const expiryTime = Date.now() + (signInResponse.data.expiresIn * 1000)
+          localStorage.setItem('x_token_expiry', expiryTime.toString())
+          
+          router.push('/dashboard')
+          return
+        }
+
         // If signin failed (user not found), try signup
         if (signInResponse.error) {
           console.log('User not found, attempting signup...')
@@ -36,35 +57,38 @@ export default function LinkedInCallback() {
             code,
           })
 
-          if (signUpResponse.error) {
-            console.error('LinkedIn signup error:', signUpResponse.error)
-            const errorMessage = signUpResponse.message || 'Signup failed'
-            router.push(`/signup?error=${encodeURIComponent(errorMessage)}`)
+          console.log('LinkedIn signup response:', signUpResponse)
+
+          // Check if signup was successful with new format: { success, accessToken, expiresIn, user: {...} }
+          if (!signUpResponse.error && signUpResponse.data?.user?.id && signUpResponse.data?.accessToken) {
+            console.log('LinkedIn signup successful')
+            
+            // Store JWT token with x_ prefix
+            localStorage.setItem('x_user_auth_token', signUpResponse.data.accessToken)
+            localStorage.setItem('x_user_id', signUpResponse.data.user.id)
+            if (signUpResponse.data.user.email) {
+              localStorage.setItem('x_user_email', signUpResponse.data.user.email)
+            }
+            
+            // Store token expiry
+            const expiryTime = Date.now() + (signUpResponse.data.expiresIn * 1000)
+            localStorage.setItem('x_token_expiry', expiryTime.toString())
+            
+            router.push('/dashboard')
             return
           }
 
-          const { id, email, name, picture } = signUpResponse.data
-
-          // Store in localStorage
-          localStorage.setItem('user_id', id)
-          localStorage.setItem('user_email', email)
-          localStorage.setItem('user_name', name || email)
-          localStorage.setItem('user_picture', picture || '')
-
-          console.log('LinkedIn signup successful')
-          router.push('/dashboard')
-        } else {
-          const { id, email, name, picture } = signInResponse.data
-
-          // Store in localStorage
-          localStorage.setItem('user_id', id)
-          localStorage.setItem('user_email', email)
-          localStorage.setItem('user_name', name || email)
-          localStorage.setItem('user_picture', picture || '')
-
-          console.log('LinkedIn signin successful')
-          router.push('/dashboard')
+          // Signup failed
+          console.error('LinkedIn signup error:', signUpResponse.error)
+          const errorMessage = signUpResponse.message || 'Signup failed'
+          router.push(`/signup?error=${encodeURIComponent(errorMessage)}`)
+          return
         }
+
+        // Signin error
+        const errorMessage = signInResponse.error || 'Login failed'
+        console.error('LinkedIn signin error:', errorMessage)
+        router.push(`/login?error=${encodeURIComponent(errorMessage)}`)
       } catch (err) {
         console.error('LinkedIn callback error:', err)
         setError('An unexpected error occurred')

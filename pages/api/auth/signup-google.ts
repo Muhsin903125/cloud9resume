@@ -1,15 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { google } from 'googleapis'
+import { generateToken } from '../../../lib/backend/utils/tokenService'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET!
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Initialize Google OAuth2
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -27,6 +26,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { idToken } = req.body
 
+    if (!idToken) {
+      return res.status(400).json({
+        error: 'Missing ID token',
+        message: 'ID token is required'
+      })
+    }
+
     // Verify the ID token with Google
     const ticket = await oauth2Client.verifyIdToken({
       idToken,
@@ -42,109 +48,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    const googleId = payload.sub
     const email = payload.email
     const name = payload.name || 'User'
-    const picture = payload.picture || ''
-
-    // Parse name into first and last
-    const nameParts = name.split(' ')
-    const firstName = nameParts[0] || ''
-    const lastName = nameParts.slice(1).join(' ') || ''
 
     // Check if user already exists
     const { data: existingUser, error: searchError } = await supabaseAdmin
-      .from('profiles')
-      .select('id, email')
+      .from('users')
+      .select('id, email, plan, credits')
       .eq('email', email)
       .single()
 
-    if (!searchError && existingUser) {
-      // User already exists
+    if (existingUser) {
+      // User already exists, return 409 Conflict
       return res.status(409).json({
         error: 'User already exists',
-        message: 'An account with this email already exists. Please sign in instead.',
+        message: 'An account with this email already exists. Please sign in instead.'
       })
     }
 
-    if (searchError && searchError.code !== 'PGRST116') {
-      // PGRST116 = no rows returned
-      console.error('Profile search error:', searchError)
-      return res.status(500).json({
-        error: 'Database error',
-        message: 'Failed to check existing user'
-      })
-    }
-
-    // Create new user in Supabase Auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: Math.random().toString(36).slice(-16), // Random password (won't be used)
-      email_confirm: true, // Skip email verification for OAuth
-      user_metadata: {
-        auth_method: 'google',
-        provider: 'google',
-        provider_id: googleId,
-        full_name: name,
-        avatar_url: picture,
-      },
-    })
-
-    if (authError || !authData.user) {
-      console.error('Auth creation error:', authError)
-      return res.status(400).json({
-        error: 'Registration failed',
-        message: authError?.message || 'Failed to create auth user'
-      })
-    }
-
-    // Create profile in profiles table
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
+    // Create user if doesn't exist
+    const { data: newUser, error: createError } = await supabaseAdmin
+      .from('users')
+      .insert([{
         email,
-        first_name: firstName,
-        last_name: lastName,
-        provider: 'google',
-        provider_id: googleId,
-        auth_method: 'google',
-        oauth_data: {
-          name,
-          picture,
-          email,
-        },
-        credits: 5, // Free credits for new users
-        last_login_at: new Date().toISOString(),
-        login_count: 1,
-        created_at: new Date().toISOString(),
-      })
+        name,
+        login_provider: 'google',
+        plan: 'free',
+        credits: 0,
+      }])
+      .select('id, email, plan, credits')
+      .single()
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError)
-      // Clean up auth user if profile creation fails
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-      return res.status(400).json({
-        error: 'Registration failed',
-        message: 'Failed to create user profile'
+    if (createError || !newUser) {
+      console.error('User creation error:', createError)
+      return res.status(500).json({
+        error: 'Failed to create user',
+        message: 'Could not create account'
       })
     }
 
-    // Log OAuth signup
-    await supabaseAdmin.from('oauth_audit_log').insert({
-      user_id: authData.user.id,
-      provider: 'google',
-      provider_id: googleId,
-      ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-      user_agent: req.headers['user-agent'],
-    })
+    // Generate JWT token
+    const accessToken = await generateToken(newUser.id, newUser.email, newUser.plan)
 
     return res.status(201).json({
-      id: authData.user.id,
-      email: authData.user.email,
-      name: `${firstName} ${lastName}`.trim(),
-      picture: picture || null,
-      message: 'Registration successful',
+      success: true,
+      accessToken,
+      expiresIn: 86400,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        plan: newUser.plan,
+        credits: newUser.credits,
+      },
     })
   } catch (error) {
     console.error('Google signup error:', error)

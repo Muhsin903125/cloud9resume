@@ -8,11 +8,10 @@ import Footer from "../components/Footer";
 import ConfirmationModal from "../components/ConfirmationModal";
 import { useAuth } from "../lib/authUtils";
 import {
-  DashboardIcon,
   DocumentIcon,
-  PaletteIcon,
-  CheckCircleIcon,
-  CreditCardIcon,
+  PortfolioIcon,
+  AnalyticsIcon,
+  TemplateIcon,
 } from "../components/Icons";
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -82,15 +81,15 @@ function DashboardLayout({
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const navigationItems = [
-    { name: "Dashboard", href: "/dashboard", Icon: DashboardIcon },
+    { name: "Dashboard", href: "/dashboard", Icon: DocumentIcon },
     { name: "Resume Builder", href: "/dashboard/resume", Icon: DocumentIcon },
     {
       name: "Portfolio Builder",
       href: "/dashboard/portfolio",
-      Icon: PaletteIcon,
+      Icon: PortfolioIcon,
     },
-    { name: "ATS Checker", href: "/dashboard/ats", Icon: CheckCircleIcon },
-    { name: "Credits", href: "/dashboard/credits", Icon: CreditCardIcon },
+    { name: "ATS Checker", href: "/dashboard/ats", Icon: AnalyticsIcon },
+    { name: "Credits", href: "/dashboard/credits", Icon: TemplateIcon },
   ];
 
   const handleSignOutClick = () => {
@@ -133,13 +132,12 @@ function DashboardLayout({
                       : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <item.Icon
-                    className={`mr-3 w-5 h-5 ${
-                      router.pathname === item.href
-                        ? "text-white"
-                        : "text-gray-600"
-                    }`}
-                  />
+                  <span style={{ marginRight: '0.75rem', display: 'flex', alignItems: 'center', lineHeight: 1 }}>
+                    <item.Icon
+                      size={20}
+                      color={router.pathname === item.href ? "white" : "#666666"}
+                    />
+                  </span>
                   {item.name}
                 </a>
               ))}

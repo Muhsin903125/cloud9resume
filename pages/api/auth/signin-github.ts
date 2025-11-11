@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { generateToken } from '../../../lib/backend/utils/tokenService'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -95,59 +96,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    const githubId = profileData.id.toString()
     const name = profileData.name || profileData.login
-    const picture = profileData.avatar_url || ''
 
-    // Check if user already exists
-    const { data: existingUser, error: searchError } = await supabaseAdmin
-      .from('profiles')
-      .select('id, email, auth_method')
+    // Check if user exists
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id, email, plan, credits')
       .eq('email', primaryEmail)
       .single()
 
-    if (searchError && searchError.code !== 'PGRST116') {
-      console.error('Profile search error:', searchError)
-    }
+    let user = existingUser
 
-    // If user exists, update auth method if needed
-    if (existingUser) {
-      if (existingUser.auth_method !== 'github') {
-        const { error: updateError } = await supabaseAdmin
-          .from('profiles')
-          .update({
-            auth_method: 'github',
-            provider: 'github',
-            provider_id: githubId,
-            oauth_data: {
-              name,
-              picture,
-              email: primaryEmail,
-            },
-            last_login_at: new Date().toISOString(),
-            login_count: (existingUser as any).login_count ? (existingUser as any).login_count + 1 : 1,
-          })
-          .eq('id', existingUser.id)
+    // Create user if doesn't exist
+    if (!user) {
+      const { data: newUser, error: createError } = await supabaseAdmin
+        .from('users')
+        .insert([{
+          email: primaryEmail,
+          name,
+          login_provider: 'github',
+          plan: 'free',
+          credits: 0,
+        }])
+        .select('id, email, plan, credits')
+        .single()
 
-        if (updateError) {
-          console.error('Profile update error:', updateError)
-        }
+      if (createError || !newUser) {
+        console.error('User creation error:', createError)
+        return res.status(500).json({
+          error: 'Failed to create user',
+          message: 'Could not create account'
+        })
       }
 
-      return res.status(200).json({
-        id: existingUser.id,
-        email: existingUser.email,
-        name: name || primaryEmail,
-        picture: picture || null,
-        provider: 'github',
-        message: 'Login successful',
-      })
+      user = newUser
     }
 
-    // User doesn't exist
-    return res.status(404).json({
-      error: 'User not found',
-      message: 'No account found with this email. Please sign up first.',
+    // Generate JWT token
+    const accessTokenJwt = await generateToken(user.id, user.email, user.plan)
+
+    return res.status(200).json({
+      success: true,
+      accessToken: accessTokenJwt,
+      expiresIn: 86400,
+      user: {
+        id: user.id,
+        email: user.email,
+        plan: user.plan,
+        credits: user.credits,
+      },
     })
   } catch (error) {
     console.error('GitHub signin error:', error)

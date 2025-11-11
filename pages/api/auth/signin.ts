@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { generateToken, getUserById } from '../../../lib/backend/utils/tokenService'
+import bcrypt from 'bcryptjs'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const JWT_SECRET = process.env.JWT_SECRET
 
-// Client for user authentication (uses anon key)
+// Client for database access
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -15,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { email, password } = req.body
 
-    // Basic validation
+    // Validation
     if (!email || !password) {
       return res.status(400).json({
         error: 'Validation failed',
@@ -23,43 +26,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Sign in with Supabase
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      return res.status(401).json({
-        error: 'Authentication failed',
-        message: error.message
+    if (!JWT_SECRET) {
+      return res.status(500).json({
+        error: 'Server error',
+        message: 'JWT_SECRET not configured'
       })
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', data.user.id)
+    // Fetch user from 'users' table (not Supabase Auth)
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, email, password_hash, plan, credits')
+      .eq('email', email)
+      .eq('login_provider', 'email')
       .single()
 
-    if (profileError) {
-      console.error('Profile fetch error:', profileError)
-      // Continue without profile data
+    if (userError || !user) {
+      return res.status(401).json({
+        error: 'Authentication failed',
+        message: 'Invalid email or password'
+      })
     }
 
+    // Verify password hash
+    if (!user.password_hash) {
+      return res.status(401).json({
+        error: 'Authentication failed',
+        message: 'This account uses social login, not email/password'
+      })
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password_hash)
+    if (!passwordMatch) {
+      return res.status(401).json({
+        error: 'Authentication failed',
+        message: 'Invalid email or password'
+      })
+    }
+
+    // Generate JWT token with user plan info
+    const accessToken = await generateToken(user.id, user.email, user.plan)
+
     return res.status(200).json({
+      success: true,
+      accessToken,
+      expiresIn: 86400, // 24 hours in seconds
       user: {
-        id: data.user.id,
-        email: data.user.email,
-        profile: profile || null,
+        id: user.id,
+        email: user.email,
+        plan: user.plan,
+        credits: user.credits
       },
-      session: {
-        access_token: data.session?.access_token,
-        refresh_token: data.session?.refresh_token,
-        expires_at: data.session?.expires_at,
-      },
-      message: 'Login successful',
+      message: 'Login successful'
     })
   } catch (error) {
     console.error('Signin error:', error)
