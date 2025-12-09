@@ -11,6 +11,7 @@ interface ResumeResponse {
   data?: any
   error?: string
   message?: string
+  code?: string
 }
 
 /**
