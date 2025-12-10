@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Create new user
-      const bcrypt = require('bcrypt')
+      const bcrypt = require('bcryptjs')
       const passwordHash = await bcrypt.hash(testPassword, 10)
 
       const { data: newUser, error: createError } = await supabaseAdmin
@@ -127,7 +127,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Verify password
-      const bcrypt = require('bcrypt')
+      const bcrypt = require('bcryptjs')
       const passwordMatch = await bcrypt.compare(testPassword, user.password_hash)
 
       if (!passwordMatch) {
@@ -314,7 +314,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // 2. Signup
-        const bcrypt = require('bcrypt')
+        const bcrypt = require('bcryptjs')
         const passwordHash = await bcrypt.hash(testPassword, 10)
         const { data: newUser } = await supabaseAdmin
           .from('users')
