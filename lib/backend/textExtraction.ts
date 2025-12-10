@@ -5,7 +5,7 @@ import * as mammoth from 'mammoth'
  */
 export const extractPdfText = async (buffer: Buffer): Promise<string> => {
   try {
-    const pdfParseModule = require('pdf-parse/lib/pdf-parse.js')
+    const pdfParseModule = require('pdf-parse')
     const data = await pdfParseModule(buffer)
     let text = data.text || ''
 
