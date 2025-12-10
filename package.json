@@ -22,7 +22,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.11.0",
-    "next": "16.0.1",
+    "next": "16.0.7",
     "nodemailer": "^6.9.8",
     "pdf-parse": "^2.4.5",
     "pdfkit": "^0.14.0",
