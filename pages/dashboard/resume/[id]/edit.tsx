@@ -646,6 +646,14 @@ const renderSectionForm = (
               placeholder="+1 (555) 000-0000"
             />
           </div>
+          <div className="grid grid-cols-1">
+            <Input
+              label="Photo URL"
+              value={data.photoUrl}
+              onChange={(e: any) => handleChange("photoUrl", e.target.value)}
+              placeholder="https://example.com/photo.jpg"
+            />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Address"

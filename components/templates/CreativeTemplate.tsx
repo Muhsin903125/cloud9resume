@@ -41,10 +41,18 @@ export const CreativeTemplate = ({
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-black opacity-5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
         <div className="relative z-10 text-center">
-          <div className="w-32 h-32 mx-auto bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/30 mb-6">
-            <span className="text-4xl font-black text-white">
-              {personalInfo.name?.[0] || "U"}
-            </span>
+          <div className="w-32 h-32 mx-auto bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/30 mb-6 overflow-hidden relative">
+            {personalInfo.photoUrl ? (
+              <img
+                src={personalInfo.photoUrl}
+                alt={personalInfo.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-4xl font-black text-white">
+                {personalInfo.name?.[0] || "U"}
+              </span>
+            )}
           </div>
 
           <h1 className="text-2xl font-black uppercase leading-tight mb-2 tracking-tighter">

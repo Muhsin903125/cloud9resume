@@ -23,6 +23,13 @@ export const ClassicTemplate = ({
         className="text-center border-b-2 pb-4 mb-5"
         style={{ borderColor: themeColor }}
       >
+        {personalInfo.photoUrl && (
+          <img
+            src={personalInfo.photoUrl}
+            alt={personalInfo.name}
+            className="w-24 h-24 mx-auto rounded-full object-cover mb-4 border border-gray-200"
+          />
+        )}
         <h1
           className="text-2xl font-bold mb-1 uppercase tracking-wide"
           style={{ color: themeColor }}

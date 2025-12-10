@@ -12,7 +12,7 @@ import { toast } from "react-hot-toast";
 
 const ResumeDashboard = () => {
   const router = useRouter();
-  const { get, post, delete: deleteRequest } = useAPIAuth();
+  const { get, post, patch, delete: deleteRequest } = useAPIAuth();
 
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,6 +120,39 @@ const ResumeDashboard = () => {
     }
   };
 
+  const handlePreferencesSave = async (template: string, color: string) => {
+    if (!previewResume?.id) return false;
+
+    try {
+      const userId = localStorage.getItem("x_user_id");
+      await patch(
+        `/api/resumes/${previewResume.id}`,
+        { template_id: template, theme_color: color },
+        { "x-user-id": userId || "" }
+      );
+
+      setPreviewResume((prev: any) => ({
+        ...prev,
+        template_id: template,
+        theme_color: color,
+      }));
+      // Also update the list so we don't have stale data
+      setResumes((prev) =>
+        prev.map((r) =>
+          r.id === previewResume.id
+            ? { ...r, template_id: template, theme_color: color }
+            : r
+        )
+      );
+
+      toast.success("Preferences saved");
+      return true;
+    } catch (e) {
+      toast.error("Failed to save");
+      return false;
+    }
+  };
+
   const filteredResumes = resumes.filter(
     (r) =>
       r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -134,6 +167,12 @@ const ResumeDashboard = () => {
       </Head>
 
       <div className="bg-gray-50 min-h-screen">
+        {/* ... (Header omitted for brevity in replace, but I need to match context) ... */}
+        {/* Actually, I am replacing the end of the file. */}
+        {/* Let's look at where I am. I am near line 123 for filteredResumes. */}
+        {/* And line 295 for ResumePreviewModal. */}
+        {/* I'll specificy the chunks properly. */}
+
         {/* Header */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -297,6 +336,9 @@ const ResumeDashboard = () => {
           onClose={() => setShowPreview(false)}
           resume={previewResume || {}}
           sections={previewSections}
+          template={previewResume?.template_id}
+          themeColor={previewResume?.theme_color}
+          onSave={handlePreferencesSave}
         />
 
         {/* Loading Overlay for Preview Fetch */}

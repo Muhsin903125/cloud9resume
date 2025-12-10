@@ -25,6 +25,13 @@ export const ExecutiveTemplate = ({
       ></div>
 
       <header className="text-center mb-10">
+        {personalInfo.photoUrl && (
+          <img
+            src={personalInfo.photoUrl}
+            alt={personalInfo.name}
+            className="w-24 h-24 mx-auto rounded-full object-cover mb-4 border-4 border-gray-100 shadow-sm"
+          />
+        )}
         <h1 className="text-3xl font-bold uppercase tracking-widest mb-2 text-gray-900">
           {personalInfo.name || "Your Name"}
         </h1>

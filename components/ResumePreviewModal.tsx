@@ -27,13 +27,14 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
   const [themeColor, setThemeColor] = useState(initialColor);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync with props when modal opens or props change
+  // Sync with props ONLY when modal opens to prevent overwriting user selection during save/print cycle
   useEffect(() => {
     if (isOpen) {
       setTemplate(initialTemplate);
       setThemeColor(initialColor);
     }
-  }, [isOpen, initialTemplate, initialColor]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handlePrint = async () => {
     if (onSave) {
@@ -43,46 +44,63 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
       if (!success) return;
     }
 
-    const originalTitle = document.title;
-    document.title = `${resume.title || "Resume"} - Cloud9`;
-    window.print();
-    document.title = originalTitle;
-    toast.success("Download started");
+    // Small delay to ensure React state and DOM are fully settled after save-triggered re-renders
+    setTimeout(() => {
+      const originalTitle = document.title;
+      document.title = `${resume.title || "Resume"} - Cloud9`;
+      window.print();
+      document.title = originalTitle;
+      toast.success("Download started");
+    }, 500);
   };
 
-  const templates = [
-    { id: "modern", name: "Modern", description: "Clean & professional" },
-    { id: "classic", name: "Classic", description: "Traditional & elegant" },
+  // Categorized Templates
+  const categories = [
     {
-      id: "minimal",
-      name: "Minimal",
-      description: "Simple & focus on content",
+      name: "Simple & Clean",
+      items: [
+        { id: "modern", name: "Modern", description: "Clean & professional" },
+        { id: "minimal", name: "Minimal", description: "Focused on content" },
+        { id: "compact", name: "Compact", description: "Space efficient" },
+        { id: "dense", name: "Dense", description: "Maximized density" },
+      ],
     },
     {
-      id: "professional",
       name: "Professional",
-      description: "Corporate & authoritative",
+      items: [
+        {
+          id: "classic",
+          name: "Classic",
+          description: "Traditional & elegant",
+        },
+        {
+          id: "professional",
+          name: "Professional",
+          description: "Corporate style",
+        },
+        {
+          id: "executive",
+          name: "Executive",
+          description: "Commanding presence",
+        },
+        { id: "elegant", name: "Elegant", description: "Refined serif look" },
+      ],
     },
     {
-      id: "executive",
-      name: "Executive",
-      description: "Bold header & strong lines",
-    },
-    {
-      id: "creative",
       name: "Creative",
-      description: "Artistic sidebar & colors",
+      items: [
+        { id: "creative", name: "Creative", description: "Artistic sidebar" },
+        { id: "bold", name: "Bold", description: "High contrast type" },
+      ],
     },
-    { id: "tech", name: "Tech", description: "Monospace & terminal style" },
-    { id: "bold", name: "Bold", description: "High contrast & large type" },
     {
-      id: "compact",
-      name: "Compact",
-      description: "Maximize space efficiency",
+      name: "Technical",
+      items: [
+        { id: "tech", name: "Tech", description: "Monospace / Terminal" },
+        { id: "grid", name: "Grid", description: "Structured boxes" },
+        { id: "timeline", name: "Timeline", description: "Vertical timeline" },
+      ],
     },
-    { id: "grid", name: "Grid", description: "Structured box layout" },
-    { id: "timeline", name: "Timeline", description: "Visual career path" },
-    { id: "elegant", name: "Elegant", description: "Soft serif & refined" },
   ];
 
   const colors = [
@@ -96,53 +114,58 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
   ];
 
   return (
-    <SharedModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Resume Preview & Export"
-      size="2xl"
-    >
+    <SharedModal isOpen={isOpen} onClose={onClose} size="2xl">
       <div className="flex flex-col lg:flex-row gap-8 h-[80vh]">
         {/* Sidebar Controls */}
-        <div className="w-full lg:w-80 flex-shrink-0 space-y-8 overflow-y-auto pr-2 custom-scrollbar">
+        <div className="w-full lg:w-80 flex-shrink-0 space-y-8 overflow-y-auto pr-2 custom-scrollbar no-print">
           {/* Templates */}
           <div>
             <h4 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
               <TemplateIcon size={16} className="text-blue-500" /> Select
               Template
             </h4>
-            <div className="grid grid-cols-2 gap-3">
-              {templates.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setTemplate(t.id)}
-                  className={`relative p-3 rounded-xl border-2 text-left transition-all ${
-                    template === t.id
-                      ? "border-blue-600 bg-blue-50/50 ring-2 ring-blue-100 ring-offset-1"
-                      : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
-                  }`}
-                >
-                  {template === t.id && (
-                    <div className="absolute top-2 right-2 text-blue-600 bg-white rounded-full p-0.5 shadow-sm">
-                      <CheckIcon size={12} />
-                    </div>
-                  )}
-                  <div
-                    className={`w-full h-16 rounded-lg mb-2 flex items-center justify-center ${
-                      template === t.id ? "bg-blue-200/50" : "bg-gray-100"
-                    }`}
-                  >
-                    <span className="text-xs font-bold text-gray-400 uppercase">
-                      {t.id.substring(0, 2)}
-                    </span>
+
+            <div className="space-y-6">
+              {categories.map((category) => (
+                <div key={category.name}>
+                  <h5 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                    {category.name}
+                  </h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    {category.items.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setTemplate(t.id)}
+                        className={`relative p-3 rounded-xl border-2 text-left transition-all ${
+                          template === t.id
+                            ? "border-blue-600 bg-blue-50/50 ring-2 ring-blue-100 ring-offset-1"
+                            : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {template === t.id && (
+                          <div className="absolute top-2 right-2 text-blue-600 bg-white rounded-full p-0.5 shadow-sm">
+                            <CheckIcon size={12} />
+                          </div>
+                        )}
+                        <div
+                          className={`w-full h-16 rounded-lg mb-2 flex items-center justify-center ${
+                            template === t.id ? "bg-blue-200/50" : "bg-gray-100"
+                          }`}
+                        >
+                          <span className="text-xs font-bold text-gray-400 uppercase">
+                            {t.id.substring(0, 2)}
+                          </span>
+                        </div>
+                        <div className="font-bold text-xs text-gray-900">
+                          {t.name}
+                        </div>
+                        <div className="text-[10px] text-gray-500 truncate">
+                          {t.description}
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                  <div className="font-bold text-xs text-gray-900">
-                    {t.name}
-                  </div>
-                  <div className="text-[10px] text-gray-500 truncate">
-                    {t.description}
-                  </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>

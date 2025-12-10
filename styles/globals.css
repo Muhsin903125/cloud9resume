@@ -25,6 +25,19 @@
   body {
     background: white !important;
   }
+
+  /* Automatic Page Breaks for Sections */
+  /* Targets first-level sections in most one-column templates */
+  #resume-preview-content > div > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Targets sections in two-column layouts (Main Column) */
+  #resume-preview-content > div.flex > div > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
 
 .print-only {

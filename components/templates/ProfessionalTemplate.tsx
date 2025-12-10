@@ -25,17 +25,26 @@ export const ProfessionalTemplate = ({
         className="border-b-4 pb-6 mb-8"
         style={{ borderColor: themeColor }}
       >
-        <div className="flex justify-between items-end">
-          <div>
-            <h1
-              className="text-4xl font-bold uppercase tracking-tight mb-2"
-              style={{ color: themeColor }}
-            >
-              {personalInfo.name || "Your Name"}
-            </h1>
-            <p className="text-lg font-medium text-gray-600">
-              {personalInfo.jobTitle}
-            </p>
+        <div className="flex justify-between items-start">
+          <div className="flex gap-6 items-center">
+            {personalInfo.photoUrl && (
+              <img
+                src={personalInfo.photoUrl}
+                alt={personalInfo.name}
+                className="w-24 h-24 rounded-lg object-cover shadow-sm border border-gray-200"
+              />
+            )}
+            <div>
+              <h1
+                className="text-4xl font-bold uppercase tracking-tight mb-2"
+                style={{ color: themeColor }}
+              >
+                {personalInfo.name || "Your Name"}
+              </h1>
+              <p className="text-lg font-medium text-gray-600">
+                {personalInfo.jobTitle}
+              </p>
+            </div>
           </div>
           <div className="text-right text-xs space-y-1 text-gray-600">
             <div>{personalInfo.email}</div>

@@ -21,6 +21,13 @@ export const ElegantTemplate = ({
       style={{ width: "210mm", minHeight: "297mm", color: "#4b5563" }} // slate-600ish
     >
       <header className="text-center mb-12">
+        {personalInfo.photoUrl && (
+          <img
+            src={personalInfo.photoUrl}
+            alt={personalInfo.name}
+            className="w-20 h-20 mx-auto rounded-full object-cover mb-4 border border-gray-100 shadow-sm"
+          />
+        )}
         <h1
           className="text-4xl font-normal tracking-wide mb-3"
           style={{ color: themeColor }}

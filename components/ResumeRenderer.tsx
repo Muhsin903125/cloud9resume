@@ -11,7 +11,9 @@ import { BoldTemplate } from "./templates/BoldTemplate";
 import { CompactTemplate } from "./templates/CompactTemplate";
 import { GridTemplate } from "./templates/GridTemplate";
 import { TimelineTemplate } from "./templates/TimelineTemplate";
+
 import { ElegantTemplate } from "./templates/ElegantTemplate";
+import { DenseTemplate } from "./templates/DenseTemplate";
 
 interface ResumeRendererProps {
   resume: any;
@@ -36,9 +38,40 @@ export const ResumeRenderer: React.FC<ResumeRendererProps> = ({
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
 
+  // Filter out empty sections globally
+  const filteredSections = sections.filter((section) => {
+    const { section_type, section_data } = section;
+    if (!section_data) return false;
+
+    // Check for empty object (often the default state, e.g. {})
+    if (
+      typeof section_data === "object" &&
+      !Array.isArray(section_data) &&
+      Object.keys(section_data).length === 0
+    ) {
+      return false;
+    }
+
+    // Arrays (Experience, Education, Skills list, etc.)
+    if (Array.isArray(section_data)) {
+      return section_data.length > 0;
+    }
+    // Object with items array (Some skills formats)
+    if (section_data.items && Array.isArray(section_data.items)) {
+      return section_data.items.length > 0;
+    }
+    // Text based (Summary)
+    if (section_type === "summary") {
+      return section_data.text && section_data.text.trim().length > 0; // standard format
+      // || (typeof section_data === 'string' && section_data.trim().length > 0); // mixed format
+    }
+
+    return true;
+  });
+
   const props = {
     resume,
-    sections,
+    sections: filteredSections,
     themeColor,
     hexToRgba,
   };
@@ -68,6 +101,8 @@ export const ResumeRenderer: React.FC<ResumeRendererProps> = ({
       return <TimelineTemplate {...props} />;
     case "elegant":
       return <ElegantTemplate {...props} />;
+    case "dense":
+      return <DenseTemplate {...props} />;
     default:
       return <ModernTemplate {...props} />;
   }

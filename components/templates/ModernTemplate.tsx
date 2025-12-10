@@ -34,10 +34,18 @@ export const ModernTemplate = ({
       >
         {/* Photo / Name */}
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-3 border-2 border-slate-700">
-            <span className="text-xl font-bold text-slate-500">
-              {personalInfo.name ? personalInfo.name.charAt(0) : "U"}
-            </span>
+          <div className="w-16 h-16 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-3 border-2 border-slate-700 overflow-hidden relative">
+            {personalInfo.photoUrl ? (
+              <img
+                src={personalInfo.photoUrl}
+                alt={personalInfo.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-xl font-bold text-slate-500">
+                {personalInfo.name ? personalInfo.name.charAt(0) : "U"}
+              </span>
+            )}
           </div>
           <h1 className="text-base font-bold tracking-tight mb-0.5">
             {personalInfo.name || "Your Name"}
