@@ -70,3 +70,15 @@ export interface APIResponse<T = any> {
   error?: string
   message?: string
 }
+
+export interface ATSAnalysisRecord {
+  id: string
+  user_id?: string
+  resume_text: string
+  job_description: string
+  score: number
+  match_percentage: number
+  keywords_found: string[]
+  keywords_missing: string[]
+  created_at: string
+}

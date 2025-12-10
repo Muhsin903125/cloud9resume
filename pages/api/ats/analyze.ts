@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { createClient } from '@supabase/supabase-js'
 import {
   analyzeKeywordMatch,
   detectSections,
@@ -261,6 +262,18 @@ const ACTION_VERBS = [
   'distinguished', 'distributed', 'diversified', 'documented', 'dominated'
 ]
 
+// Initialize Supabase only if env vars are present
+const getSupabaseAdmin = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.warn('Missing Supabase environment variables. DB saving will be skipped.')
+    return null
+  }
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ATSAnalysisResponse>
@@ -318,6 +331,29 @@ export default async function handler(
 
     // Calculate final score
     analysis.score = calculateATSScore(analysis)
+
+    // Save to Database
+    try {
+      const supabaseAdmin = getSupabaseAdmin()
+      if (supabaseAdmin) {
+        const { error: dbError } = await supabaseAdmin
+          .from('ats_analyses')
+          .insert({
+            resume_text: resumeText,
+            job_description: jobDescription,
+            score: analysis.score,
+            match_percentage: analysis.matchPercentage,
+            keywords_found: analysis.matchedKeywords,
+            keywords_missing: analysis.missingKeywords,
+          })
+        
+        if (dbError) {
+          console.error('Failed to save analysis to DB:', dbError)
+        }
+      }
+    } catch (saveError) {
+       console.error('Error saving to DB:', saveError)
+    }
 
     res.status(200).json({
       success: true,
