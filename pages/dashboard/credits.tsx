@@ -1,189 +1,246 @@
-import { NextPage } from 'next'
-import { useState } from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import Button from '../../components/Button'
-import Card from '../../components/Card'
+import { NextPage } from "next";
+import { useState } from "react";
+import Head from "next/head";
+import Link from "next/link";
+import Button from "../../components/Button";
+import Card from "../../components/Card";
 
 const CreditsPage: NextPage = () => {
   const [creditStats] = useState({
     current: 75,
     used: 25,
     total: 100,
-    resetDate: '2024-12-06'
-  })
+    resetDate: "2024-12-06",
+  });
 
   const usage = [
-    { action: 'Resume Generated', credits: 5, date: '2024-11-06', time: '2:30 PM' },
-    { action: 'ATS Check', credits: 2, date: '2024-11-05', time: '4:15 PM' },
-    { action: 'Portfolio Created', credits: 10, date: '2024-11-04', time: '10:20 AM' },
-    { action: 'Resume Template', credits: 3, date: '2024-11-03', time: '1:45 PM' }
-  ]
+    {
+      action: "Resume Generated",
+      credits: 5,
+      date: "2024-11-06",
+      time: "2:30 PM",
+    },
+    { action: "ATS Check", credits: 2, date: "2024-11-05", time: "4:15 PM" },
+    {
+      action: "Portfolio Created",
+      credits: 10,
+      date: "2024-11-04",
+      time: "10:20 AM",
+    },
+    {
+      action: "Resume Template",
+      credits: 3,
+      date: "2024-11-03",
+      time: "1:45 PM",
+    },
+  ];
 
   const creditPacks = [
     {
-      name: 'Starter Pack',
+      name: "Starter Pack",
       credits: 50,
       price: 9.99,
-      popular: false
+      popular: false,
     },
     {
-      name: 'Professional Pack',
+      name: "Professional Pack",
       credits: 150,
       price: 24.99,
       popular: true,
-      savings: 'Save 17%'
+      savings: "Save 17%",
     },
     {
-      name: 'Enterprise Pack',
+      name: "Enterprise Pack",
       credits: 300,
       price: 49.99,
       popular: false,
-      savings: 'Save 25%'
-    }
-  ]
+      savings: "Save 25%",
+    },
+  ];
 
   return (
     <>
       <Head>
-        <title>Credits Management - Cloud9 Resume</title>
-        <meta name="description" content="Manage your credits and view usage history" />
+        <title>Credits - Cloud9 Resume</title>
+        <meta
+          name="description"
+          content="Manage your credits and view usage history"
+        />
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <nav className="flex space-x-2 text-sm text-gray-600 mb-2">
-                <Link href="/dashboard" className="hover:text-gray-900">Dashboard</Link>
-                <span>/</span>
-                <span className="text-gray-900">Credits</span>
-              </nav>
-              <h1 className="text-2xl font-bold text-gray-900">Credits Management</h1>
-              <p className="text-gray-600">Monitor your usage and purchase additional credits</p>
+      <div className="min-h-screen font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900 relative">
+        {/* Header */}
+        <header className="border-b border-gray-200 bg-white/80 backdrop-blur-md sticky top-0 z-30 shadow-sm">
+          <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+            <h1 className="text-base font-semibold text-gray-900">Credits</h1>
+            <div className="text-xs text-gray-500">
+              Billing cycle resets on{" "}
+              <span className="font-medium text-gray-900">
+                {creditStats.resetDate}
+              </span>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-5xl mx-auto px-4 py-8 relative z-10">
           {/* Credit Overview */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <Card className="p-6 text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">{creditStats.current}</div>
-              <p className="text-gray-600">Credits Remaining</p>
+          <div className="grid md:grid-cols-3 gap-4 mb-8">
+            <Card className="p-5 flex flex-col items-center justify-center border-blue-200 bg-blue-50/50">
+              <div className="text-4xl font-bold text-blue-600 mb-1">
+                {creditStats.current}
+              </div>
+              <p className="text-xs font-medium text-blue-900 uppercase tracking-wide">
+                Available Credits
+              </p>
             </Card>
-            <Card className="p-6 text-center">
-              <div className="text-3xl font-bold text-gray-900 mb-2">{creditStats.used}</div>
-              <p className="text-gray-600">Credits Used This Month</p>
+            <Card className="p-5 flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-gray-900 mb-1">
+                {creditStats.used}
+              </div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Used This Month
+              </p>
             </Card>
-            <Card className="p-6 text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">{creditStats.total}</div>
-              <p className="text-gray-600">Monthly Allocation</p>
-              <p className="text-sm text-gray-500 mt-1">Resets on {creditStats.resetDate}</p>
+            <Card className="p-5 flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-gray-400 mb-1">
+                {creditStats.total}
+              </div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Monthly Limit
+              </p>
             </Card>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Purchase Credits */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Purchase Additional Credits</h2>
-              <div className="space-y-4">
+          <div className="grid lg:grid-cols-12 gap-8">
+            {/* Purchase Credits (8 cols) */}
+            <div className="lg:col-span-8 space-y-4">
+              <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                Purchase Packs
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
                 {creditPacks.map((pack, index) => (
-                  <Card key={index} className={`p-6 ${pack.popular ? 'ring-2 ring-blue-500' : ''}`}>
-                    <div className="flex justify-between items-center">
+                  <Card
+                    key={index}
+                    className={`p-5 transition-shadow hover:shadow-md ${
+                      pack.popular
+                        ? "ring-1 ring-blue-500 border-blue-500 relative overflow-hidden"
+                        : ""
+                    }`}
+                  >
+                    {pack.popular && (
+                      <div className="absolute top-0 right-0 py-0.5 px-2 bg-blue-500 text-white text-[10px] font-bold uppercase rounded-bl-lg">
+                        Best Value
+                      </div>
+                    )}
+                    <div className="flex flex-col h-full justify-between">
                       <div>
-                        <div className="flex items-center">
-                          <h3 className="text-lg font-medium text-gray-900">{pack.name}</h3>
-                          {pack.popular && (
-                            <span className="ml-2 px-2 py-1 text-xs bg-blue-500 text-white rounded-full">
-                              Popular
-                            </span>
+                        <h3 className="text-base font-bold text-gray-900">
+                          {pack.name}
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                          {pack.credits} credits
+                        </p>
+                      </div>
+
+                      <div className="flex items-end justify-between mt-2">
+                        <div>
+                          <p className="text-xl font-bold text-gray-900">
+                            ${pack.price}
+                          </p>
+                          {pack.savings && (
+                            <p className="text-xs text-green-600 font-medium">
+                              {pack.savings}
+                            </p>
                           )}
                         </div>
-                        <p className="text-gray-600">{pack.credits} credits</p>
-                        {pack.savings && (
-                          <p className="text-sm text-green-600 font-medium">{pack.savings}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900">${pack.price}</div>
-                        <Button variant={pack.popular ? 'primary' : 'secondary'} size="small">
-                          Purchase
+                        <Button
+                          variant={pack.popular ? "primary" : "secondary"}
+                          size="small"
+                          className="text-xs"
+                        >
+                          Buy Now
                         </Button>
                       </div>
                     </div>
                   </Card>
                 ))}
               </div>
+
+              <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide mt-8">
+                Info
+              </h2>
+              <Card className="p-6">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="text-center">
+                    <span className="text-2xl mb-2 block">📄</span>
+                    <p className="font-semibold text-gray-900 text-sm">
+                      Resume
+                    </p>
+                    <p className="text-xs text-gray-500">5 credits</p>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-2xl mb-2 block">🎯</span>
+                    <p className="font-semibold text-gray-900 text-sm">
+                      ATS Check
+                    </p>
+                    <p className="text-xs text-gray-500">2 credits</p>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-2xl mb-2 block">🎨</span>
+                    <p className="font-semibold text-gray-900 text-sm">
+                      Portfolio
+                    </p>
+                    <p className="text-xs text-gray-500">10 credits</p>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-2xl mb-2 block">📝</span>
+                    <p className="font-semibold text-gray-900 text-sm">
+                      Template
+                    </p>
+                    <p className="text-xs text-gray-500">3 credits</p>
+                  </div>
+                </div>
+              </Card>
             </div>
 
-            {/* Usage History */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Usage</h2>
-              <Card className="p-6">
-                <div className="space-y-4">
+            {/* Usage History (4 cols) */}
+            <div className="lg:col-span-4 space-y-4">
+              <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                Recent Usage
+              </h2>
+              <Card className="overflow-hidden">
+                <div className="divide-y divide-gray-100">
                   {usage.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-3 last:border-b-0">
+                    <div
+                      key={index}
+                      className="p-4 hover:bg-gray-50 transition-colors flex justify-between items-center"
+                    >
                       <div>
-                        <p className="font-medium text-gray-900">{item.action}</p>
-                        <p className="text-sm text-gray-500">{item.date} at {item.time}</p>
+                        <p className="text-xs font-medium text-gray-900">
+                          {item.action}
+                        </p>
+                        <p className="text-[10px] text-gray-400">{item.date}</p>
                       </div>
                       <div className="text-right">
-                        <span className="text-lg font-semibold text-red-600">-{item.credits}</span>
-                        <p className="text-xs text-gray-500">credits</p>
+                        <span className="text-xs font-bold text-red-500">
+                          -{item.credits}
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <Button variant="secondary" className="w-full">
-                    View Full History
-                  </Button>
+                <div className="p-3 bg-gray-50 border-t border-gray-100 text-center">
+                  <button className="text-xs font-medium text-gray-600 hover:text-gray-900">
+                    View All History
+                  </button>
                 </div>
               </Card>
             </div>
           </div>
-
-          {/* Credit System Info */}
-          <div className="mt-12">
-            <Card className="p-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">How Credits Work</h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3 flex items-center justify-center">
-                    <span className="text-2xl">📄</span>
-                  </div>
-                  <h3 className="font-medium text-gray-900 mb-2">Resume Generation</h3>
-                  <p className="text-sm text-gray-600">5 credits per resume</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3 flex items-center justify-center">
-                    <span className="text-2xl">🎯</span>
-                  </div>
-                  <h3 className="font-medium text-gray-900 mb-2">ATS Check</h3>
-                  <p className="text-sm text-gray-600">2 credits per check</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-3 flex items-center justify-center">
-                    <span className="text-2xl">🎨</span>
-                  </div>
-                  <h3 className="font-medium text-gray-900 mb-2">Portfolio Creation</h3>
-                  <p className="text-sm text-gray-600">10 credits per portfolio</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg mx-auto mb-3 flex items-center justify-center">
-                    <span className="text-2xl">📝</span>
-                  </div>
-                  <h3 className="font-medium text-gray-900 mb-2">Template Access</h3>
-                  <p className="text-sm text-gray-600">3 credits per premium template</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </main>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default CreditsPage
+export default CreditsPage;

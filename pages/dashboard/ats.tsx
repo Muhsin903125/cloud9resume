@@ -93,16 +93,14 @@ const ATSCheckerPage: NextPage = () => {
         />
       </Head>
 
-      <div className="min-h-screen bg-gray-50/50 font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900">
+      <div className="min-h-screen font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900 relative">
         <header className="border-b border-gray-200 bg-white sticky top-0 z-30 shadow-sm">
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Link
                 href="/dashboard"
                 className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors"
-              >
-                Dashboard
-              </Link>
+              ></Link>
               <span className="text-gray-300 text-xs">/</span>
               <span className="text-xs font-semibold text-gray-900">
                 ATS Optimization

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useAPIAuth } from "@/hooks/useAPIAuth";
@@ -20,6 +20,7 @@ import {
   DownloadIcon,
   SaveIcon,
   LinkIcon,
+  TemplateIcon,
 } from "@/components/Icons";
 
 import { ResumeRenderer } from "../../../../components/ResumeRenderer";
@@ -28,7 +29,7 @@ import { ResumePreviewModal } from "../../../../components/ResumePreviewModal";
 const ResumeEditor = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { get, post } = useAPIAuth();
+  const { get, post, patch } = useAPIAuth();
 
   // State
   const [resume, setResume] = useState<any>(null);
@@ -40,12 +41,14 @@ const ResumeEditor = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [showGenerationModal, setShowGenerationModal] = useState(false);
 
   // UI State
   const [activeTab, setActiveTab] = useState("personal_info");
   const [template, setTemplate] = useState<"modern" | "classic" | "minimal">(
     "modern"
   );
+  const [themeColor, setThemeColor] = useState("#3b82f6");
 
   const sectionTypes = [
     { id: "personal_info", label: "Personal Info", Icon: UserIcon },
@@ -76,6 +79,10 @@ const ResumeEditor = () => {
         const sectionsData =
           data.data.resume_sections || data.data.sections || [];
         setSections(sectionsData);
+
+        // Load preferences
+        if (data.data.template_id) setTemplate(data.data.template_id);
+        if (data.data.theme_color) setThemeColor(data.data.theme_color);
 
         // Initialize Form Data
         const initialData: any = {};
@@ -111,7 +118,6 @@ const ResumeEditor = () => {
     if (typeof updatedArray[index] === "object") {
       updatedArray[index] = { ...updatedArray[index], [field]: value };
     } else {
-      // Handle simple string arrays (like skills if using old structure, but we use objects now mostly)
       updatedArray[index] = value;
     }
 
@@ -154,7 +160,6 @@ const ResumeEditor = () => {
       return data.map(cleanSectionData).filter((item) => {
         if (typeof item === "string") return item.trim() !== "";
         if (typeof item === "object" && item !== null) {
-          // Check if object has at least one non-empty value
           return Object.values(item).some((v) => {
             if (typeof v === "string") return v.trim() !== "";
             if (Array.isArray(v)) return v.length > 0;
@@ -213,7 +218,6 @@ const ResumeEditor = () => {
 
       if (res.success) {
         setIsDirty(false);
-        // Update local state with cleaned data
         setFormData((prev: any) => ({ ...prev, [sectionKey]: cleanedData }));
         toast.success("Saved");
         return true;
@@ -229,6 +233,31 @@ const ResumeEditor = () => {
     }
   };
 
+  const handlePreferencesSave = async (
+    newTemplate: string,
+    newColor: string
+  ) => {
+    try {
+      const userId = localStorage.getItem("x_user_id");
+      await patch(
+        `/api/resumes/${id}`,
+        {
+          template_id: newTemplate,
+          theme_color: newColor,
+        },
+        { "x-user-id": userId || "" }
+      );
+
+      setTemplate(newTemplate as any);
+      setThemeColor(newColor);
+      toast.success("Preferences saved!");
+      return true;
+    } catch (e) {
+      toast.error("Failed to save preferences");
+      return false;
+    }
+  };
+
   const handleStepChange = async (newId: string) => {
     if (activeTab === newId) return;
     if (isDirty) {
@@ -239,13 +268,11 @@ const ResumeEditor = () => {
 
   // Live Preview Helper
   const getPreviewSections = () => {
-    // Merge existing DB sections with current Form Data
     const updated = sections.map((s) => ({
       ...s,
       section_data: formData[s.section_type] || s.section_data,
     }));
 
-    // Add new sections not yet in DB
     sectionTypes.forEach((type) => {
       if (
         !updated.find((s) => s.section_type === type.id) &&
@@ -281,7 +308,7 @@ const ResumeEditor = () => {
       {/* Main Editor UI - Hidden on Print */}
       <div className="flex-1 flex flex-col overflow-hidden no-print">
         {/* Top Navigation Bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm relative">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/dashboard/resume")}
@@ -334,32 +361,20 @@ const ResumeEditor = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex bg-gray-100 rounded-lg p-1 border border-gray-200">
-              {["modern", "classic", "minimal"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTemplate(t as any)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all ${
-                    template === t
-                      ? "bg-white shadow-sm text-gray-900"
-                      : "text-gray-500 hover:text-gray-900"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            {/* Template Trigger (Simplified) */}
+            <div className="text-xs text-gray-400 font-medium hidden md:block">
+              Auto-saving...
             </div>
 
             <button
               onClick={() => {
                 if (isDirty) saveSection();
-                toast("Preparing download...", { icon: "📄" });
-                setTimeout(() => window.print(), 500);
+                setShowGenerationModal(true);
               }}
-              className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2 shadow-sm"
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors flex items-center gap-2 shadow-lg shadow-gray-900/10"
             >
-              <DownloadIcon size={16} />
-              <span className="hidden sm:inline">Download</span>
+              <ZapIcon size={16} className="text-yellow-400" />
+              <span className="hidden sm:inline">Generate Resume</span>
             </button>
           </div>
         </header>
@@ -387,7 +402,8 @@ const ResumeEditor = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {/* Scrollable Form Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar bg-white relative">
               <div className="max-w-2xl mx-auto p-6 md:p-10 pb-32">
                 <div className="flex items-center justify-between mb-8">
                   <div>
@@ -395,7 +411,7 @@ const ResumeEditor = () => {
                       {sectionTypes.find((s) => s.id === activeTab)?.label}
                     </h2>
                     <p className="text-gray-500 text-sm mt-1">
-                      Fill in the details below. Changes are auto-saved.
+                      Fill in the details below.
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -405,7 +421,7 @@ const ResumeEditor = () => {
                       </span>
                     ) : (
                       <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium border border-green-100">
-                        All Saved
+                        Saved
                       </span>
                     )}
                   </div>
@@ -419,53 +435,51 @@ const ResumeEditor = () => {
                   handleRemoveArrayItem,
                   handleArrayFieldChange
                 )}
-
-                {/* Navigation Footer */}
-                <div className="flex justify-between items-center pt-8 border-t border-gray-100 mt-12">
-                  <button
-                    disabled={activeSectionIndex === 0}
-                    onClick={() =>
-                      handleStepChange(sectionTypes[activeSectionIndex - 1].id)
-                    }
-                    className="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (activeSectionIndex === sectionTypes.length - 1) {
-                        await saveSection();
-                        toast.success("Resume verification complete!");
-                      } else {
-                        handleStepChange(
-                          sectionTypes[activeSectionIndex + 1].id
-                        );
-                      }
-                    }}
-                    className="px-8 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
-                  >
-                    {activeSectionIndex === sectionTypes.length - 1
-                      ? "Finish Review"
-                      : "Next Step"}
-                    <ArrowRightIcon size={16} />
-                  </button>
-                </div>
               </div>
             </div>
 
-            {/* Mobile Preview Fab */}
-            <div className="lg:hidden absolute bottom-6 right-6">
+            {/* Sticky Navigation Footer */}
+            <div className="shrink-0 p-4 bg-white border-t border-gray-100 flex justify-between items-center z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
               <button
-                onClick={() => setShowPreview(true)}
-                className="bg-blue-900 text-white p-4 rounded-full shadow-xl hover:bg-blue-800 transition-colors"
+                disabled={activeSectionIndex === 0}
+                onClick={() =>
+                  handleStepChange(sectionTypes[activeSectionIndex - 1].id)
+                }
+                className="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                <EyeIcon size={24} />
+                Back
+              </button>
+              <button
+                onClick={async () => {
+                  if (activeSectionIndex === sectionTypes.length - 1) {
+                    await saveSection();
+                    setShowGenerationModal(true);
+                  } else {
+                    handleStepChange(sectionTypes[activeSectionIndex + 1].id);
+                  }
+                }}
+                className="px-8 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
+              >
+                {activeSectionIndex === sectionTypes.length - 1
+                  ? "Finish & Generate"
+                  : "Next Step"}
+                <ArrowRightIcon size={16} />
               </button>
             </div>
           </div>
 
+          {/* Mobile Preview Fab */}
+          <div className="lg:hidden absolute bottom-24 right-6 z-30">
+            <button
+              onClick={() => setShowPreview(true)}
+              className="bg-blue-900 text-white p-4 rounded-full shadow-xl hover:bg-blue-800 transition-colors"
+            >
+              <EyeIcon size={24} />
+            </button>
+          </div>
+
           {/* RIGHT: Live Preview (40%) */}
-          <div className="hidden lg:flex w-2/5 bg-slate-100 overflow-y-auto items-start justify-center p-8 relative custom-scrollbar">
+          <div className="hidden lg:flex w-2/5 bg-slate-100 overflow-y-auto items-start justify-center p-8 relative custom-scrollbar overflow-x-hidden">
             <div className="sticky top-8 pb-8">
               <div
                 className="bg-white shadow-2xl shadow-slate-200/50 rounded-sm overflow-hidden transition-all duration-300 transform"
@@ -480,18 +494,25 @@ const ResumeEditor = () => {
                   resume={resume}
                   sections={getPreviewSections()}
                   template={template}
+                  themeColor={themeColor}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Mobile Preview Modal */}
+        {/* Modals */}
         <ResumePreviewModal
-          isOpen={showPreview}
-          onClose={() => setShowPreview(false)}
+          isOpen={showPreview || showGenerationModal}
+          onClose={() => {
+            setShowPreview(false);
+            setShowGenerationModal(false);
+          }}
           resume={resume || { title: "New Resume" }}
           sections={getPreviewSections()}
+          template={template}
+          themeColor={themeColor}
+          onSave={handlePreferencesSave}
         />
       </div>
 
@@ -501,6 +522,7 @@ const ResumeEditor = () => {
           resume={resume}
           sections={getPreviewSections()}
           template={template}
+          themeColor={themeColor}
         />
       </div>
     </div>
@@ -805,27 +827,8 @@ const renderSectionForm = (
                     placeholder="New York, NY"
                   />
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                    Employment Type
-                  </label>
-                  <select
-                    value={item.employmentType || ""}
-                    onChange={(e) =>
-                      onArrayChange(idx, "employmentType", e.target.value)
-                    }
-                    className="w-full mt-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                  >
-                    <option value="">Select...</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Freelance">Freelance</option>
-                    <option value="Internship">Internship</option>
-                  </select>
-                </div>
               </div>
-              <div className="col-span-2">
+              <div>
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
                   Description
                 </label>
@@ -834,20 +837,18 @@ const renderSectionForm = (
                   onChange={(e) =>
                     onArrayChange(idx, "description", e.target.value)
                   }
-                  className="w-full mt-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm min-h-[100px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none leading-relaxed"
-                  placeholder="• Led a team of developers...&#10;• Achieved 20% growth..."
+                  rows={3}
+                  className="w-full mt-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"
+                  placeholder="Describe your responsibilities and achievements..."
                 />
               </div>
             </div>
           ))}
           <button
-            onClick={() => onAdd("items")}
-            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 group"
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
           >
-            <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-              +
-            </span>{" "}
-            Add Experience
+            <BriefcaseIcon size={16} /> Add Experience
           </button>
         </div>
       );
@@ -860,141 +861,115 @@ const renderSectionForm = (
               key={idx}
               className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3 relative group hover:shadow-md transition-shadow"
             >
-              <button
-                onClick={() => onRemove("items", idx)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                ×
-              </button>
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                <button
+                  onClick={() => onRemove("items", idx)}
+                  className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <div className="w-4 h-4 flex items-center justify-center font-bold">
+                    ×
+                  </div>
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <InputWrapper label="School / University">
-                  <input
-                    value={item.school || ""}
-                    onChange={(e) =>
-                      onArrayChange(idx, "school", e.target.value)
-                    }
-                    placeholder="Oxford University"
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  />
-                </InputWrapper>
-                <InputWrapper label="Degree">
-                  <input
-                    value={item.degree || ""}
-                    onChange={(e) =>
-                      onArrayChange(idx, "degree", e.target.value)
-                    }
-                    placeholder="BSc Computer Science"
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  />
-                </InputWrapper>
-                <InputWrapper label="Field of Study (Major)">
-                  <input
-                    value={item.fieldOfStudy || ""}
-                    onChange={(e) =>
-                      onArrayChange(idx, "fieldOfStudy", e.target.value)
-                    }
-                    placeholder="Artificial Intelligence"
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  />
-                </InputWrapper>
-                <div className="grid grid-cols-2 gap-2">
-                  <InputWrapper label="Graduation Year">
-                    <input
-                      value={item.graduationDate || ""}
-                      onChange={(e) =>
-                        onArrayChange(idx, "graduationDate", e.target.value)
-                      }
-                      placeholder="2023"
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                    />
-                  </InputWrapper>
-                  <InputWrapper label="GPA">
-                    <input
-                      value={item.gpa || ""}
-                      onChange={(e) =>
-                        onArrayChange(idx, "gpa", e.target.value)
-                      }
-                      placeholder="3.8/4.0"
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                    />
-                  </InputWrapper>
-                </div>
-                <InputWrapper label="Location">
-                  <input
-                    value={item.location || ""}
-                    onChange={(e) =>
-                      onArrayChange(idx, "location", e.target.value)
-                    }
-                    placeholder="London, UK"
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                  />
-                </InputWrapper>
+                <Input
+                  label="School / University"
+                  value={item.school}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "school", e.target.value)
+                  }
+                  placeholder="Stanford University"
+                />
+                <Input
+                  label="Degree"
+                  value={item.degree}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "degree", e.target.value)
+                  }
+                  placeholder="BSc Computer Science"
+                />
+                <Input
+                  label="Graduation Date"
+                  value={item.graduationDate}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "graduationDate", e.target.value)
+                  }
+                  placeholder="May 2020"
+                />
+                <Input
+                  label="Location"
+                  value={item.location}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "location", e.target.value)
+                  }
+                  placeholder="Stanford, CA"
+                />
               </div>
             </div>
           ))}
           <button
-            onClick={() => onAdd("items")}
-            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl font-bold text-xs text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-all"
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
           >
-            + Add Education
+            <GraduationCapIcon size={16} /> Add Education
           </button>
         </div>
       );
 
     case "skills":
       return (
-        <div className="bg-white p-8 rounded-2xl border border-gray-200 animate-fade-in-up">
-          <p className="text-sm font-medium text-gray-500 mb-6">
-            Type a skill and press Enter to add it.
-          </p>
-          <div className="flex flex-wrap gap-2 mb-6">
-            {(data.items || []).map((skill: string, idx: number) => (
-              <span
-                key={idx}
-                className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-bold border border-blue-100 group"
-              >
-                {skill}
-                <button
-                  onClick={() => onRemove("items", idx)}
-                  className="ml-2 text-blue-400 hover:text-blue-900 transition-colors"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-3">
-            <input
-              id="skillInput"
-              placeholder="e.g. React, Python, Project Management"
-              className="flex-1 px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm"
-              onKeyDown={(e: any) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  const val = e.target.value.trim();
-                  if (val) {
-                    const current = data.items || [];
-                    onChange("items", [...current, val]);
+        <div className="space-y-4 animate-fade-in-up">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <p className="text-sm text-gray-500 mb-4">
+              Add skills to your profile. Press Enter to add.
+            </p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {(data.items || []).map((skill: any, idx: number) => {
+                const skillName =
+                  typeof skill === "string" ? skill : skill.name;
+                return (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100"
+                  >
+                    {skillName}
+                    <button
+                      onClick={() => onRemove("items", idx)}
+                      className="ml-2 w-4 h-4 rounded-full hover:bg-blue-200 flex items-center justify-center text-blue-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Type a skill and press Enter (e.g. React, Python)"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-medium"
+                onKeyDown={(e: any) => {
+                  if (e.key === "Enter" && e.target.value.trim()) {
+                    e.preventDefault();
+                    // Check doubles
+                    const val = e.target.value.trim();
+                    const exists = (data.items || []).some(
+                      (s: any) =>
+                        (typeof s === "string" ? s : s.name).toLowerCase() ===
+                        val.toLowerCase()
+                    );
+                    if (!exists) {
+                      const newItems = [...(data.items || []), { name: val }];
+                      onChange("items", newItems);
+                    }
                     e.target.value = "";
                   }
-                }
-              }}
-            />
-            <button
-              onClick={() => {
-                const input = document.getElementById(
-                  "skillInput"
-                ) as HTMLInputElement;
-                if (input && input.value.trim()) {
-                  const current = data.items || [];
-                  onChange("items", [...current, input.value.trim()]);
-                  input.value = "";
-                }
-              }}
-              className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/10"
-            >
-              Add
-            </button>
+                }}
+              />
+              <div className="absolute right-4 top-3 text-gray-400">
+                <ZapIcon size={20} />
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -1005,117 +980,126 @@ const renderSectionForm = (
           {(data.items || []).map((item: any, idx: number) => (
             <div
               key={idx}
-              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3 relative group"
+              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3 relative group hover:shadow-md transition-shadow"
             >
               <button
                 onClick={() => onRemove("items", idx)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 p-1.5"
+                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
               >
                 ×
               </button>
               <div className="grid grid-cols-2 gap-4">
-                <InputWrapper label="Project Name">
-                  <input
-                    value={item.title || ""}
-                    onChange={(e) =>
-                      onArrayChange(idx, "title", e.target.value)
-                    }
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                    placeholder="e.g. Portfolio Website"
-                  />
-                </InputWrapper>
-                <InputWrapper label="Tech Stack">
-                  <input
-                    value={item.technologies || ""}
-                    onChange={(e) =>
-                      onArrayChange(idx, "technologies", e.target.value)
-                    }
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                    placeholder="e.g. React, Node.js"
-                  />
-                </InputWrapper>
-                <InputWrapper label="Project Link">
-                  <input
-                    value={item.link || ""}
-                    onChange={(e) => onArrayChange(idx, "link", e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                    placeholder="https://..."
-                  />
-                </InputWrapper>
-                <InputWrapper label="Date / Year">
-                  <input
-                    value={item.date || ""}
-                    onChange={(e) => onArrayChange(idx, "date", e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                    placeholder="2023"
-                  />
-                </InputWrapper>
-              </div>
-              <InputWrapper label="Description">
-                <textarea
-                  value={item.description || ""}
-                  onChange={(e) =>
-                    onArrayChange(idx, "description", e.target.value)
+                <Input
+                  label="Project Title"
+                  value={item.title}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "title", e.target.value)
                   }
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm min-h-[80px] resize-none"
-                  placeholder="Describe your project..."
+                  placeholder="Task Manager App"
                 />
-              </InputWrapper>
+                <Input
+                  label="Technologies"
+                  value={item.technologies}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "technologies", e.target.value)
+                  }
+                  placeholder="React, Node.js"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Link / URL"
+                  value={item.link}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "link", e.target.value)
+                  }
+                  placeholder="https://github.com/..."
+                />
+                <Input
+                  label="Date"
+                  value={item.date}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "date", e.target.value)
+                  }
+                  placeholder="2022"
+                />
+              </div>
+              <Textarea
+                label="Description"
+                value={item.description}
+                onChange={(e: any) =>
+                  onArrayChange(idx, "description", e.target.value)
+                }
+                placeholder="Describe what you built and the impact..."
+              />
             </div>
           ))}
           <button
-            onClick={() => onAdd("items")}
-            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl font-bold text-xs text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-all"
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
           >
-            + Add Project
+            <PortfolioIcon size={16} /> Add Project
+          </button>
+        </div>
+      );
+
+    case "languages":
+      return (
+        <div className="space-y-4 animate-fade-in-up">
+          {(data.items || []).map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center gap-4 relative group"
+            >
+              <button
+                onClick={() => onRemove("items", idx)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+              >
+                ×
+              </button>
+              <div className="flex-1">
+                <Input
+                  label="Language"
+                  value={item.language}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "language", e.target.value)
+                  }
+                  placeholder="English"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
+                  Proficiency
+                </label>
+                <select
+                  value={item.proficiency || ""}
+                  onChange={(e) =>
+                    onArrayChange(idx, "proficiency", e.target.value)
+                  }
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+                >
+                  <option value="">Select...</option>
+                  <option value="Native">Native</option>
+                  <option value="Fluent">Fluent</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Basic">Basic</option>
+                </select>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+          >
+            <GlobeIcon size={16} /> Add Language
           </button>
         </div>
       );
 
     default:
       return (
-        <div className="space-y-4 animate-fade-in-up">
-          {(data.items || []).map((item: any, idx: number) => (
-            <div
-              key={idx}
-              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3 relative group"
-            >
-              <button
-                onClick={() => onRemove("items", idx)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 p-1.5"
-              >
-                ×
-              </button>
-              <InputWrapper label="Title / Name">
-                <input
-                  value={item.title || item.name || ""}
-                  onChange={(e) =>
-                    onArrayChange(
-                      idx,
-                      item.title !== undefined ? "title" : "name",
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                />
-              </InputWrapper>
-              <InputWrapper label="Description">
-                <textarea
-                  value={item.description || ""}
-                  onChange={(e) =>
-                    onArrayChange(idx, "description", e.target.value)
-                  }
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm min-h-[80px]"
-                />
-              </InputWrapper>
-            </div>
-          ))}
-          <button
-            onClick={() => onAdd("items")}
-            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl font-bold text-xs text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-all"
-          >
-            + Add Item
-          </button>
+        <div className="text-center py-12 text-gray-400">
+          Section specific form not implemented yet for {type}
         </div>
       );
   }

@@ -6,6 +6,7 @@ export interface Resume {
   job_title?: string
   is_primary: boolean
   template_id?: string
+  theme_color?: string
   created_at: string
   updated_at: string
 }

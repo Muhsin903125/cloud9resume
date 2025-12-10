@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { USER_AUTH_TOKEN_KEY, clearAllTokens } from '../lib/token-keys'
 
@@ -10,7 +10,7 @@ interface ApiResponse<T = any> {
   status?: number
 }
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 
 /**
  * Reusable hook for making authenticated API calls with access tokens
@@ -165,6 +165,12 @@ export function useAPIAuth() {
       request<T>(endpoint, 'PUT', body, customHeaders),
     [request]
   )
+  
+  const patch = useCallback(
+    <T = any>(endpoint: string, body?: any, customHeaders?: Record<string, string>) =>
+      request<T>(endpoint, 'PATCH', body, customHeaders),
+    [request]
+  )
 
   const delete_ = useCallback(
     <T = any>(endpoint: string, customHeaders?: Record<string, string>) =>
@@ -181,6 +187,7 @@ export function useAPIAuth() {
     get,
     post,
     put,
+    patch,
     delete: delete_,
     getAccessToken,
     handle401Logout,

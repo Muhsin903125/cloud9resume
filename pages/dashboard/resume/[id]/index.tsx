@@ -1,238 +1,233 @@
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
-import Head from 'next/head'
-import { EditIcon, DownloadIcon, CopyIcon, AIIcon, EyeIcon, ChevronLeftIcon } from '../../../../components/Icons'
-import { colors } from '../../../../lib/constants'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import Head from "next/head";
+import {
+  EditIcon,
+  DownloadIcon,
+  CopyIcon,
+  AIIcon,
+  EyeIcon,
+  ChevronLeftIcon,
+} from "../../../../components/Icons";
 
 const EnhancedResumeEditor = () => {
-  const router = useRouter()
-  const { id } = router.query
-  const [resume, setResume] = useState<any>(null)
-  const [sections, setSections] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('edit')
-  const [formData, setFormData] = useState<any>({})
+  const router = useRouter();
+  const { id } = router.query;
+  const [resume, setResume] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("edit");
 
   const navItems = [
-    { id: 'edit', label: 'Edit', icon: EditIcon, action: () => setActiveTab('edit') },
-    { id: 'templates', label: 'Templates', icon: DownloadIcon, action: () => router.push(`/dashboard/resume/${id}/templates`) },
-    { id: 'export', label: 'Export', icon: DownloadIcon, action: () => router.push(`/dashboard/resume/${id}/export`) },
-    { id: 'portfolio', label: 'Portfolio', icon: EyeIcon, action: () => router.push(`/dashboard/resume/${id}/portfolio`) },
-    { id: 'analytics', label: 'Analytics', icon: EditIcon, action: () => router.push(`/dashboard/resume/${id}/analytics`) },
-    { id: 'ai-tools', label: 'AI Tools', icon: AIIcon, action: () => router.push(`/dashboard/resume/${id}/ai-tools`) }
-  ]
+    {
+      id: "edit",
+      label: "Edit",
+      icon: EditIcon,
+      action: () => setActiveTab("edit"),
+    },
+    {
+      id: "templates",
+      label: "Templates",
+      icon: DownloadIcon,
+      action: () => router.push(`/dashboard/resume/${id}/templates`),
+    },
+    {
+      id: "export",
+      label: "Export",
+      icon: DownloadIcon,
+      action: () => router.push(`/dashboard/resume/${id}/export`),
+    },
+    {
+      id: "portfolio",
+      label: "Portfolio",
+      icon: EyeIcon,
+      action: () => router.push(`/dashboard/resume/${id}/portfolio`),
+    },
+    {
+      id: "analytics",
+      label: "Analytics",
+      icon: EditIcon,
+      action: () => router.push(`/dashboard/resume/${id}/analytics`),
+    },
+    {
+      id: "ai-tools",
+      label: "AI Tools",
+      icon: AIIcon,
+      action: () => router.push(`/dashboard/resume/${id}/ai-tools`),
+    },
+  ];
 
   useEffect(() => {
-    fetchData()
-  }, [id])
+    if (id) fetchData();
+  }, [id]);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      const response = await fetch(`/api/resumes/${id}`)
-      const data = await response.json()
+      setLoading(true);
+      const response = await fetch(`/api/resumes/${id}`);
+      const data = await response.json();
 
       if (data.success && data.data) {
-        setResume(data.data)
-        setSections(data.data.resume_sections || [])
-
-        // Initialize formData from sections
-        const initialFormData: any = {}
-        data.data.resume_sections?.forEach((section: any) => {
-          initialFormData[section.section_type] = section.section_data || {}
-        })
-        setFormData(initialFormData)
+        setResume(data.data);
       } else {
-        setError(data.error || 'Failed to load resume')
+        setError(data.error || "Failed to load resume");
       }
     } catch (err) {
-      console.error('Fetch error:', err)
-      setError('Failed to load resume')
+      console.error("Fetch error:", err);
+      setError("Failed to load resume");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <>
-        <Head>
-          <title>Loading Resume - Cloud9 Resume</title>
-        </Head>
-        <div style={{ padding: '40px', textAlign: 'center', color: colors.secondary.mediumGray }}>
-          Loading resume...
-        </div>
-      </>
-    )
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-gray-900"></div>
+      </div>
+    );
   }
 
   return (
     <>
       <Head>
-        <title>{resume?.title ? `Edit ${resume.title}` : 'Resume'} - Cloud9 Resume</title>
+        <title>
+          {resume?.title ? `Edit ${resume.title}` : "Resume"} - Cloud9 Resume
+        </title>
       </Head>
 
-      <div style={{ background: colors.background.light, minHeight: '100vh' }}>
+      <div className="min-h-screen bg-gray-50 font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900">
         {/* Header */}
-        <div style={{ background: 'white', borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
-          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <header className="border-b border-gray-200 bg-white sticky top-0 z-30 shadow-sm">
+          <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
             <button
-              onClick={() => router.push('/dashboard/resume')}
-              style={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '14px', 
-                fontWeight: '600', 
-                color: colors.primary.black, 
-                background: 'none', 
-                border: 'none', 
-                cursor: 'pointer'
-              }}
+              onClick={() => router.push("/dashboard/resumes")}
+              className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
             >
-              <ChevronLeftIcon size={18} color={colors.primary.black} />
+              <ChevronLeftIcon size={14} />
               Back
             </button>
-            <h1 style={{ fontSize: '20px', fontWeight: '700', margin: 0, color: colors.primary.black }}>
-              {resume?.title || 'Resume'}
+            <h1 className="text-sm font-bold text-gray-900 truncate max-w-[200px] sm:max-w-md">
+              {resume?.title || "Resume Editor"}
             </h1>
-            <div style={{ width: '100px' }} />
+            <div className="w-10"></div> {/* Spacer for center alignment */}
           </div>
-        </div>
 
-        {/* Navigation Tabs */}
-        <div style={{ background: 'white', borderBottom: `2px solid ${colors.border}`, overflowX: 'auto' }}>
-          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '4px', padding: '0 24px' }}>
-            {navItems.map((item) => {
-              const IconComponent = item.icon
-              return (
-                <button
-                  key={item.id}
-                  onClick={item.action}
-                  style={{
-                    padding: '12px 16px',
-                    background: activeTab === item.id ? colors.primary.blue : 'transparent',
-                    color: activeTab === item.id ? 'white' : colors.primary.black,
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (activeTab !== item.id) {
-                      e.currentTarget.style.backgroundColor = colors.secondary.lightGray
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (activeTab !== item.id) {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }
-                  }}
-                >
-                  <IconComponent size={16} color={activeTab === item.id ? 'white' : colors.primary.black} />
-                  {item.label}
-                </button>
-              )
-            })}
+          {/* Navigation Tabs */}
+          <div className="border-t border-gray-100 bg-white overflow-x-auto scrollbar-hide">
+            <div className="max-w-5xl mx-auto px-4 flex gap-6">
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={item.action}
+                    className={`
+                        flex items-center gap-2 py-3 text-xs font-medium border-b-2 transition-all whitespace-nowrap
+                        ${
+                          isActive
+                            ? "border-blue-600 text-blue-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        }
+                      `}
+                  >
+                    <IconComponent
+                      size={14}
+                      className={isActive ? "text-blue-600" : "text-gray-400"}
+                    />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </header>
 
         {/* Content Area */}
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
-          <div style={{ background: 'white', borderRadius: '8px', padding: '24px', border: `1px solid ${colors.border}` }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: colors.primary.black, margin: '0 0 16px 0' }}>
-              Resume Editor
+        <main className="max-w-5xl mx-auto px-4 py-8">
+          {error && (
+            <div className="mb-6 p-3 bg-red-50 text-red-600 text-xs rounded-lg border border-red-100 flex justify-between items-center">
+              <span>{error}</span>
+              <button
+                onClick={() => setError("")}
+                className="text-red-400 hover:text-red-600"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h2 className="text-base font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <EditIcon size={18} className="text-gray-400" />
+              Editor Workspace
             </h2>
 
-            {error && (
-              <div style={{ 
-                padding: '12px 16px', 
-                background: 'rgba(239, 68, 68, 0.1)', 
-                color: colors.accent.red, 
-                borderRadius: '6px', 
-                marginBottom: '16px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <span>{error}</span>
-                <button
-                  onClick={() => setError('')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: colors.accent.red,
-                    cursor: 'pointer',
-                    fontSize: '18px'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            )}
-
             {/* Quick Actions */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-              <QuickActionButton icon={EyeIcon} label="View Resume" onClick={() => window.open(`/portfolio/${resume?.id}`, '_blank')} />
-              <QuickActionButton icon={CopyIcon} label="Duplicate Resume" onClick={() => alert('Duplicate functionality coming soon')} />
-              <QuickActionButton icon={DownloadIcon} label="Download Export" onClick={() => router.push(`/dashboard/resume/${id}/export`)} />
-              <QuickActionButton icon={AIIcon} label="AI Enhancement" onClick={() => router.push(`/dashboard/resume/${id}/ai-tools`)} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <QuickActionButton
+                icon={EyeIcon}
+                label="View Resume"
+                onClick={() =>
+                  window.open(`/portfolio/${resume?.id}`, "_blank")
+                }
+              />
+              <QuickActionButton
+                icon={CopyIcon}
+                label="Duplicate"
+                onClick={() => alert("Coming soon")}
+              />
+              <QuickActionButton
+                icon={DownloadIcon}
+                label="Export PDF"
+                onClick={() => router.push(`/dashboard/resume/${id}/export`)}
+              />
+              <QuickActionButton
+                icon={AIIcon}
+                label="AI Improve"
+                onClick={() => router.push(`/dashboard/resume/${id}/ai-tools`)}
+              />
             </div>
 
             {/* Navigation Suggestions */}
-            <div style={{ padding: '16px', background: colors.background.light, borderRadius: '6px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
-              <p style={{ fontSize: '13px', color: colors.secondary.mediumGray, margin: 0, lineHeight: '1.5' }}>
-                <strong>Tip:</strong> Use the tabs above to access templates, export formats, portfolio links, analytics, and AI enhancement tools!
+            <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100/50 mb-6">
+              <p className="text-xs text-blue-800 leading-relaxed">
+                <strong>Pro Tip:</strong> Use the tab bar above to switch
+                between editing different sections, choosing templates, and
+                analyzing your resume with AI.
               </p>
             </div>
 
-            {/* Content */}
-            <div style={{ padding: '16px', background: colors.background.light, borderRadius: '6px', minHeight: '200px', border: `1px solid ${colors.border}` }}>
-              <p style={{ fontSize: '14px', color: colors.secondary.mediumGray, margin: 0, lineHeight: '1.6' }}>
-                Click on the tabs above to navigate between different sections of your resume builder. Each section provides specialized tools for editing, exporting, publishing, and analyzing your resume.
+            {/* Content Placeholder */}
+            <div className="p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center">
+              <p className="text-xs text-gray-500 max-w-lg mx-auto leading-relaxed">
+                The section editor is currently being updated to match the new
+                design system. Full editing capabilities will be restored
+                shortly.
               </p>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </>
-  )
-}
+  );
+};
 
 const QuickActionButton = ({ icon: IconComponent, label, onClick }: any) => {
-  const [isHovered, setIsHovered] = useState(false)
-
   return (
     <button
       onClick={onClick}
-      style={{
-        padding: '12px',
-        background: isHovered ? colors.primary.blue : 'white',
-        border: `1px solid ${isHovered ? colors.primary.blue : colors.border}`,
-        borderRadius: '6px',
-        fontSize: '13px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        color: isHovered ? 'white' : colors.secondary.mediumGray,
-        transition: 'all 0.2s'
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="group flex flex-col items-center justify-center gap-2 p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:shadow-sm hover:bg-blue-50/10 transition-all"
     >
-      <IconComponent size={16} color={isHovered ? 'white' : colors.secondary.mediumGray} />
-      {label}
+      <div className="p-2 bg-gray-50 rounded-lg text-gray-500 group-hover:text-blue-600 group-hover:bg-blue-100 transition-colors">
+        <IconComponent size={18} />
+      </div>
+      <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900">
+        {label}
+      </span>
     </button>
-  )
-}
+  );
+};
 
-export default EnhancedResumeEditor
+export default EnhancedResumeEditor;
