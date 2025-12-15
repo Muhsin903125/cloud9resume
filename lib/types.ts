@@ -24,8 +24,22 @@ export interface ResumeSection {
 export interface Portfolio {
   id: string
   user_id: string
-  slug: string
+  title: string
+  slug?: string
   resume_id: string
+  repo?: string
+  url?: string
+  theme?: string
+  theme_color?: string
+  template_id?: string
+  settings?: {
+    visibleSections?: string[];
+    showPhoto?: boolean;
+    photoUrl?: string;
+    customTitle?: string;
+    customUser?: string;
+    [key: string]: any;
+  }
   is_active: boolean
   created_at: string
   updated_at: string

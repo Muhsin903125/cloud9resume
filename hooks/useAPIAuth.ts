@@ -92,6 +92,7 @@ export function useAPIAuth() {
           method,
           headers,
           body: body ? JSON.stringify(body) : undefined,
+          cache: 'no-store', // Prevent browser caching of API responses
         })
 
         // Parse response
@@ -189,6 +190,7 @@ export function useAPIAuth() {
     put,
     patch,
     delete: delete_,
+    del: delete_,
     getAccessToken,
     handle401Logout,
   }
