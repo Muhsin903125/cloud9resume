@@ -1,7 +1,7 @@
 {
   "name": "cloud9profile",
   "version": "1.0.0",
-  "description": "Cloud9 Resume - AI-powered resume and portfolio builder",
+  "description": "Cloud9Profile - AI-powered resume and portfolio builder",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -76,6 +76,6 @@
     "ats",
     "supabase"
   ],
-  "author": "Cloud9 Resume Team",
+  "author": "Cloud9Profile Team",
   "license": "MIT"
 }

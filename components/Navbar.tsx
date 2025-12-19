@@ -38,15 +38,23 @@ export default function Navbar() {
           <div className="flex items-center space-x-3">
             <Link
               href="/"
-              className="font-bold text-blue-600 flex items-center gap-2"
+              className="font-bold text-blue-600 flex items-center gap-2 group"
             >
-              <Image
-                src="/logo.png"
-                alt="Cloud9 Resume Logo"
-                width={150}
-                height={40}
-                className="rounded-lg object-contain h-10 w-auto"
-              />
+              <motion.div
+                whileHover={{
+                  scale: 1.05,
+                  filter: "drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))",
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                <Image
+                  src="/logo.png"
+                  alt="Cloud9Profile Logo"
+                  width={150}
+                  height={40}
+                  className="rounded-lg object-contain h-10 w-auto transition-all"
+                />
+              </motion.div>
             </Link>
           </div>
 
@@ -77,6 +85,17 @@ export default function Navbar() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  animate={{
+                    boxShadow: [
+                      "0 0 0 0px rgba(59, 130, 246, 0.4)",
+                      "0 0 0 10px rgba(59, 130, 246, 0)",
+                    ],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2,
+                    ease: "easeInOut",
+                  }}
                   className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-medium text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
                 >
                   Get Started

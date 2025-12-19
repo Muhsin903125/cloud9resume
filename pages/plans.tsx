@@ -87,7 +87,7 @@ const PlansPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Plans & Pricing - Cloud9 Resume</title>
+        <title>Plans & Pricing - Cloud9Profile</title>
         <meta
           name="description"
           content="Choose the perfect plan for your career growth"

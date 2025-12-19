@@ -61,7 +61,7 @@ const CreditsPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Credits - Cloud9 Resume</title>
+        <title>Credits - Cloud9Profile</title>
         <meta
           name="description"
           content="Manage your credits and view usage history"

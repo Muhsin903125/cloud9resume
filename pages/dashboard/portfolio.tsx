@@ -291,7 +291,7 @@ const PortfolioDashboardPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Portfolios - Cloud9 Resume</title>
+        <title>Portfolios - Cloud9Profile</title>
       </Head>
 
       <div className="min-h-screen font-sans text-gray-900 bg-gray-50">

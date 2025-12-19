@@ -183,7 +183,7 @@ const ResumeDashboard = () => {
   return (
     <>
       <Head>
-        <title>My Resumes - Cloud9 Resume</title>
+        <title>My Resumes - Cloud9Profile</title>
       </Head>
 
       <div className="bg-gray-50 min-h-screen">

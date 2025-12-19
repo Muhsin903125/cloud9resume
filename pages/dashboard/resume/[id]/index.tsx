@@ -92,7 +92,7 @@ const EnhancedResumeEditor = () => {
     <>
       <Head>
         <title>
-          {resume?.title ? `Edit ${resume.title}` : "Resume"} - Cloud9 Resume
+          {resume?.title ? `Edit ${resume.title}` : "Resume"} - Cloud9Profile
         </title>
       </Head>
 

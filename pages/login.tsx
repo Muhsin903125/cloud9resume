@@ -1,101 +1,104 @@
-import { NextPage } from 'next'
-import { useState, useEffect } from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter } from 'next/router'
-import Button from '../components/Button'
-import OAuthButton from '../components/OAuthButton'
-import { 
-  signIn, 
+import { NextPage } from "next";
+import { useState, useEffect } from "react";
+import Head from "next/head";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/router";
+import Button from "../components/Button";
+import OAuthButton from "../components/OAuthButton";
+import {
+  signIn,
   getGoogleOAuthUrl,
   getLinkedInOAuthUrl,
-  getGitHubOAuthUrl
-} from '../lib/authUtils'
+  getGitHubOAuthUrl,
+} from "../lib/authUtils";
 
 const LoginPage: NextPage = () => {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [rememberMe, setRememberMe] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [showEmailForm, setShowEmailForm] = useState(false)
+    email: "",
+    password: "",
+  });
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   // Load saved email if remember me was enabled, and check for OAuth errors
   useEffect(() => {
-    const savedEmail = localStorage.getItem('rememberedEmail')
-    const wasRemembered = localStorage.getItem('rememberMeEnabled') === 'true'
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    const wasRemembered = localStorage.getItem("rememberMeEnabled") === "true";
     if (savedEmail && wasRemembered) {
-      setFormData(prev => ({ ...prev, email: savedEmail }))
-      setRememberMe(true)
+      setFormData((prev) => ({ ...prev, email: savedEmail }));
+      setRememberMe(true);
     }
 
     // Check if there's an error from Google OAuth callback
     if (router.query.error) {
-      const errorMsg = Array.isArray(router.query.error) 
-        ? router.query.error[0] 
-        : router.query.error
-      setError(decodeURIComponent(errorMsg))
-      
+      const errorMsg = Array.isArray(router.query.error)
+        ? router.query.error[0]
+        : router.query.error;
+      setError(decodeURIComponent(errorMsg));
+
       // Clear error from URL
-      window.history.replaceState({}, '', '/login')
+      window.history.replaceState({}, "", "/login");
     }
-  }, [router.query.error])
+  }, [router.query.error]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       // Handle remember me
       if (rememberMe) {
-        localStorage.setItem('rememberedEmail', formData.email)
-        localStorage.setItem('rememberMeEnabled', 'true')
+        localStorage.setItem("rememberedEmail", formData.email);
+        localStorage.setItem("rememberMeEnabled", "true");
       } else {
-        localStorage.removeItem('rememberedEmail')
-        localStorage.setItem('rememberMeEnabled', 'false')
+        localStorage.removeItem("rememberedEmail");
+        localStorage.setItem("rememberMeEnabled", "false");
       }
 
       // Call the signin function from authUtils
-      const result = await signIn(formData.email, formData.password)
+      const result = await signIn(formData.email, formData.password);
 
       if (result.error) {
-        setError(result.error)
-        return
+        setError(result.error);
+        return;
       }
 
       // Redirect to dashboard on success
-      router.push('/dashboard')
+      router.push("/dashboard");
     } catch (err) {
-      setError('An error occurred. Please try again.')
-      console.error('Login error:', err)
+      setError("An error occurred. Please try again.");
+      console.error("Login error:", err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = () => {
     // This is now handled by OAuthButton component
-    window.location.href = getGoogleOAuthUrl('signin')
-  }
+    window.location.href = getGoogleOAuthUrl("signin");
+  };
 
   return (
     <>
       <Head>
-        <title>Sign In - Cloud9 Resume</title>
-        <meta name="description" content="Sign in to your Cloud9 Resume account" />
+        <title>Sign In - Cloud9Profile</title>
+        <meta
+          name="description"
+          content="Sign in to your Cloud9Profile account"
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -106,14 +109,18 @@ const LoginPage: NextPage = () => {
             <Link href="/" className="inline-block mb-6">
               <Image
                 src="/logo.png"
-                alt="Cloud9 Resume"
+                alt="Cloud9Profile"
                 width={160}
                 height={48}
                 className="h-auto"
               />
             </Link>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Welcome back</h1>
-            <p className="text-sm text-gray-600">Sign in to continue to your account</p>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+              Welcome back
+            </h1>
+            <p className="text-sm text-gray-600">
+              Sign in to continue to your account
+            </p>
           </div>
 
           {/* Error Message */}
@@ -128,17 +135,17 @@ const LoginPage: NextPage = () => {
             <OAuthButton
               provider="google"
               mode="signin"
-              getOAuthUrl={() => getGoogleOAuthUrl('signin')}
+              getOAuthUrl={() => getGoogleOAuthUrl("signin")}
             />
             <OAuthButton
               provider="linkedin"
               mode="signin"
-              getOAuthUrl={() => getLinkedInOAuthUrl('signin')}
+              getOAuthUrl={() => getLinkedInOAuthUrl("signin")}
             />
             <OAuthButton
               provider="github"
               mode="signin"
-              getOAuthUrl={() => getGitHubOAuthUrl('signin')}
+              getOAuthUrl={() => getGitHubOAuthUrl("signin")}
             />
           </div>
 
@@ -153,7 +160,7 @@ const LoginPage: NextPage = () => {
                 onClick={() => setShowEmailForm(!showEmailForm)}
                 className="px-3 bg-white text-gray-500 hover:text-gray-700 font-medium transition-colors"
               >
-                {showEmailForm ? 'Hide email sign in' : 'Or sign in with email'}
+                {showEmailForm ? "Hide email sign in" : "Or sign in with email"}
               </button>
             </div>
           </div>
@@ -162,7 +169,10 @@ const LoginPage: NextPage = () => {
           {showEmailForm && (
             <form onSubmit={handleSubmit} className="space-y-4 mb-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                >
                   Email
                 </label>
                 <input
@@ -179,10 +189,16 @@ const LoginPage: NextPage = () => {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Password
                   </label>
-                  <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
                     Forgot?
                   </Link>
                 </div>
@@ -207,7 +223,10 @@ const LoginPage: NextPage = () => {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600">
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 text-sm text-gray-600"
+                >
                   Remember me
                 </label>
               </div>
@@ -217,29 +236,36 @@ const LoginPage: NextPage = () => {
                 disabled={isLoading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors disabled:opacity-50"
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? "Signing in..." : "Sign in"}
               </button>
             </form>
           )}
 
           {/* Sign Up Link */}
           <p className="text-center text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/signup" className="font-semibold text-blue-600 hover:text-blue-700">
+            Don't have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-blue-600 hover:text-blue-700"
+            >
               Sign up free
             </Link>
           </p>
 
           {/* Footer */}
           <p className="mt-8 text-center text-xs text-gray-500">
-            <a href="#" className="hover:text-gray-700">Terms</a>
-            {' · '}
-            <a href="#" className="hover:text-gray-700">Privacy</a>
+            <a href="#" className="hover:text-gray-700">
+              Terms
+            </a>
+            {" · "}
+            <a href="#" className="hover:text-gray-700">
+              Privacy
+            </a>
           </p>
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default LoginPage
+export default LoginPage;

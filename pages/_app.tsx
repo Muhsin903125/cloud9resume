@@ -14,9 +14,22 @@ import {
   AnalyticsIcon,
   TemplateIcon,
 } from "../components/Icons";
+import GoogleAnalytics from "../components/GoogleAnalytics";
+import * as gtag from "../lib/gtag";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
+
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      gtag.pageview(url);
+    };
+    router.events.on("routeChangeComplete", handleRouteChange);
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router.events]);
+
   const { user, logout } = useAuth();
   const [userName, setUserName] = useState<string>("");
   const [userPicture, setUserPicture] = useState<string | null>(null);
@@ -38,6 +51,7 @@ export default function App({ Component, pageProps }: AppProps) {
   if (isDashboard) {
     return (
       <div className="min-h-screen bg-gray-50">
+        <GoogleAnalytics />
         <DashboardLayout
           userName={userName}
           userPicture={userPicture}
@@ -54,12 +68,18 @@ export default function App({ Component, pageProps }: AppProps) {
 
   // Auth pages don't need navbar/footer
   if (isAuthPage) {
-    return <Component {...pageProps} />;
+    return (
+      <>
+        <GoogleAnalytics />
+        <Component {...pageProps} />
+      </>
+    );
   }
 
   // Regular pages with navbar and footer
   return (
     <div className="min-h-screen flex flex-col">
+      <GoogleAnalytics />
       <Toaster position="bottom-right" />
       <Navbar />
       <main className="flex-1">

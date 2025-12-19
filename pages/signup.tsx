@@ -1,175 +1,177 @@
-import { NextPage } from 'next'
-import { useState, useEffect } from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter } from 'next/router'
-import Button from '../components/Button'
-import Card from '../components/Card'
-import OAuthButton from '../components/OAuthButton'
-import { api } from '../lib/api'
-import { 
-  validateEmail, 
-  isValidEmail, 
+import { NextPage } from "next";
+import { useState, useEffect } from "react";
+import Head from "next/head";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/router";
+import Button from "../components/Button";
+import Card from "../components/Card";
+import OAuthButton from "../components/OAuthButton";
+import { api } from "../lib/api";
+import {
+  validateEmail,
+  isValidEmail,
   getGoogleOAuthUrl,
   getLinkedInOAuthUrl,
-  getGitHubOAuthUrl
-} from '../lib/authUtils'
+  getGitHubOAuthUrl,
+} from "../lib/authUtils";
 
 const SignupPage: NextPage = () => {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    acceptTerms: false
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [showEmailForm, setShowEmailForm] = useState(false)
-  const [emailError, setEmailError] = useState('')
-  const [emailValidating, setEmailValidating] = useState(false)
-  const [emailValid, setEmailValid] = useState<boolean | null>(null)
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    acceptTerms: false,
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [emailValidating, setEmailValidating] = useState(false);
+  const [emailValid, setEmailValid] = useState<boolean | null>(null);
 
   // Check for errors from OAuth callback
   useEffect(() => {
     if (router.query.error) {
-      const errorMsg = Array.isArray(router.query.error) 
-        ? router.query.error[0] 
-        : router.query.error
-      setError(decodeURIComponent(errorMsg))
-      
+      const errorMsg = Array.isArray(router.query.error)
+        ? router.query.error[0]
+        : router.query.error;
+      setError(decodeURIComponent(errorMsg));
+
       // Clear error from URL
-      window.history.replaceState({}, '', '/signup')
+      window.history.replaceState({}, "", "/signup");
     }
-  }, [router.query.error])
+  }, [router.query.error]);
 
   // Validate email when it changes
   useEffect(() => {
     const validateEmailAsync = async () => {
-      const email = formData.email.trim()
-      
+      const email = formData.email.trim();
+
       if (!email) {
-        setEmailError('')
-        setEmailValid(null)
-        return
+        setEmailError("");
+        setEmailValid(null);
+        return;
       }
 
       // First check format
       if (!isValidEmail(email)) {
-        setEmailError('Invalid email format')
-        setEmailValid(false)
-        return
+        setEmailError("Invalid email format");
+        setEmailValid(false);
+        return;
       }
 
       // Then check if user already exists
-      setEmailValidating(true)
-      setEmailError('')
-      
+      setEmailValidating(true);
+      setEmailError("");
+
       try {
-        const result = await validateEmail(email)
-        
+        const result = await validateEmail(email);
+
         if (result.data?.exists) {
-          setEmailError('This email is already registered')
-          setEmailValid(false)
+          setEmailError("This email is already registered");
+          setEmailValid(false);
         } else {
-          setEmailError('')
-          setEmailValid(true)
+          setEmailError("");
+          setEmailValid(true);
         }
       } catch (err) {
-        console.error('Email validation error:', err)
+        console.error("Email validation error:", err);
         // Don't block submission if validation fails
-        setEmailError('')
-        setEmailValid(null)
+        setEmailError("");
+        setEmailValid(null);
       } finally {
-        setEmailValidating(false)
+        setEmailValidating(false);
       }
-    }
+    };
 
     // Debounce the validation
-    const timer = setTimeout(validateEmailAsync, 500)
-    return () => clearTimeout(timer)
-  }, [formData.email])
+    const timer = setTimeout(validateEmailAsync, 500);
+    return () => clearTimeout(timer);
+  }, [formData.email]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setFormData(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
-  }
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     // Email validation
     if (!isValidEmail(formData.email)) {
-      setError('Invalid email format')
-      setIsLoading(false)
-      return
+      setError("Invalid email format");
+      setIsLoading(false);
+      return;
     }
 
     if (emailValid === false) {
-      setError(emailError || 'Invalid email')
-      setIsLoading(false)
-      return
+      setError(emailError || "Invalid email");
+      setIsLoading(false);
+      return;
     }
 
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setIsLoading(false)
-      return
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setIsLoading(false)
-      return
+      setError("Password must be at least 6 characters long");
+      setIsLoading(false);
+      return;
     }
 
     if (!formData.acceptTerms) {
-      setError('You must accept the terms and conditions')
-      setIsLoading(false)
-      return
+      setError("You must accept the terms and conditions");
+      setIsLoading(false);
+      return;
     }
 
     try {
       const response = await api.signUp(formData.email, formData.password, {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        acceptTerms: true // Assuming terms are accepted in the form
-      })
+        acceptTerms: true, // Assuming terms are accepted in the form
+      });
 
       if (!response.success) {
-        setError(response.error || 'Failed to create account')
-        return
+        setError(response.error || "Failed to create account");
+        return;
       }
 
       // Show success message and redirect to login or dashboard
-      alert('Account created successfully! Please check your email to verify your account.')
-      router.push('/login')
+      alert(
+        "Account created successfully! Please check your email to verify your account."
+      );
+      router.push("/login");
     } catch (err) {
-      setError('Failed to create account. Please try again.')
+      setError("Failed to create account. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignUp = () => {
     // This is now handled by OAuthButton component
-    window.location.href = getGoogleOAuthUrl('signup')
-  }
+    window.location.href = getGoogleOAuthUrl("signup");
+  };
 
   return (
     <>
       <Head>
-        <title>Sign Up - Cloud9 Resume</title>
-        <meta name="description" content="Create your Cloud9 Resume account" />
+        <title>Sign Up - Cloud9Profile</title>
+        <meta name="description" content="Create your Cloud9Profile account" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -180,14 +182,18 @@ const SignupPage: NextPage = () => {
             <Link href="/" className="inline-block mb-6">
               <Image
                 src="/logo.png"
-                alt="Cloud9 Resume"
+                alt="Cloud9Profile"
                 width={160}
                 height={48}
                 className="h-auto"
               />
             </Link>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Create your account</h1>
-            <p className="text-sm text-gray-600">Start building your professional profile</p>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+              Create your account
+            </h1>
+            <p className="text-sm text-gray-600">
+              Start building your professional profile
+            </p>
           </div>
 
           {/* Error Message */}
@@ -202,17 +208,17 @@ const SignupPage: NextPage = () => {
             <OAuthButton
               provider="google"
               mode="signup"
-              getOAuthUrl={() => getGoogleOAuthUrl('signup')}
+              getOAuthUrl={() => getGoogleOAuthUrl("signup")}
             />
             <OAuthButton
               provider="linkedin"
               mode="signup"
-              getOAuthUrl={() => getLinkedInOAuthUrl('signup')}
+              getOAuthUrl={() => getLinkedInOAuthUrl("signup")}
             />
             <OAuthButton
               provider="github"
               mode="signup"
-              getOAuthUrl={() => getGitHubOAuthUrl('signup')}
+              getOAuthUrl={() => getGitHubOAuthUrl("signup")}
             />
           </div>
 
@@ -227,7 +233,7 @@ const SignupPage: NextPage = () => {
                 onClick={() => setShowEmailForm(!showEmailForm)}
                 className="px-3 bg-white text-gray-500 hover:text-gray-700 font-medium transition-colors"
               >
-                {showEmailForm ? 'Hide email sign up' : 'Or sign up with email'}
+                {showEmailForm ? "Hide email sign up" : "Or sign up with email"}
               </button>
             </div>
           </div>
@@ -237,7 +243,10 @@ const SignupPage: NextPage = () => {
             <form onSubmit={handleSubmit} className="space-y-4 mb-6">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
                     First Name
                   </label>
                   <input
@@ -252,7 +261,10 @@ const SignupPage: NextPage = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
                     Last Name
                   </label>
                   <input
@@ -269,7 +281,10 @@ const SignupPage: NextPage = () => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                >
                   Email
                 </label>
                 <div className="relative">
@@ -281,11 +296,11 @@ const SignupPage: NextPage = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
-                      emailError 
-                        ? 'border-red-300 focus:ring-red-500' 
-                        : emailValid === true 
-                        ? 'border-green-300 focus:ring-green-500' 
-                        : 'border-gray-300 focus:ring-blue-500'
+                      emailError
+                        ? "border-red-300 focus:ring-red-500"
+                        : emailValid === true
+                        ? "border-green-300 focus:ring-green-500"
+                        : "border-gray-300 focus:ring-blue-500"
                     } focus:border-transparent`}
                     placeholder="you@example.com"
                   />
@@ -295,7 +310,9 @@ const SignupPage: NextPage = () => {
                     </div>
                   )}
                   {!emailValidating && emailValid === true && (
-                    <div className="absolute right-3 top-3 text-green-600">✓</div>
+                    <div className="absolute right-3 top-3 text-green-600">
+                      ✓
+                    </div>
                   )}
                   {!emailValidating && emailError && (
                     <div className="absolute right-3 top-3 text-red-600">✕</div>
@@ -307,7 +324,10 @@ const SignupPage: NextPage = () => {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                >
                   Password
                 </label>
                 <input
@@ -323,7 +343,10 @@ const SignupPage: NextPage = () => {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                >
                   Confirm Password
                 </label>
                 <input
@@ -349,12 +372,18 @@ const SignupPage: NextPage = () => {
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded mt-0.5"
                 />
                 <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-                  I agree to the{' '}
-                  <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                  I agree to the{" "}
+                  <a
+                    href="#"
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
                     Terms of Service
-                  </a>
-                  {' '}and{' '}
-                  <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="#"
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
                     Privacy Policy
                   </a>
                 </label>
@@ -365,29 +394,36 @@ const SignupPage: NextPage = () => {
                 disabled={isLoading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors disabled:opacity-50"
               >
-                {isLoading ? 'Creating account...' : 'Create account'}
+                {isLoading ? "Creating account..." : "Create account"}
               </button>
             </form>
           )}
 
           {/* Sign In Link */}
           <p className="text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="font-semibold text-blue-600 hover:text-blue-700"
+            >
               Sign in
             </Link>
           </p>
 
           {/* Footer */}
           <p className="mt-8 text-center text-xs text-gray-500">
-            <a href="#" className="hover:text-gray-700">Terms</a>
-            {' · '}
-            <a href="#" className="hover:text-gray-700">Privacy</a>
+            <a href="#" className="hover:text-gray-700">
+              Terms
+            </a>
+            {" · "}
+            <a href="#" className="hover:text-gray-700">
+              Privacy
+            </a>
           </p>
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default SignupPage
+export default SignupPage;

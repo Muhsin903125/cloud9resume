@@ -134,7 +134,7 @@ const DashboardPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Dashboard - Cloud9 Resume</title>
+        <title>Dashboard - Cloud9Profile</title>
         <meta
           name="description"
           content="Manage your resumes, portfolios, and career tools"

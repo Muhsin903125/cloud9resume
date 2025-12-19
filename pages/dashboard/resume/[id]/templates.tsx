@@ -82,7 +82,7 @@ const TemplateSelector = () => {
   return (
     <>
       <Head>
-        <title>Select Template - {resume?.title} - Cloud9 Resume</title>
+        <title>Select Template - {resume?.title} - Cloud9Profile</title>
       </Head>
 
       <div className="min-h-screen bg-gray-50 flex flex-col pt-16">

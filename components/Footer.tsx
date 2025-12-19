@@ -13,7 +13,7 @@ export default function Footer() {
               <div className="relative h-10 w-40">
                 <Image
                   src="/logo.png"
-                  alt="Cloud9 Profile Logo"
+                  alt="Cloud9Profile Logo"
                   fill
                   className="object-contain object-left filter brightness-0 invert"
                 />
@@ -134,7 +134,7 @@ export default function Footer() {
 
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-slate-500 text-sm">
-            &copy; {currentYear} Cloud9 Profile. All rights reserved.
+            &copy; {currentYear} Cloud9Profile. All rights reserved.
           </p>
           <div className="flex space-x-6">
             <a

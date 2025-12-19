@@ -88,7 +88,7 @@ const ATSCheckerPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>ATS Checker - Cloud9 Resume</title>
+        <title>ATS Checker - Cloud9Profile</title>
         <meta
           name="description"
           content="Optimize your resume for Applicant Tracking Systems"

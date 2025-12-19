@@ -1,8 +1,8 @@
 import { GetStaticProps, GetStaticPaths } from "next";
-import Head from "next/head";
 import { createClient } from "@supabase/supabase-js";
 import { ResumeRenderer } from "@/components/ResumeRenderer";
 import { Portfolio, Resume } from "@/lib/types";
+import SEO from "../components/SEO";
 
 // Init Supabase Client (Server Side)
 const supabase = createClient(
@@ -26,6 +26,7 @@ export default function PortfolioPage({
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <SEO title="Portfolio | Cloud9Profile" noIndex={true} />
         <div className="text-center p-8 bg-white rounded-xl shadow-lg border border-gray-100 max-w-md">
           <div className="text-4xl mb-4">😕</div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">
@@ -55,23 +56,13 @@ export default function PortfolioPage({
 
   return (
     <>
-      <Head>
-        <title>
-          {portfolio.settings?.customTitle ||
-            `${resume.title} - ${resume.job_title || "Portfolio"}`}
-        </title>
-        <meta
-          name="description"
-          content={`Portfolio of ${resume.title} - ${resume.job_title}`}
-        />
-        {/* Open Graph / Social Media */}
-        <meta property="og:title" content={resume.title} />
-        <meta
-          property="og:description"
-          content={resume.job_title || "Professional Portfolio"}
-        />
-        {/* Add more meta tags as needed */}
-      </Head>
+      <SEO
+        title={
+          portfolio.settings?.customTitle ||
+          `${resume.title} - ${resume.job_title || "Portfolio"}`
+        }
+        description={`Professional portfolio of ${resume.title} - ${resume.job_title}. Built with Cloud9Profile.`}
+      />
 
       <ResumeRenderer
         resume={resume}
@@ -157,7 +148,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
         resume: JSON.parse(JSON.stringify(resume)),
         sections: JSON.parse(JSON.stringify(sections)),
       },
-      revalidate: 60 * 60 * 24, // 24 hours
+      revalidate: 60, // 60 seconds
     };
   } catch (e) {
     console.error("Error generating portfolio:", e);
