@@ -21,6 +21,8 @@ import {
   SaveIcon,
   LinkIcon,
   TemplateIcon,
+  ChevronDownIcon,
+  CheckIcon,
 } from "@/components/Icons";
 
 import { ResumeRenderer } from "../../../../components/ResumeRenderer";
@@ -44,6 +46,7 @@ const ResumeEditor = () => {
   const [showGenerationModal, setShowGenerationModal] = useState(false);
   const [resumeTitle, setResumeTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // UI State
   const [activeTab, setActiveTab] = useState("personal_info");
@@ -515,24 +518,85 @@ const ResumeEditor = () => {
         <div className="flex-1 flex overflow-hidden">
           {/* LEFT: Form Editor (60%) */}
           <div className="w-full lg:w-3/5 flex flex-col bg-white border-r border-gray-200 h-full overflow-hidden relative shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
-            {/* Mobile Stepper Header */}
-            <div className="lg:hidden p-4 border-b border-gray-100 bg-white overflow-x-auto whitespace-nowrap hide-scrollbar">
-              <div className="flex gap-2">
-                {sectionTypes.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => handleStepChange(s.id)}
-                    className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${
-                      activeTab === s.id
-                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+            {/* Mobile Section Selection Header */}
+            <div className="lg:hidden p-4 border-b border-gray-100 bg-white sticky top-0 z-20 flex items-center justify-between shadow-sm">
+              <div
+                className="flex items-center gap-2"
+                onClick={() => setIsMobileMenuOpen(true)}
+              >
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                    Current Section
+                  </span>
+                  <div className="flex items-center gap-2 font-bold text-gray-900 text-lg">
+                    {sectionTypes.find((s) => s.id === activeTab)?.label}
+                    <ChevronDownIcon size={16} className="text-blue-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                {activeSectionIndex + 1} / {sectionTypes.length}
               </div>
             </div>
+
+            {/* Mobile Section Drawer */}
+            {isMobileMenuOpen && (
+              <div
+                className="fixed inset-0 z-[60] flex flex-col justify-end sm:justify-center bg-gray-900/60 backdrop-blur-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div
+                  className="bg-white rounded-t-2xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto w-full max-w-lg mx-auto shadow-2xl animate-slide-up"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">
+                      Jump to Section
+                    </h3>
+                    <button
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"
+                    >
+                      <ChevronDownIcon size={20} className="rotate-180" />
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {sectionTypes.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => {
+                          handleStepChange(s.id);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
+                          activeTab === s.id
+                            ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
+                            : "border-gray-100 hover:bg-gray-50 text-gray-600"
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              activeTab === s.id
+                                ? "bg-blue-200 text-blue-700"
+                                : "bg-gray-100 text-gray-500"
+                            }`}
+                          >
+                            <s.Icon size={16} />
+                          </div>
+                          <span className="font-bold text-sm">{s.label}</span>
+                        </div>
+                        {activeTab === s.id && (
+                          <div className="bg-blue-600 text-white rounded-full p-1">
+                            <CheckIcon size={12} />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Scrollable Form Content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar bg-white relative">

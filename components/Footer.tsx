@@ -12,7 +12,7 @@ export default function Footer() {
             <div className="flex items-center space-x-2">
               <div className="relative h-10 w-40">
                 <Image
-                  src="/logo.png"
+                  src="/logo.png?v=2"
                   alt="Cloud9Profile Logo"
                   fill
                   className="object-contain object-left filter brightness-0 invert"

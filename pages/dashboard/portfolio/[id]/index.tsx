@@ -115,20 +115,19 @@ export default function PortfolioEditorPage() {
       );
       if (resumeRes.success) {
         setResume(resumeRes.data);
-        const fetchedSections = resumeRes.data.sections || [];
-
-        // Merge with potentially custom ordered sections from portfolio settings if we implement that fully
-        // For now just use resume sections order logic or simple reorder
-
-        // Ensure sections have IDs
-        // If we want to support reordering specifically for portfolio, we should store that order in portfolio.settings.sectionOrder
-        // And sort `sections` based on that.
+        const fetchedSections = (resumeRes.data.sections || []).map(
+          (s: any) => ({
+            ...s,
+            content: s.section_data, // Ensure templates find data in 'content'
+          })
+        );
 
         // Check for custom sections in portfolio settings
         const customSectionsRaw = portData.settings?.customSections || [];
         const customSections = customSectionsRaw.map((s: any) => ({
           ...s,
           section_data: s.section_data || s.content, // Migrate legacy 'content'
+          content: s.section_data || s.content, // Ensure templates find data
         }));
 
         const allSections = [...fetchedSections, ...customSections];

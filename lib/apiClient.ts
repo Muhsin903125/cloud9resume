@@ -1,133 +1,166 @@
 // API client for making requests to backend APIs
 // Usage: import { apiClient } from '@/lib/apiClient'
 
-import { USER_AUTH_TOKEN_KEY } from './token-keys'
+import { USER_AUTH_TOKEN_KEY } from "./token-keys";
 
 interface ApiResponse<T = any> {
-  data?: T
-  error?: string
-  message?: string
+  data?: T;
+  error?: string;
+  message?: string;
 }
 
 class ApiClient {
-  private baseUrl: string
+  private baseUrl: string;
 
-  constructor(baseUrl: string = '') {
-    this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || '/api'
+  constructor(baseUrl: string = "") {
+    this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "/api";
   }
 
   private getHeaders() {
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    }
+      "Content-Type": "application/json",
+    };
 
     // Add auth token if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem(USER_AUTH_TOKEN_KEY) : null
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem(USER_AUTH_TOKEN_KEY)
+        : null;
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
-    return headers
+    return headers;
   }
 
   async post<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeaders(),
         body: data ? JSON.stringify(data) : undefined,
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (!response.ok) {
         return {
-          error: result.message || result.error || 'Request failed',
+          error: result.message || result.error || "Request failed",
           message: result.message || result.error,
-        }
+        };
       }
 
-      return { data: result }
+      return { data: result };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-      }
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
     }
   }
 
   async get<T = any>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'GET',
+        method: "GET",
         headers: this.getHeaders(),
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (!response.ok) {
         return {
-          error: result.message || result.error || 'Request failed',
+          error: result.message || result.error || "Request failed",
           message: result.message || result.error,
-        }
+        };
       }
 
-      return { data: result }
+      return { data: result };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-      }
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
     }
   }
 
   async put<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: this.getHeaders(),
         body: data ? JSON.stringify(data) : undefined,
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (!response.ok) {
         return {
-          error: result.message || result.error || 'Request failed',
+          error: result.message || result.error || "Request failed",
           message: result.message || result.error,
-        }
+        };
       }
 
-      return { data: result }
+      return { data: result };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  }
+
+  async patch<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: "PATCH",
+        headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return {
+          error: result.message || result.error || "Request failed",
+          message: result.message || result.error,
+        };
       }
+
+      return { data: result };
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
     }
   }
 
   async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: this.getHeaders(),
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (!response.ok) {
         return {
-          error: result.message || result.error || 'Request failed',
+          error: result.message || result.error || "Request failed",
           message: result.message || result.error,
-        }
+        };
       }
 
-      return { data: result }
+      return { data: result };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-      }
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
     }
   }
 }
 
 // Export singleton instance
-export const apiClient = new ApiClient()
+export const apiClient = new ApiClient();

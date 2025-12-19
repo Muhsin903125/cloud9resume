@@ -4,6 +4,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import { motion } from "framer-motion";
 import Button from "../components/Button";
 import Card from "../components/Card";
 import OAuthButton from "../components/OAuthButton";
@@ -175,13 +176,32 @@ const SignupPage: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <div className="w-full max-w-sm">
+      <div className="min-h-screen bg-[#F8FAFC] relative overflow-hidden flex items-center justify-center px-4 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[10%] left-[5%] w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px]"
+          />
+          <motion.div
+            animate={{ x: [0, -40, 0], y: [0, 60, 0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute bottom-[10%] right-[5%] w-[600px] h-[600px] bg-purple-200/20 rounded-full blur-[100px]"
+          />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/50 p-8 rounded-3xl shadow-2xl relative z-10"
+        >
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-block mb-6">
               <Image
-                src="/logo.png"
+                src="/logo.png?v=2"
                 alt="Cloud9Profile"
                 width={160}
                 height={48}
@@ -420,7 +440,7 @@ const SignupPage: NextPage = () => {
               Privacy
             </a>
           </p>
-        </div>
+        </motion.div>
       </div>
     </>
   );

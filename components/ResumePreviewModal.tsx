@@ -153,6 +153,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
   const [hiddenSectionIds, setHiddenSectionIds] = useState<string[]>([]);
 
   const [activeTab, setActiveTab] = useState<"design" | "content">("design");
+  const [mobileTab, setMobileTab] = useState<"controls" | "preview">("preview");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -455,9 +456,37 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-0 h-[85vh] overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-0 h-[85vh] overflow-hidden relative">
+          {/* Mobile Toggle Bar */}
+          <div className="lg:hidden flex border-b border-gray-200 bg-white shrink-0 z-30">
+            <button
+              onClick={() => setMobileTab("controls")}
+              className={`flex-1 py-3 text-sm font-bold transition-colors ${
+                mobileTab === "controls"
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              Edit Design
+            </button>
+            <button
+              onClick={() => setMobileTab("preview")}
+              className={`flex-1 py-3 text-sm font-bold transition-colors ${
+                mobileTab === "preview"
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              Live Preview
+            </button>
+          </div>
+
           {/* Sidebar Controls */}
-          <div className="w-full lg:w-80 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col z-20">
+          <div
+            className={`w-full lg:w-80 flex-shrink-0 bg-white border-r border-gray-200 flex-col z-20 transition-all ${
+              mobileTab === "preview" ? "hidden lg:flex" : "flex h-full"
+            }`}
+          >
             {/* Tabs Header */}
             <div className="flex border-b border-gray-200">
               <button
@@ -666,7 +695,11 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
           </div>
 
           {/* Preview Area */}
-          <div className="flex-1 bg-slate-100 rounded-none overflow-hidden flex flex-col relative shadow-inner">
+          <div
+            className={`flex-1 bg-slate-100 rounded-none overflow-hidden flex-col relative shadow-inner ${
+              mobileTab === "controls" ? "hidden lg:flex" : "flex"
+            }`}
+          >
             <div className="bg-white border-b border-gray-200 p-3 flex flex-col sm:flex-row items-center justify-between gap-4 z-20 shadow-sm">
               <div className="flex items-center gap-6">
                 <div className="flex flex-col gap-1">

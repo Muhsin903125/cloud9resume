@@ -48,7 +48,7 @@ export default function Navbar() {
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
                 <Image
-                  src="/logo.png"
+                  src="/logo.png?v=2"
                   alt="Cloud9Profile Logo"
                   width={150}
                   height={40}
