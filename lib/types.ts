@@ -27,9 +27,15 @@ export interface ResumeSection {
     | "skills"
     | "projects"
     | "certifications"
-    | "custom";
+    | "summary"
+    | "personal_info"
+    | "languages"
+    | "achievements"
+    | "custom"
+    | string;
   title: string;
   content: any;
+  section_data?: any; // Add this for compatibility with API before mapping
   order_index: number;
 }
 

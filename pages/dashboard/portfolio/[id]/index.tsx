@@ -18,6 +18,7 @@ import {
   DeleteIcon,
 } from "@/components/Icons";
 import { ResumeRenderer } from "@/components/ResumeRenderer";
+import { PortfolioRenderer } from "@/lib/portfolio-templates";
 import { Resume, Portfolio } from "@/lib/types";
 
 const TABS = [
@@ -369,10 +370,10 @@ export default function PortfolioEditorPage() {
             href={`/${portfolio?.slug || id}`}
             target="_blank"
             rel="noreferrer"
-            className="px-3 py-2 bg-white border border-gray-200 text-gray-500 hover:text-blue-600 rounded-lg flex items-center justify-center transition"
-            title="View Live"
+            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 hover:text-blue-600 hover:border-blue-300 rounded-lg flex items-center justify-center gap-2 transition font-medium text-sm"
+            title="Open in new tab"
           >
-            <GlobeIcon size={16} />
+            <EyeIcon size={16} /> Preview
           </a>
           <button
             onClick={saveChanges}
@@ -438,11 +439,11 @@ export default function PortfolioEditorPage() {
                         >
                           <div className="absolute inset-0 overflow-hidden bg-white pointer-events-none select-none">
                             <div className="transform scale-[0.25] origin-top-left w-[400%] h-[400%] p-4">
-                              <ResumeRenderer
-                                resume={resume || undefined}
+                              <PortfolioRenderer
+                                resume={resume || ({} as any)}
                                 sections={sections}
                                 template={t.id}
-                                themeColor={config.themeColor}
+                                settings={{ themeColor: config.themeColor }}
                               />
                             </div>
                           </div>
@@ -775,24 +776,41 @@ export default function PortfolioEditorPage() {
                   <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
                   <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
                 </div>
-                <div className="px-3 py-1 bg-white rounded-md shadow-sm border border-gray-100 font-mono text-[10px] flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  {portfolio?.slug
-                    ? `cloud9profile.com/${portfolio.slug}`
-                    : "preview"}
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 bg-white rounded-md shadow-sm border border-gray-100 font-mono text-[10px] flex items-center gap-1.5">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    {portfolio?.slug
+                      ? `cloud9profile.com/${portfolio.slug}`
+                      : "preview"}
+                  </div>
+                  <button
+                    onClick={() =>
+                      window.open(
+                        `/dashboard/portfolio/${id}/preview`,
+                        "_blank"
+                      )
+                    }
+                    title="Open in new tab"
+                    className="p-1 hover:bg-white hover:shadow-sm rounded transition-all text-gray-400 hover:text-primary"
+                  >
+                    <EyeIcon className="w-4 h-4" />
+                  </button>
                 </div>
                 <div></div>
               </div>
 
               {/* Content */}
               <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
-                <ResumeRenderer
-                  resume={resume}
+                <PortfolioRenderer
+                  resume={resume || ({} as any)}
                   sections={sections.filter((s) =>
                     config.settings.visibleSections?.includes(s.section_type)
                   )}
                   template={config.templateId}
-                  themeColor={config.themeColor}
+                  settings={{
+                    ...config.settings,
+                    themeColor: config.themeColor,
+                  }}
                 />
               </div>
             </div>
