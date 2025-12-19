@@ -1,0 +1,231 @@
+import React from "react";
+import { MailIcon, PhoneIcon, MapPinIcon, GlobeIcon } from "../Icons";
+
+export const VibrantCreativeTemplate = ({
+  resume,
+  sections,
+  themeColor,
+  hexToRgba,
+  font,
+}: any) => {
+  const personalInfo =
+    sections.find((s: any) => s.section_type === "personal_info")
+      ?.section_data || {};
+
+  const mainSections = sections.filter((s: any) =>
+    ["summary", "experience", "projects", "declaration"].includes(
+      s.section_type
+    )
+  );
+
+  const sidebarSections = sections.filter(
+    (s: any) =>
+      ![
+        "personal_info",
+        "summary",
+        "experience",
+        "projects",
+        "declaration",
+      ].includes(s.section_type)
+  );
+
+  return (
+    <div
+      id="resume-preview-content"
+      className="bg-white w-full shadow-sm print:shadow-none mx-auto flex overflow-hidden lg:flex-row flex-col"
+      style={{
+        width: "210mm",
+        minHeight: "297mm",
+        fontFamily: font || "'Poppins', sans-serif",
+      }}
+    >
+      {/* Left Accent Bar (Small) */}
+      <div
+        className="w-1.5 lg:block hidden shrink-0"
+        style={{ backgroundColor: themeColor }}
+      ></div>
+
+      {/* Main Container */}
+      <div className="flex-1 flex lg:flex-row flex-col">
+        {/* Sidebar Space (32%) */}
+        <div className="lg:w-[32%] w-full bg-slate-50 border-r border-slate-100 p-8 flex flex-col gap-8">
+          {/* Photo & Name Card */}
+          <div className="text-center lg:text-left">
+            <div className="w-24 h-24 mx-auto lg:mx-0 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-slate-100 mb-6 overflow-hidden relative rotate-3">
+              {personalInfo.photoUrl ? (
+                <img
+                  src={personalInfo.photoUrl}
+                  alt={personalInfo.name}
+                  className="w-full h-full object-cover -rotate-3"
+                />
+              ) : (
+                <span className="text-3xl font-black text-slate-200 -rotate-3">
+                  {personalInfo.name?.[0] || "U"}
+                </span>
+              )}
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 leading-tight mb-2 tracking-tight">
+              {personalInfo.name || "YOUR NAME"}
+            </h1>
+            <p
+              className="text-xs font-bold uppercase tracking-widest px-2 py-1 bg-white border border-slate-200 inline-block rounded-md shadow-sm"
+              style={{ color: themeColor }}
+            >
+              {personalInfo.jobTitle || "Your Profession"}
+            </p>
+          </div>
+
+          {/* Contact Block */}
+          <div className="space-y-4">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pb-2 border-b border-slate-200">
+              Connection
+            </h3>
+            <div className="space-y-3 text-xs font-medium text-slate-600">
+              {[
+                { icon: MailIcon, val: personalInfo.email },
+                { icon: PhoneIcon, val: personalInfo.phone },
+                { icon: MapPinIcon, val: personalInfo.city },
+                { icon: GlobeIcon, val: personalInfo.website },
+              ].map(
+                (item, i) =>
+                  item.val && (
+                    <div key={i} className="flex items-center gap-3">
+                      <span
+                        className="shrink-0 p-1.5 rounded-lg bg-white border border-slate-100 shadow-sm"
+                        style={{ color: themeColor }}
+                      >
+                        <item.icon size={12} />
+                      </span>
+                      <span className="truncate">{item.val}</span>
+                    </div>
+                  )
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar Modules (Skills, Languages, etc) */}
+          {sidebarSections.map((section: any) => (
+            <div key={section.id} className="space-y-4">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pb-2 border-b border-slate-200">
+                {section.section_type.replace("_", " ")}
+              </h3>
+
+              {section.section_type === "skills" ||
+              section.section_type === "languages" ? (
+                <div className="flex flex-wrap gap-2">
+                  {(Array.isArray(section.section_data)
+                    ? section.section_data
+                    : section.section_data?.items || []
+                  ).map((s: any, idx: number) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600 shadow-sm"
+                    >
+                      {typeof s === "string" ? s : s.name || s.language}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(Array.isArray(section.section_data)
+                    ? section.section_data
+                    : section.section_data?.items || []
+                  ).map((item: any, idx: number) => (
+                    <div key={idx} className="text-xs">
+                      <div className="font-bold text-slate-800">
+                        {item.degree || item.school || item.title}
+                      </div>
+                      <div className="text-slate-400 text-[10px] mt-0.5">
+                        {item.date || item.year || item.company}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Main Content Area (68%) */}
+        <div className="flex-1 p-10 bg-white">
+          <div className="space-y-12">
+            {mainSections.map((section: any) => {
+              const { section_type, section_data } = section;
+              if (
+                !section_data ||
+                (Array.isArray(section_data) && section_data.length === 0)
+              )
+                return null;
+
+              return (
+                <section key={section.id} className="relative">
+                  {/* Section Label Header */}
+                  <div className="flex items-center gap-4 mb-8">
+                    <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 whitespace-nowrap">
+                      {section_type.replace("_", " ")}
+                    </h2>
+                    <div className="h-0.5 flex-1 bg-slate-100 relative">
+                      <div
+                        className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: themeColor }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {section_type === "summary" ? (
+                    <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                      {section_data.text || section_data}
+                    </p>
+                  ) : (
+                    <div className="space-y-10">
+                      {(Array.isArray(section_data)
+                        ? section_data
+                        : section_data?.items || []
+                      ).map((item: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="group relative pl-6 border-l-2 border-slate-50 hover:border-slate-200 transition-colors"
+                        >
+                          <div
+                            className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-white border-2 border-slate-100 group-hover:scale-125 transition-transform"
+                            style={{ borderColor: themeColor }}
+                          ></div>
+
+                          <div className="flex flex-col sm:flex-row justify-between sm:items-baseline gap-2 mb-2">
+                            <h4 className="text-base font-bold text-slate-900 group-hover:translate-x-1 transition-transform inline-block">
+                              {item.position || item.title}
+                            </h4>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded">
+                              {item.startDate}{" "}
+                              {item.endDate && `— ${item.endDate}`}
+                            </span>
+                          </div>
+
+                          <div
+                            className="text-xs font-bold mb-3 flex items-center gap-2"
+                            style={{ color: themeColor }}
+                          >
+                            {item.company || item.issuer || item.school}
+                            {item.location && (
+                              <span className="text-slate-300 font-medium">
+                                • {item.location}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-slate-500 leading-relaxed max-w-xl">
+                            {item.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

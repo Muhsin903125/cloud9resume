@@ -20,6 +20,36 @@ export const TEMPLATE_REGISTRY: TemplateContract[] = [
     version: "1.0.0",
   },
   {
+    id: "modern-ats",
+    name: "Modern ATS",
+    description:
+      "Sleek, minimalist layout with high readability. Built for tech and design.",
+    component: "ModernAtsTemplate",
+    isAtsSafe: true,
+    category: "ATS",
+    version: "1.0.0",
+  },
+  {
+    id: "pro-ats",
+    name: "Professional ATS",
+    description:
+      "Traditional corporate layout with a refined serif touch. Best for executive roles.",
+    component: "ProfessionalAtsTemplate",
+    isAtsSafe: true,
+    category: "ATS",
+    version: "1.0.0",
+  },
+  {
+    id: "creative-ats",
+    name: "Creative ATS",
+    description:
+      "Linear layout with bold headers and dynamic styling. 100% ATS safe.",
+    component: "CreativeAtsTemplate",
+    isAtsSafe: true,
+    category: "ATS",
+    version: "1.0.0",
+  },
+  {
     id: "classic",
     name: "Classic",
     description: "Traditional professional layout. ATS-friendly.",
@@ -37,8 +67,26 @@ export const TEMPLATE_REGISTRY: TemplateContract[] = [
     category: "ATS",
     version: "1.0.0",
   },
-  // Deprecated / Hidden Templates:
-  // Modern, Minimal, Compact, Dense, Professional, Creative, Bold, Tech, Grid, Timeline, Elegant
+  {
+    id: "vibrant-creative",
+    name: "Vibrant Creative",
+    description:
+      "Bold, high-contrast design with modern accents. Ideal for high-impact roles.",
+    component: "VibrantCreativeTemplate",
+    isAtsSafe: true,
+    category: "CREATIVE",
+    version: "1.0.0",
+  },
+  {
+    id: "geometric-creative",
+    name: "Geometric Creative",
+    description:
+      "Structured, boxed layout with bold borders and modern typography.",
+    component: "GeometricCreativeTemplate",
+    isAtsSafe: true,
+    category: "CREATIVE",
+    version: "1.0.0",
+  },
 ];
 
 export const getAtsTemplates = () =>

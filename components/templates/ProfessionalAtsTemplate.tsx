@@ -1,6 +1,6 @@
 import React from "react";
 
-interface AtsTemplateProps {
+interface ProfessionalAtsTemplateProps {
   resume: any;
   sections: any[];
   themeColor?: string;
@@ -8,11 +8,9 @@ interface AtsTemplateProps {
   hexToRgba?: (hex: string, alpha: number) => string;
 }
 
-export const AtsTemplate: React.FC<AtsTemplateProps> = ({
-  resume,
-  sections,
-  font = "'Inter', sans-serif",
-}) => {
+export const ProfessionalAtsTemplate: React.FC<
+  ProfessionalAtsTemplateProps
+> = ({ resume, sections, font = "'Merriweather', serif" }) => {
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
@@ -24,36 +22,31 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
         width: "210mm",
         minHeight: "297mm",
         fontFamily: font,
-        lineHeight: "1.5",
-        color: "#000000",
+        lineHeight: "1.4",
       }}
     >
-      {/* Header / Personal Info */}
-      <header className="border-b-2 border-black pb-4 mb-6 text-center">
-        <h1 className="text-3xl font-bold uppercase tracking-wide mb-2 text-black">
+      {/* Header */}
+      <header className="border-b-[3px] border-black pb-6 mb-8 text-center italic">
+        <h1 className="text-4xl font-bold not-italic uppercase tracking-widest mb-3">
           {personalInfo.name ||
             personalInfo.fullName ||
             resume.title ||
             "Your Name"}
         </h1>
-
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-black">
+        <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs font-semibold">
           {personalInfo.email && <span>{personalInfo.email}</span>}
-          {personalInfo.phone && <span>| {personalInfo.phone}</span>}
+          {personalInfo.phone && <span>• {personalInfo.phone}</span>}
           {(personalInfo.city || personalInfo.address) && (
             <span>
-              |{" "}
+              •{" "}
               {[personalInfo.city || personalInfo.address, personalInfo.country]
                 .filter(Boolean)
                 .join(", ")}
             </span>
           )}
-          {(personalInfo.website || personalInfo.portfolio) && (
-            <span>| {personalInfo.website || personalInfo.portfolio}</span>
-          )}
           {personalInfo.linkedin && (
             <span>
-              | LinkedIn:{" "}
+              •{" "}
               {personalInfo.linkedin.replace(
                 /^https?:\/\/(www\.)?linkedin\.com\/in\//,
                 ""
@@ -64,40 +57,37 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
       </header>
 
       {/* Sections */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         {sections.map((section: any) => {
           const { section_type, section_data } = section;
           if (!section_data || section_type === "personal_info") return null;
 
           return (
             <section key={section.id} className="break-inside-avoid">
-              <h2
-                className="text-lg font-bold uppercase border-b border-black mb-3 pb-1 text-black"
-                style={{ letterSpacing: "0.05em" }}
-              >
+              <h2 className="text-sm font-bold uppercase tracking-[0.25em] border-b border-black/80 mb-4 pb-1">
                 {section.title || section_type.replace("_", " ")}
               </h2>
 
               {/* Summary / Text Sections */}
               {(section_type === "summary" ||
                 section_type === "declaration") && (
-                <p className="whitespace-pre-wrap text-sm text-black text-justify">
+                <p className="text-[13px] leading-relaxed text-justify whitespace-pre-wrap">
                   {section_data.text || section_data}
                 </p>
               )}
 
-              {/* List based sections (Experience, Education, Projects, etc.) */}
+              {/* List based sections */}
               {!["summary", "skills", "languages", "declaration"].includes(
                 section_type
               ) && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {(Array.isArray(section_data)
                     ? section_data
                     : section_data?.items || []
                   ).map((item: any, idx: number) => (
                     <div key={idx}>
-                      <div className="flex justify-between items-baseline font-bold text-base text-black">
-                        <h3>
+                      <div className="flex justify-between items-baseline mb-1">
+                        <h3 className="text-base font-bold italic">
                           {item.position ||
                             item.title ||
                             item.degree ||
@@ -105,13 +95,13 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                             item.institution ||
                             item.language}
                         </h3>
-                        <span className="text-sm font-normal">
-                          {item.startDate ? `${item.startDate} – ` : ""}
+                        <span className="text-[11px] font-bold uppercase">
+                          {item.startDate ? `${item.startDate} — ` : ""}
                           {item.endDate || item.date || item.graduationDate}
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-center text-sm italic mb-1 text-black">
+                      <div className="flex justify-between items-center text-[13px] font-semibold uppercase tracking-tight mb-2">
                         <span>
                           {item.company ||
                             item.issuer ||
@@ -122,22 +112,14 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                         <span>{item.location}</span>
                       </div>
 
-                      {item.link && (
-                        <div className="text-sm mb-1">
-                          <a href={item.link} className="text-black underline">
-                            {item.link}
-                          </a>
-                        </div>
-                      )}
-
                       {item.description && (
-                        <p className="text-sm text-black leading-relaxed text-justify whitespace-pre-wrap">
+                        <p className="text-[13px] leading-relaxed text-justify whitespace-pre-wrap">
                           {item.description}
                         </p>
                       )}
 
                       {item.points && Array.isArray(item.points) && (
-                        <ul className="list-disc ml-5 text-sm mt-1 space-y-0.5 text-black">
+                        <ul className="list-disc ml-8 text-[13px] mt-2 space-y-1">
                           {item.points.map((pt: string, i: number) => (
                             <li key={i}>{pt}</li>
                           ))}
@@ -148,10 +130,9 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                 </div>
               )}
 
-              {/* Skills / Languages (Tag/List based) */}
+              {/* Skills / Languages */}
               {(section_type === "skills" || section_type === "languages") && (
-                <div className="text-sm text-black">
-                  {/* Handle tagged skills or categorized items */}
+                <div className="text-[13px]">
                   {typeof section_data === "object" &&
                     !Array.isArray(section_data) && (
                       <div className="space-y-1">
@@ -161,7 +142,9 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                           if (!Array.isArray(skills)) return null;
                           return (
                             <div key={idx}>
-                              <span className="font-bold">{category}: </span>
+                              <span className="font-bold underline uppercase text-[11px] tracking-wider">
+                                {category}:{" "}
+                              </span>
                               <span>
                                 {skills
                                   .map((s) =>
@@ -177,10 +160,9 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                       </div>
                     )}
 
-                  {/* Fallback to flat list */}
                   {(Array.isArray(section_data) ||
                     Array.isArray(section_data?.items)) && (
-                    <p>
+                    <p className="leading-relaxed">
                       {(Array.isArray(section_data)
                         ? section_data
                         : section_data.items
@@ -194,7 +176,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                           }
                           return item.name || item.skill || item.language;
                         })
-                        .join(", ")}
+                        .join(" • ")}
                     </p>
                   )}
                 </div>

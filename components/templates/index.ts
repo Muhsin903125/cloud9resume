@@ -11,3 +11,8 @@ export * from "./GridTemplate";
 export * from "./TimelineTemplate";
 export * from "./ElegantTemplate";
 export * from "./AtsTemplate";
+export * from "./ModernAtsTemplate";
+export * from "./ProfessionalAtsTemplate";
+export * from "./CreativeAtsTemplate";
+export * from "./VibrantCreativeTemplate";
+export * from "./GeometricCreativeTemplate";

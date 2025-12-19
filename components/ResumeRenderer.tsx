@@ -15,6 +15,11 @@ import { TimelineTemplate } from "./templates/TimelineTemplate";
 import { ElegantTemplate } from "./templates/ElegantTemplate";
 import { DenseTemplate } from "./templates/DenseTemplate";
 import { AtsTemplate } from "./templates/AtsTemplate";
+import { ModernAtsTemplate } from "./templates/ModernAtsTemplate";
+import { ProfessionalAtsTemplate } from "./templates/ProfessionalAtsTemplate";
+import { CreativeAtsTemplate } from "./templates/CreativeAtsTemplate";
+import { VibrantCreativeTemplate } from "./templates/VibrantCreativeTemplate";
+import { GeometricCreativeTemplate } from "./templates/GeometricCreativeTemplate";
 
 interface ResumeRendererProps {
   resume: any;
@@ -165,6 +170,16 @@ export const ResumeRenderer: React.FC<ResumeRendererProps> = ({
             return <DenseTemplate {...props} />;
           case "ats":
             return <AtsTemplate {...props} />;
+          case "modern-ats":
+            return <ModernAtsTemplate {...props} />;
+          case "pro-ats":
+            return <ProfessionalAtsTemplate {...props} />;
+          case "creative-ats":
+            return <CreativeAtsTemplate {...props} />;
+          case "vibrant-creative":
+            return <VibrantCreativeTemplate {...props} />;
+          case "geometric-creative":
+            return <GeometricCreativeTemplate {...props} />;
           default:
             return <ModernTemplate {...props} />;
         }

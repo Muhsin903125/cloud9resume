@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, Reorder } from "framer-motion";
 import SharedModal from "./SharedModal";
 import { ResumeRenderer } from "./ResumeRenderer";
-import { getAtsTemplates } from "../lib/template-registry";
+import { TEMPLATE_REGISTRY, getAtsTemplates } from "../lib/template-registry";
 import { useAPIAuth } from "@/hooks/useAPIAuth";
 import {
   DownloadIcon,
@@ -38,35 +38,44 @@ const MiniTemplatePreview = ({
   color: string;
 }) => {
   // Determine layout based on template ID
-  const isSidebarLeft = ["modern", "creative", "timeline"].includes(templateId);
+  const isSidebarLeft = [
+    "modern",
+    "creative",
+    "timeline",
+    "modern-ats",
+    "creative-ats",
+    "vibrant-creative",
+  ].includes(templateId);
   const isSidebarRight = ["tech", "bold"].includes(templateId);
-  const isGrid = ["grid", "compact", "dense"].includes(templateId);
+  const isGrid = ["grid", "compact", "dense", "geometric-creative"].includes(
+    templateId
+  );
 
   const accentStyle = { backgroundColor: color };
   const lightAccentStyle = { backgroundColor: color, opacity: 0.1 };
   const textAccentStyle = { backgroundColor: color, opacity: 0.4 };
 
   return (
-    <div className="w-full h-20 bg-white rounded-lg mb-2 shadow-sm border border-gray-100 overflow-hidden relative flex flex-col p-1.5 gap-1 select-none pointer-events-none">
+    <div className="w-full h-24 bg-white rounded-lg mb-2 shadow-sm border border-gray-100 overflow-hidden relative flex flex-col p-1.5 gap-1 select-none pointer-events-none">
       {/* Header Area */}
       {!isSidebarLeft && !isSidebarRight && (
-        <div className="w-full h-4 bg-gray-200 rounded-sm mb-0.5 flex flex-col gap-0.5 justify-center px-1">
+        <div className="w-full h-4 bg-gray-50 rounded-sm mb-0.5 flex flex-col gap-0.5 justify-center px-1">
           <div className="w-1/3 h-1 rounded-full" style={textAccentStyle}></div>
-          <div className="w-1/4 h-0.5 bg-gray-300 rounded-full"></div>
+          <div className="w-1/4 h-0.5 bg-gray-200 rounded-full"></div>
         </div>
       )}
 
       <div className="flex-1 flex gap-1 h-full overflow-hidden">
         {/* Left Sidebar */}
         {isSidebarLeft && (
-          <div className="w-1/3 h-full bg-gray-100 rounded-sm p-1 flex flex-col gap-1">
+          <div className="w-[28%] h-full bg-slate-50 rounded-sm p-1 flex flex-col gap-1">
             <div
-              className="w-8 h-8 rounded-full mb-1 mx-auto"
+              className="w-4 h-4 rounded-full mb-1 mx-auto"
               style={accentStyle}
             ></div>
-            <div className="w-full h-1 bg-gray-300 rounded mb-1"></div>
-            <div className="w-full h-0.5 bg-gray-300 rounded"></div>
-            <div className="w-2/3 h-0.5 bg-gray-300 rounded"></div>
+            <div className="w-full h-0.5 bg-gray-200 rounded"></div>
+            <div className="w-full h-0.5 bg-gray-200 rounded"></div>
+            <div className="w-2/3 h-0.5 bg-gray-200 rounded"></div>
           </div>
         )}
 
@@ -78,7 +87,7 @@ const MiniTemplatePreview = ({
         >
           {/* If Sidebar Layout, add a small header in main area */}
           {(isSidebarLeft || isSidebarRight) && (
-            <div className="w-full h-3 bg-gray-200 rounded-sm mb-0.5"></div>
+            <div className="w-full h-2.5 bg-gray-50 rounded-sm"></div>
           )}
 
           {isGrid ? (
@@ -86,22 +95,23 @@ const MiniTemplatePreview = ({
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-gray-50 rounded-sm p-0.5"
+                  className="bg-gray-50 rounded-sm p-0.5 flex flex-col gap-0.5"
                   style={lightAccentStyle}
                 >
-                  <div className="w-full h-1 bg-gray-200 mb-0.5"></div>
+                  <div className="w-full h-0.5 bg-gray-200"></div>
+                  <div className="w-2/3 h-0.5 bg-gray-200"></div>
                 </div>
               ))}
             </>
           ) : (
             <>
               <div
-                className="w-full h-1.5 rounded-sm"
+                className="w-full h-1 rounded-sm"
                 style={textAccentStyle}
               ></div>
-              <div className="w-full h-8 bg-gray-50 rounded-sm border border-dashed border-gray-200"></div>
-              <div className="w-3/4 h-1.5 bg-gray-100 rounded-sm"></div>
-              <div className="w-full h-4 bg-gray-50 rounded-sm border border-dashed border-gray-200"></div>
+              <div className="w-full h-10 bg-gray-50/50 rounded-sm border border-dashed border-gray-200"></div>
+              <div className="w-3/4 h-1 bg-gray-100 rounded-sm"></div>
+              <div className="w-full h-4 bg-gray-50/50 rounded-sm border border-dashed border-gray-200"></div>
             </>
           )}
         </div>
@@ -109,10 +119,10 @@ const MiniTemplatePreview = ({
         {/* Right Sidebar */}
         {isSidebarRight && (
           <div
-            className="w-1/4 h-full rounded-sm p-1 flex flex-col gap-1"
+            className="w-[28%] h-full rounded-sm p-1 flex flex-col gap-1"
             style={accentStyle}
           >
-            <div className="w-full h-1 bg-white/40 rounded mb-1"></div>
+            <div className="w-full h-0.5 bg-white/40 rounded"></div>
             <div className="w-full h-0.5 bg-white/40 rounded"></div>
             <div className="w-2/3 h-0.5 bg-white/40 rounded"></div>
           </div>
@@ -340,16 +350,24 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
     (s) => !hiddenSectionIds.includes(s.section_type)
   );
 
-  const allTemplates = getAtsTemplates();
-
   const categories = [
     {
-      name: "ATS Optimized (Verified)",
-      items: allTemplates.map((t) => ({
+      name: "Professional (ATS Optimized)",
+      items: TEMPLATE_REGISTRY.filter((t) => t.category === "ATS").map((t) => ({
         id: t.id,
         name: t.name,
         description: t.description,
       })),
+    },
+    {
+      name: "Creative Designs",
+      items: TEMPLATE_REGISTRY.filter((t) => t.category === "CREATIVE").map(
+        (t) => ({
+          id: t.id,
+          name: t.name,
+          description: t.description,
+        })
+      ),
     },
   ];
 
