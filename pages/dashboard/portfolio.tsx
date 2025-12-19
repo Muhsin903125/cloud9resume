@@ -247,7 +247,7 @@ const PortfolioDashboardPage: NextPage = () => {
                   <div className="pointer-events-none select-none h-full">
                     <PortfolioRenderer
                       resume={selectedResume}
-                      sections={selectedResume.resume_sections || []}
+                      sections={selectedResume.sections || []}
                       template={selectedTemplateId}
                       settings={{ color: "#2563EB" }} // Default preview color
                     />

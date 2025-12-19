@@ -15,7 +15,7 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   PlusIcon,
-  TrashIcon,
+  DeleteIcon,
 } from "@/components/Icons";
 import { ResumeRenderer } from "@/components/ResumeRenderer";
 import { Resume, Portfolio } from "@/lib/types";
@@ -115,7 +115,7 @@ export default function PortfolioEditorPage() {
       );
       if (resumeRes.success) {
         setResume(resumeRes.data);
-        const fetchedSections = resumeRes.data.resume_sections || [];
+        const fetchedSections = resumeRes.data.sections || [];
 
         // Merge with potentially custom ordered sections from portfolio settings if we implement that fully
         // For now just use resume sections order logic or simple reorder
@@ -582,7 +582,7 @@ export default function PortfolioEditorPage() {
                                   className="text-gray-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition"
                                   title="Remove Section"
                                 >
-                                  <TrashIcon size={16} />
+                                  <DeleteIcon size={16} />
                                 </button>
                               )}
                             </div>
