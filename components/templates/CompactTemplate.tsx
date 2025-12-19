@@ -5,6 +5,7 @@ export const CompactTemplate = ({
   sections,
   themeColor,
   hexToRgba,
+  font,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -17,8 +18,13 @@ export const CompactTemplate = ({
     <div
       id="resume-preview-content"
       // Smaller font size base for compactness
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[10mm] font-sans text-[10px]"
-      style={{ width: "210mm", minHeight: "297mm", color: "#111" }}
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[10mm] text-[10px]"
+      style={{
+        width: "210mm",
+        minHeight: "297mm",
+        color: "#111",
+        fontFamily: font || "inherit",
+      }}
     >
       <header className="flex justify-between items-center border-b border-gray-300 pb-3 mb-4">
         <div>
@@ -75,7 +81,7 @@ export const CompactTemplate = ({
                 </p>
               )}
 
-              {section_type === "skills" && (
+              {(section_type === "skills" || section_type === "languages") && (
                 <div className="flex flex-wrap gap-1">
                   {(Array.isArray(section_data)
                     ? section_data
@@ -85,13 +91,19 @@ export const CompactTemplate = ({
                       key={idx}
                       className="font-medium bg-gray-100 px-1.5 rounded-sm border border-gray-200 text-gray-700"
                     >
-                      {typeof s === "string" ? s : s.name}
+                      {typeof s === "string"
+                        ? s
+                        : section_type === "languages"
+                        ? `${s.language}${
+                            s.proficiency ? ` (${s.proficiency})` : ""
+                          }`
+                        : s.name || s.language}
                     </span>
                   ))}
                 </div>
               )}
 
-              {!["summary", "skills"].includes(section_type) && (
+              {!["summary", "skills", "languages"].includes(section_type) && (
                 <div className="space-y-2.5">
                   {(Array.isArray(section_data)
                     ? section_data

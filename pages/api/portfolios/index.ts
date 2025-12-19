@@ -41,10 +41,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-      const { title, resume_id, repo, url, theme, theme_color, template_id, slug } = req.body
+      const { title, resume_id, repo, url, theme, theme_color, template_id, slug, is_active, settings } = req.body
 
       if (!title || !resume_id) {
         return res.status(400).json({ success: false, error: 'Title and Resume ID are required' })
+      }
+
+      // Check slug uniqueness if provided
+      if (slug) {
+        const { data: existing } = await supabase
+          .from('portfolios')
+          .select('id')
+          .eq('slug', slug)
+          .neq('user_id', userId) // Allow same user to reclaim or update their own? Actually slug should be globally unique.
+          .maybeSingle()
+        
+        if (existing) {
+             return res.status(400).json({ success: false, error: 'Username/URL is already taken' })
+        }
       }
 
       const { data, error } = await supabase
@@ -53,13 +67,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           user_id: userId,
           title,
           resume_id,
-          repo, // Optional: might be null initially if just creating a record
-          url,
-          theme,
-          theme_color,
-          template_id,
-          slug,
-          is_active: true
+          repo: repo || null,
+          url: url || null,
+          theme: theme || 'modern',
+          theme_color: theme_color || '#3b82f6',
+          template_id: template_id || 'modern',
+          slug: slug || null,
+          is_active: is_active ?? true,
+          settings: settings || {}
         })
         .select()
         .single()

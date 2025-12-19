@@ -6,6 +6,7 @@ export const CreativeTemplate = ({
   sections,
   themeColor,
   hexToRgba,
+  font,
 }: any) => {
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -28,7 +29,7 @@ export const CreativeTemplate = ({
       style={{
         width: "210mm",
         minHeight: "297mm",
-        fontFamily: "'Poppins', sans-serif",
+        fontFamily: font || "'Poppins', sans-serif",
       }}
     >
       {/* Left Sidebar (35%) - Dynamic Checkered/Artistic BG concept or just bold color */}
@@ -104,7 +105,7 @@ export const CreativeTemplate = ({
                   {section_type.replace("_", " ")}
                 </h3>
 
-                {section_type === "skills" ? (
+                {section_type === "skills" || section_type === "languages" ? (
                   <div className="flex flex-wrap gap-2">
                     {(Array.isArray(section_data)
                       ? section_data
@@ -114,7 +115,13 @@ export const CreativeTemplate = ({
                         key={idx}
                         className="bg-white/20 hover:bg-white/30 transition-colors px-2 py-1 rounded text-[10px] font-bold"
                       >
-                        {typeof s === "string" ? s : s.name}
+                        {typeof s === "string"
+                          ? s
+                          : section_type === "languages"
+                          ? `${s.language}${
+                              s.proficiency ? ` (${s.proficiency})` : ""
+                            }`
+                          : s.name || s.language}
                       </span>
                     ))}
                   </div>

@@ -1,8 +1,8 @@
-# Cloud9Resume Project Documentation
+# Cloud9Profile Project Documentation
 
 ## Overview
 
-Cloud9Resume is a lightweight, responsive, and user-friendly platform to build resumes, portfolios, and check ATS compatibility. Supports Free, Starter, Pro, and Pro+ plans with a credit-based AI system. Designed for global users, SEO-friendly, and scalable.
+Cloud9Profile is a lightweight, responsive, and user-friendly platform to build resumes, portfolios, and check ATS compatibility. Supports Free, Starter, Pro, and Pro+ plans with a credit-based AI system. Designed for global users, SEO-friendly, and scalable.
 
 ## 🎯 Key Features
 
@@ -157,8 +157,8 @@ The ATS checker uses a hybrid OCR approach for maximum accuracy:
 
 ## Branding & Domain
 
-* Brand Name: Cloud9Resume
-* Domain: `cloud9resume.com` (or suitable TLD if unavailable)
+* Brand Name: Cloud9Profile
+* Domain: `cloud9profile.com` (or suitable TLD if unavailable)
 * Global-friendly and SEO-optimized
 
 ## Development Workflow
@@ -181,4 +181,4 @@ The ATS checker uses a hybrid OCR approach for maximum accuracy:
 
 ---
 
-**End of Cloud9Resume Project Documentation**
+**End of Cloud9Profile Project Documentation**

@@ -1,95 +1,83 @@
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
-import Head from 'next/head'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import Head from "next/head";
+import { ResumeRenderer } from "../../../../components/ResumeRenderer";
+import { ChevronLeftIcon, CheckIcon } from "../../../../components/Icons";
+import { useAPIAuth } from "../../../../hooks/useAPIAuth";
 
 const TemplateSelector = () => {
-  const router = useRouter()
-  const { id } = router.query
-  const [resume, setResume] = useState<any>(null)
-  const [templates, setTemplates] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [applying, setApplying] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-  const [categoryFilter, setCategoryFilter] = useState('all')
-  const [error, setError] = useState('')
+  const router = useRouter();
+  const { id } = router.query;
+  const { get, patch } = useAPIAuth();
 
-  const colors = {
-    primary: '#000000',
-    secondary: '#666666',
-    accent: '#3b82f6',
-    border: '#e5e7eb',
-    light: '#f9fafb'
-  }
+  const [resume, setResume] = useState<any>(null);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [applying, setApplying] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchData()
-  }, [id])
+    if (id) fetchData();
+  }, [id]);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const [resumeRes, templatesRes] = await Promise.all([
-        fetch(`/api/resumes/${id}`, { headers: { 'x-user-id': 'user-id-here' } }),
-        fetch('/api/resumes/templates', { headers: { 'x-user-id': 'user-id-here' } })
-      ])
+        get<any>(`/api/resumes/${id}`),
+        get<any[]>("/api/resumes/templates"),
+      ]);
 
-      const resumeData = await resumeRes.json()
-      const templatesData = await templatesRes.json()
+      if (resumeRes.success) {
+        setResume(resumeRes.data);
+        setSelectedTemplate(
+          resumeRes.data?.settings?.template_id ||
+            resumeRes.data?.template_id ||
+            null
+        );
+      }
 
-      setResume(resumeData.data)
-      setTemplates(templatesData.data || [])
-      setSelectedTemplate(resumeData.data?.template_id || null)
-    } catch (err) {
-      setError('Failed to load data')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const applyTemplate = async () => {
-    if (!selectedTemplate) return
-
-    try {
-      setApplying(true)
-      const response = await fetch(`/api/resumes/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': 'user-id-here'
-        },
-        body: JSON.stringify({ template_id: selectedTemplate })
-      })
-
-      const data = await response.json()
-      if (data.success) {
-        setError('')
-        router.push(`/dashboard/resumes`)
-      } else {
-        setError(data.error || 'Failed to apply template')
+      if (templatesRes.success) {
+        setTemplates(templatesRes.data || []);
       }
     } catch (err) {
-      setError('Failed to apply template')
+      setError("Failed to load data");
     } finally {
-      setApplying(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const filteredTemplates = templates.filter((t) =>
-    categoryFilter === 'all' || t.category === categoryFilter
-  )
+  const applyTemplate = async () => {
+    if (!selectedTemplate) return;
 
-  const categories = ['all', ...new Set(templates.map((t) => t.category))]
+    try {
+      setApplying(true);
+      const response = await patch(`/api/resumes/${id}`, {
+        template_id: selectedTemplate,
+      });
 
-  if (loading) {
-    return (
-      <>
-        <Head>
-          <title>Select Template - Cloud9 Resume</title>
-        </Head>
-        <div style={{ padding: '40px', textAlign: 'center' }}>Loading templates...</div>
-      </>
-    )
-  }
+      if (response.success) {
+        setError("");
+        router.push(`/dashboard/resume/${id}/edit`);
+      } else {
+        setError(response.error || "Failed to apply template");
+      }
+    } catch (err) {
+      setError("Failed to apply template");
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const filteredTemplates = templates.filter(
+    (t) => categoryFilter === "all" || t.category === categoryFilter
+  );
+
+  const categories = ["all", ...new Set(templates.map((t) => t.category))];
+
+  if (loading) return <div className="p-10 text-center">Loading...</div>;
 
   return (
     <>
@@ -97,174 +85,112 @@ const TemplateSelector = () => {
         <title>Select Template - {resume?.title} - Cloud9 Resume</title>
       </Head>
 
-      <div style={{ background: colors.light, minHeight: '100vh', padding: '24px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          {/* Header */}
-          <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '32px', fontWeight: '700', color: colors.primary, margin: '0 0 8px 0' }}>
+      <div className="min-h-screen bg-gray-50 flex flex-col pt-16">
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left: Template List */}
+          <div className="w-1/3 min-w-[320px] max-w-[400px] bg-white border-r border-gray-200 overflow-y-auto p-6 z-10 shadow-xl flex flex-col">
+            <button
+              onClick={() => router.back()}
+              className="mb-6 flex items-center gap-2 text-gray-500 hover:text-gray-900 transition text-sm"
+            >
+              <ChevronLeftIcon size={16} /> Back to Editor
+            </button>
+
+            <h1 className="text-xl font-bold text-gray-900 mb-2">
               Choose Template
             </h1>
-            <p style={{ fontSize: '14px', color: colors.secondary, margin: 0 }}>
-              Select a professional template for {resume?.title}
+            <p className="text-gray-500 text-sm mb-6">
+              Select a professional design for your resume.
             </p>
-          </div>
 
-          {/* Filters */}
-          <div style={{ marginBottom: '24px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                style={{
-                  padding: '8px 16px',
-                  background: categoryFilter === cat ? colors.accent : 'white',
-                  color: categoryFilter === cat ? 'white' : colors.primary,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  textTransform: 'capitalize'
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {error && (
-            <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', borderRadius: '6px', marginBottom: '24px' }}>
-              {error}
-            </div>
-          )}
-
-          {/* Templates Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-            {filteredTemplates.map((template) => (
-              <div
-                key={template.id}
-                onClick={() => setSelectedTemplate(template.id)}
-                style={{
-                  background: 'white',
-                  border: selectedTemplate === template.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: selectedTemplate === template.id ? `0 0 0 3px rgba(59, 130, 246, 0.1)` : 'none'
-                }}
-              >
-                {/* Template Preview */}
-                <div
-                  style={{
-                    height: '180px',
-                    background: '#f3f4f6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                    color: colors.secondary,
-                    fontStyle: 'italic'
-                  }}
+            {/* Categories */}
+            <div className="flex gap-2 flex-wrap mb-6">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize border transition ${
+                    categoryFilter === cat
+                      ? "bg-blue-50 border-blue-200 text-blue-600"
+                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
                 >
-                  Preview
-                </div>
+                  {cat}
+                </button>
+              ))}
+            </div>
 
-                {/* Template Info */}
-                <div style={{ padding: '16px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '700', color: colors.primary, margin: '0 0 4px 0' }}>
-                    {template.name}
-                  </h3>
-                  <p style={{ fontSize: '12px', color: colors.secondary, margin: '0 0 12px 0' }}>
-                    {template.description}
-                  </p>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        background: '#dbeafe',
-                        color: colors.accent,
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontWeight: '600',
-                        textTransform: 'capitalize'
-                      }}
-                    >
-                      {template.category}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        background: '#f0fdf4',
-                        color: '#16a34a',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontWeight: '600',
-                        textTransform: 'capitalize'
-                      }}
-                    >
-                      {template.requires_plan}
-                    </span>
+            <div className="grid grid-cols-2 gap-3 pb-20">
+              {filteredTemplates.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => setSelectedTemplate(t.id)}
+                  className={`group relative aspect-[3/4] bg-gray-50 rounded-xl border-2 cursor-pointer transition-all overflow-hidden ${
+                    selectedTemplate === t.id
+                      ? "border-blue-600 ring-2 ring-blue-100 shadow-md scale-[1.02]"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-xs text-gray-400 font-medium italic">
+                    {/* Placeholder for thumbnail */}
+                    Snapshot
                   </div>
-                </div>
 
-                {/* Selection Indicator */}
-                {selectedTemplate === template.id && (
-                  <div
-                    style={{
-                      padding: '12px',
-                      background: '#dbeafe',
-                      color: colors.accent,
-                      textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '700'
-                    }}
-                  >
-                    ✓ Selected
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/90 backdrop-blur-sm border-t border-gray-100">
+                    <div className="font-bold text-gray-900 text-xs">
+                      {t.name}
+                    </div>
+                  </div>
+                  {selectedTemplate === t.id && (
+                    <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full shadow-lg z-10">
+                      <CheckIcon size={12} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Live Preview */}
+          <div className="flex-1 bg-gray-100 relative overflow-hidden flex flex-col">
+            <div className="absolute inset-0 overflow-y-auto p-8 custom-scrollbar">
+              <div className="max-w-[850px] mx-auto bg-white rounded shadow-2xl overflow-hidden min-h-[1100px] ring-1 ring-black/5 transform origin-top transition-all scale-[0.9] mt-[-50px]">
+                {resume && (
+                  <div className="pointer-events-none select-none">
+                    <ResumeRenderer
+                      resume={resume}
+                      sections={
+                        Array.isArray(resume.sections)
+                          ? resume.sections
+                          : Array.isArray(resume.resume_sections)
+                          ? resume.resume_sections
+                          : []
+                      }
+                      template={selectedTemplate || "modern"}
+                      themeColor={resume.theme_color || "#000000"}
+                      settings={resume.settings}
+                    />
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <button
-              onClick={() => router.back()}
-              style={{
-                padding: '10px 20px',
-                background: 'white',
-                color: colors.primary,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={applyTemplate}
-              disabled={!selectedTemplate || applying}
-              style={{
-                padding: '10px 20px',
-                background: selectedTemplate && !applying ? colors.accent : colors.border,
-                color: selectedTemplate && !applying ? 'white' : colors.secondary,
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: selectedTemplate && !applying ? 'pointer' : 'not-allowed'
-              }}
-            >
-              {applying ? 'Applying...' : 'Apply Template'}
-            </button>
+            {/* Floating Action Bar */}
+            <div className="absolute bottom-8 right-8 z-30">
+              <button
+                onClick={applyTemplate}
+                disabled={applying || !selectedTemplate}
+                className="px-8 py-4 bg-gray-900 text-white font-bold rounded-full shadow-2xl hover:bg-black hover:scale-105 transition flex items-center gap-3 disabled:opacity-50 disabled:scale-100"
+              >
+                <span>{applying ? "Saving..." : "Apply Template"}</span>
+                {!applying && <CheckIcon size={20} />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default TemplateSelector
+export default TemplateSelector;

@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 interface EmailOptions {
   to: string;
@@ -13,8 +13,8 @@ class EmailSender {
   constructor() {
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_SECURE === "true",
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -25,7 +25,7 @@ class EmailSender {
   async sendEmail(options: EmailOptions): Promise<void> {
     try {
       const mailOptions = {
-        from: process.env.FROM_EMAIL || 'noreply@cloud9resume.com',
+        from: process.env.FROM_EMAIL || "noreply@cloud9profile.com",
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -34,13 +34,13 @@ class EmailSender {
 
       await this.transporter.sendMail(mailOptions);
     } catch (error) {
-      console.error('Email sending failed:', error);
-      throw new Error('Failed to send email');
+      console.error("Email sending failed:", error);
+      throw new Error("Failed to send email");
     }
   }
 
   async sendATSAnalysisReport(email: string, analysis: any): Promise<void> {
-    const subject = 'Your ATS Analysis Report - Cloud9 Resume';
+    const subject = "Your ATS Analysis Report - Cloud9Profile";
     const html = this.generateATSReportHTML(analysis);
 
     await this.sendEmail({
@@ -70,7 +70,7 @@ class EmailSender {
         </head>
         <body>
           <div class="header">
-            <h1>Cloud9 Resume</h1>
+            <h1>Cloud9Profile</h1>
             <h2>ATS Analysis Report</h2>
           </div>
 
@@ -82,7 +82,9 @@ class EmailSender {
           <div class="section">
             <h3>Key Issues Found</h3>
             <ul>
-              ${analysis.issues.map((issue: any) => `<li class="issue">${issue}</li>`).join('')}
+              ${analysis.issues
+                .map((issue: any) => `<li class="issue">${issue}</li>`)
+                .join("")}
             </ul>
           </div>
 
@@ -90,15 +92,21 @@ class EmailSender {
             <h3>Recommendations</h3>
             <div class="recommendations">
               <ul>
-                ${analysis.recommendations.map((rec: any) => `<li>${rec}</li>`).join('')}
+                ${analysis.recommendations
+                  .map((rec: any) => `<li>${rec}</li>`)
+                  .join("")}
               </ul>
             </div>
           </div>
 
           <div class="section">
             <h3>Keywords Found</h3>
-            <p><strong>Present:</strong> ${analysis.keywords.present.join(', ')}</p>
-            <p><strong>Missing:</strong> ${analysis.keywords.missing.join(', ')}</p>
+            <p><strong>Present:</strong> ${analysis.keywords.present.join(
+              ", "
+            )}</p>
+            <p><strong>Missing:</strong> ${analysis.keywords.missing.join(
+              ", "
+            )}</p>
           </div>
         </body>
       </html>

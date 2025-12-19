@@ -934,3 +934,44 @@ export const generatePortfolioHTML = (
 </body>
 </html>`;
 };
+
+// ==========================================
+// RENDERER COMPONENT (For Live Preview)
+// ==========================================
+export const PortfolioRenderer = ({
+  resume,
+  sections,
+  template,
+  settings = {},
+}: {
+  resume: Resume;
+  sections: ResumeSection[];
+  template: string;
+  settings?: any;
+}) => {
+  let TemplateComponent;
+
+  switch (template) {
+    case "glass":
+      TemplateComponent = GlassTemplate;
+      break;
+    case "modern":
+    default:
+      TemplateComponent = ModernTemplate;
+      break;
+  }
+
+  // Inject styles for preview
+  const themeColor = settings.color || resume.theme_color || "#2563EB";
+
+  return (
+    <div className="portfolio-preview-root h-full overflow-y-auto bg-white">
+      <style>{getThemeStyles(themeColor)}</style>
+      <TemplateComponent
+        resume={resume}
+        sections={sections}
+        settings={settings}
+      />
+    </div>
+  );
+};

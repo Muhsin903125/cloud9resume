@@ -6,13 +6,16 @@ export const ModernTemplate = ({
   sections,
   themeColor,
   hexToRgba,
+  font,
 }: any) => {
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
 
   const mainSections = sections.filter((s: any) =>
-    ["summary", "experience", "projects"].includes(s.section_type)
+    ["summary", "experience", "projects", "declaration"].includes(
+      s.section_type
+    )
   );
   const sidebarSections = sections.filter(
     (s: any) =>
@@ -24,13 +27,23 @@ export const ModernTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="w-full bg-white shadow-sm print:shadow-none mx-auto flex min-h-[1000px]"
-      style={{ width: "210mm", minHeight: "297mm" }}
+      className="w-full bg-white shadow-sm print:shadow-none mx-auto flex min-h-screen relative"
+      style={{
+        width: "210mm",
+        minHeight: "297mm",
+        printColorAdjust: "exact",
+        WebkitPrintColorAdjust: "exact",
+        fontFamily: font || "inherit",
+      }}
     >
       {/* SIDEBAR (30%) */}
       <div
-        className="w-[30%] text-white p-5 flex flex-col gap-5 print:text-white"
-        style={{ backgroundColor: "#1e293b" }} // Keep dark sidebar base
+        className="w-[30%] text-white p-5 flex flex-col gap-5 print:text-white relative"
+        style={{
+          backgroundColor: "#1e293b",
+          // Helper for print background extension
+          boxShadow: `inset -1000px 0 0 0 #1e293b`,
+        }}
       >
         {/* Photo / Name */}
         <div className="text-center">
@@ -47,11 +60,11 @@ export const ModernTemplate = ({
               </span>
             )}
           </div>
-          <h1 className="text-base font-bold tracking-tight mb-0.5">
+          <h1 className="text-base font-bold tracking-tight mb-0.5 break-words">
             {personalInfo.name || "Your Name"}
           </h1>
           <p
-            className="text-[9px] uppercase tracking-widest font-medium opacity-80"
+            className="text-[9px] uppercase tracking-widest font-medium opacity-80 break-words"
             style={{ color: themeColor }}
           >
             {personalInfo.jobTitle || "Job Title"}
@@ -78,7 +91,7 @@ export const ModernTemplate = ({
                   <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
                     <item.icon size={8} />
                   </div>
-                  <span className="truncate">{item.val}</span>
+                  <span className="break-all">{item.val}</span>
                 </div>
               )
           )}
@@ -123,34 +136,46 @@ export const ModernTemplate = ({
             return null;
 
           return (
-            <div key={section.id}>
+            <div key={section.id} className="break-inside-avoid">
               <h3 className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-2">
                 {section_type.replace("_", " ")}
               </h3>
 
-              {section_type === "skills" ? (
-                <div className="flex flex-wrap gap-1">
+              {section_type === "skills" || section_type === "languages" ? (
+                /* Simplified Skills/Languages List */
+                <div className="flex flex-wrap gap-1.5">
                   {(Array.isArray(section_data)
                     ? section_data
                     : section_data?.items || []
-                  ).map((skill: any, idx: number) => (
-                    <span
-                      key={idx}
-                      className="px-1.5 py-0.5 bg-slate-800 text-slate-200 text-[9px] rounded border border-slate-700"
-                    >
-                      {typeof skill === "string" ? skill : skill.name}
-                    </span>
-                  ))}
+                  ).map((item: any, idx: number) => {
+                    const val =
+                      typeof item === "string"
+                        ? item
+                        : `${item.language}${
+                            item.proficiency ? ` (${item.proficiency})` : ""
+                          }`;
+                    return (
+                      <span
+                        key={idx}
+                        className="text-[9px] text-slate-300 border-b border-slate-700 pb-0.5"
+                      >
+                        {val}
+                      </span>
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {(Array.isArray(section_data)
                     ? section_data
                     : section_data?.items || []
                   ).map((item: any, idx: number) => (
                     <div key={idx}>
                       <div className="font-bold text-white text-[10px]">
+                        {/* Fallback chain for various section types in sidebar */}
                         {item.school ||
+                          item.university ||
+                          item.institution ||
                           item.position ||
                           item.title ||
                           item.language}
@@ -159,7 +184,7 @@ export const ModernTemplate = ({
                         {item.degree || item.company || item.proficiency}
                       </div>
                       <div className="text-slate-500 text-[9px] mt-0.5">
-                        {item.graduationDate || item.value}
+                        {item.graduationDate || item.date || item.endDate}
                       </div>
                     </div>
                   ))}
@@ -171,66 +196,119 @@ export const ModernTemplate = ({
       </div>
 
       {/* MAIN CONTENT (70%) */}
-      <div className="w-[70%] p-8 bg-white">
-        {mainSections.map((section: any) => {
-          const { section_type, section_data } = section;
-          if (
-            !section_data ||
-            (Array.isArray(section_data) && section_data.length === 0)
-          )
-            return null;
+      <div className="w-[70%] bg-white relative">
+        <table className="w-full">
+          <thead className="h-[12mm] print:h-[12mm] opacity-0">
+            <tr>
+              <td></td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="px-8 pb-8 align-top">
+                {mainSections.map((section: any) => {
+                  const { section_type, section_data } = section;
+                  if (
+                    !section_data ||
+                    (Array.isArray(section_data) && section_data.length === 0)
+                  )
+                    return null;
 
-          return (
-            <div key={section.id} className="mb-5">
-              <h3
-                className="text-xs font-bold text-slate-900 border-b-2 border-slate-100 pb-1 mb-3 uppercase tracking-wider flex items-center gap-2"
-                style={{ borderColor: hexToRgba(themeColor, 0.2) }}
-              >
-                <span style={{ color: themeColor }}>
-                  {section_type.replace("_", " ")}
-                </span>
-              </h3>
+                  // Skip declaration; we render it explicitly at the end
+                  if (section_type === "declaration") return null;
 
-              {section_type === "summary" ? (
-                <p className="text-slate-700 leading-relaxed text-[11px] sm:text-xs text-justify">
-                  {section_data.text || section_data}
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {(Array.isArray(section_data)
-                    ? section_data
-                    : section_data?.items || []
-                  ).map((item: any, idx: number) => (
-                    <div key={idx} className="relative group">
-                      <div className="flex justify-between items-baseline mb-0.5">
-                        <h4 className="font-bold text-slate-900 text-sm">
-                          {item.position || item.title}
-                        </h4>
-                        <span className="text-[9px] font-bold text-slate-500 whitespace-nowrap bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
-                          {item.startDate} – {item.endDate || item.date}
-                        </span>
-                      </div>
-                      <div
-                        className="font-medium text-[11px] mb-1"
-                        style={{ color: themeColor }}
+                  return (
+                    <div key={section.id} className="mb-6 break-inside-avoid">
+                      <h3
+                        className="text-xs font-bold text-slate-900 border-b-2 border-slate-100 pb-1 mb-3 uppercase tracking-wider flex items-center gap-2"
+                        style={{ borderColor: hexToRgba(themeColor, 0.2) }}
                       >
-                        {item.company || item.issuer}{" "}
-                        {item.location && (
-                          <span className="text-slate-400">
-                            • {item.location}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-slate-600 leading-relaxed whitespace-pre-wrap text-justify">
-                        {item.description}
+                        <span style={{ color: themeColor }}>
+                          {section_type.replace("_", " ")}
+                        </span>
+                      </h3>
+
+                      {section_type === "summary" ? (
+                        <p className="text-slate-700 leading-relaxed text-[11px] text-justify">
+                          {section_data.text || section_data}
+                        </p>
+                      ) : (
+                        <div className="space-y-4">
+                          {(Array.isArray(section_data)
+                            ? section_data
+                            : section_data?.items || []
+                          ).map((item: any, idx: number) => (
+                            <div key={idx} className="relative group">
+                              <div className="flex justify-between items-start mb-0.5 gap-4">
+                                <div className="flex-1">
+                                  <h4 className="font-bold text-slate-900 text-sm">
+                                    {item.position || item.title}
+                                  </h4>
+                                  <div
+                                    className="font-medium text-[11px] mb-1"
+                                    style={{ color: themeColor }}
+                                  >
+                                    {item.company || item.issuer || item.school}
+                                    {item.location && (
+                                      <span className="text-slate-400 ml-1">
+                                        • {item.location}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {(item.startDate ||
+                                  item.date ||
+                                  item.endDate) && (
+                                  <span className="text-[9px] font-bold text-slate-500 whitespace-nowrap bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 shrink-0">
+                                    {item.startDate && `${item.startDate} – `}
+                                    {item.endDate || item.date}
+                                  </span>
+                                )}
+                              </div>
+
+                              {item.description && (
+                                <p className="text-[11px] text-slate-600 leading-relaxed whitespace-pre-wrap text-justify mt-1">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Explicitly render Declaration at the bottom */}
+                {sections.find((s: any) => s.section_type === "declaration") &&
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data?.text && (
+                    <div className="mb-6 break-inside-avoid">
+                      <h3
+                        className="text-xs font-bold text-slate-900 border-b-2 border-slate-100 pb-1 mb-3 uppercase tracking-wider flex items-center gap-2"
+                        style={{ borderColor: hexToRgba(themeColor, 0.2) }}
+                      >
+                        <span style={{ color: themeColor }}>Declaration</span>
+                      </h3>
+                      <p className="text-slate-700 leading-relaxed text-[11px] text-justify">
+                        {
+                          sections.find(
+                            (s: any) => s.section_type === "declaration"
+                          ).section_data.text
+                        }
                       </p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                  )}
+              </td>
+            </tr>
+          </tbody>
+          <tfoot className="h-[12mm] print:h-[12mm] opacity-0">
+            <tr>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
     </div>
   );

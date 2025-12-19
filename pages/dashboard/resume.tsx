@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { Resume } from "../../lib/types";
-import { PlusIcon, SearchIcon } from "../../components/Icons";
+import { PlusIcon, SearchIcon, DocumentIcon } from "../../components/Icons";
 import SharedModal from "../../components/SharedModal";
 import { ResumeCard } from "../../components/ResumeCard";
 import { ResumePreviewModal } from "../../components/ResumePreviewModal";
 import FormField from "../../components/FormField";
 import { useAPIAuth } from "../../hooks/useAPIAuth";
 import { toast } from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const ResumeDashboard = () => {
   const router = useRouter();
@@ -21,6 +23,9 @@ const ResumeDashboard = () => {
   const [showNewModal, setShowNewModal] = useState(false);
   const [newResumeTitle, setNewResumeTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+
+  // Delete confirmation state
+  const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
 
   // Preview State
   const [previewResume, setPreviewResume] = useState<any>(null);
@@ -107,7 +112,7 @@ const ResumeDashboard = () => {
       if (response.success && response.data) {
         setPreviewResume(response.data);
         setPreviewSections(
-          response.data.resume_sections || response.data.sections || []
+          response.data.sections || response.data.resume_sections || []
         );
         setShowPreview(true);
       } else {
@@ -120,14 +125,22 @@ const ResumeDashboard = () => {
     }
   };
 
-  const handlePreferencesSave = async (template: string, color: string) => {
+  const handlePreferencesSave = async (
+    template: string,
+    color: string,
+    settings: any
+  ) => {
     if (!previewResume?.id) return false;
 
     try {
       const userId = localStorage.getItem("x_user_id");
       await patch(
         `/api/resumes/${previewResume.id}`,
-        { template_id: template, theme_color: color },
+        {
+          template_id: template,
+          theme_color: color,
+          resume_sections: settings,
+        },
         { "x-user-id": userId || "" }
       );
 
@@ -135,12 +148,19 @@ const ResumeDashboard = () => {
         ...prev,
         template_id: template,
         theme_color: color,
+        settings: settings,
+        resume_sections: settings, // Meta alias
       }));
       // Also update the list so we don't have stale data
       setResumes((prev) =>
         prev.map((r) =>
           r.id === previewResume.id
-            ? { ...r, template_id: template, theme_color: color }
+            ? {
+                ...r,
+                template_id: template,
+                theme_color: color,
+                settings: settings,
+              }
             : r
         )
       );
@@ -167,37 +187,44 @@ const ResumeDashboard = () => {
       </Head>
 
       <div className="bg-gray-50 min-h-screen">
-        {/* ... (Header omitted for brevity in replace, but I need to match context) ... */}
-        {/* Actually, I am replacing the end of the file. */}
-        {/* Let's look at where I am. I am near line 123 for filteredResumes. */}
-        {/* And line 295 for ResumePreviewModal. */}
-        {/* I'll specificy the chunks properly. */}
-
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-white border-b border-gray-200 sticky top-0 z-30"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-20">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">My Resumes</h1>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                  My Resumes
+                </h1>
                 <p className="text-sm text-gray-500 mt-1">
-                  Manage and organize your professional resumes
+                  Manage and organize your professional credentials
                 </p>
               </div>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNewModal(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-colors shadow-lg shadow-gray-200"
               >
                 <PlusIcon size={20} color="white" />
                 New Resume
-              </button>
+              </motion.button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats / Search Bar */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-col sm:flex-row gap-4 mb-8"
+          >
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <SearchIcon size={18} color="#9CA3AF" />
@@ -207,82 +234,74 @@ const ResumeDashboard = () => {
                 placeholder="Search resumes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-lg leading-5 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow"
+                className="block w-full pl-10 pr-3 py-3 bg-white border-none rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 shadow-sm transition-shadow text-gray-700"
               />
             </div>
 
             {/* Simple Stats Pucks */}
             <div className="flex gap-3">
-              <div className="bg-white px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 shadow-sm">
-                Total:{" "}
-                <span className="text-gray-900 font-bold ml-1">
+              <div className="bg-white px-5 py-2 rounded-xl text-sm font-medium text-gray-500 shadow-sm flex items-center gap-2">
+                Total
+                <span className="bg-gray-100 text-gray-900 font-bold px-2 py-0.5 rounded-md text-xs">
                   {resumes.length}
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Loading State */}
           {loading ? (
             <div className="flex justify-center py-20">
-              <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-900 border-t-transparent"></div>
             </div>
           ) : filteredResumes.length === 0 ? (
             /* Empty State */
-            <div className="text-center py-20 bg-white rounded-xl border border-gray-200 border-dashed">
-              <div className="mx-auto h-16 w-16 text-gray-300 mb-4">
-                <DocumentIcon size={64} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-24 bg-white rounded-2xl border border-gray-100 shadow-sm"
+            >
+              <div className="mx-auto h-20 w-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+                <DocumentIcon size={32} color="#9CA3AF" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
                 {searchQuery ? "No resumes found" : "No resumes yet"}
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-gray-500 mb-8 max-w-sm mx-auto">
                 {searchQuery
                   ? "Try adjusting your search terms"
-                  : "Create your first resume to get started"}
+                  : "Create your first resume to get started building your career."}
               </p>
               {!searchQuery && (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowNewModal(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-all shadow-xl shadow-gray-200"
                 >
                   <PlusIcon size={20} color="white" />
-                  Create Resume
-                </button>
+                  Create First Resume
+                </motion.button>
               )}
-            </div>
+            </motion.div>
           ) : (
-            /* Grid Layout */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredResumes.map((resume) => (
-                <ResumeCard
-                  key={resume.id}
-                  resume={resume}
-                  onDelete={handleDeleteResume}
-                  onDuplicate={handleDuplicateResume}
-                  onPreview={handlePreviewResume}
-                />
-              ))}
-
-              {/* "Add New" Card */}
-              <button
-                onClick={() => setShowNewModal(true)}
-                className="group flex flex-col items-center justify-center h-full min-h-[280px] border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
-              >
-                <div className="h-12 w-12 rounded-full bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center mb-4 transition-colors">
-                  <PlusIcon
-                    size={24}
-                    className="text-gray-400 group-hover:text-blue-600"
+            /* Layout Group for smooth reordering */
+            <motion.div
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              <AnimatePresence>
+                {filteredResumes.map((resume) => (
+                  <ResumeCard
+                    key={resume.id}
+                    resume={resume}
+                    onDelete={(id) => setResumeToDelete(id)}
+                    onDuplicate={handleDuplicateResume}
+                    onPreview={handlePreviewResume}
                   />
-                </div>
-                <span className="font-semibold text-gray-900 group-hover:text-blue-700">
-                  Create New Resume
-                </span>
-                <span className="text-sm text-gray-500 mt-1">
-                  Start from scratch
-                </span>
-              </button>
-            </div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
           )}
         </div>
 
@@ -311,17 +330,17 @@ const ResumeDashboard = () => {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setShowNewModal(false)}
-                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateResume}
                 disabled={!newResumeTitle.trim() || isCreating}
-                className={`flex-1 px-4 py-2.5 rounded-lg font-semibold text-white transition-all ${
+                className={`flex-1 px-4 py-3 rounded-xl font-semibold text-white transition-all ${
                   !newResumeTitle.trim() || isCreating
                     ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 shadow-md"
+                    : "bg-gray-900 hover:bg-black shadow-lg"
                 }`}
               >
                 {isCreating ? "Creating..." : "Create Resume"}
@@ -341,12 +360,28 @@ const ResumeDashboard = () => {
           onSave={handlePreferencesSave}
         />
 
+        {/* Confirmation Modal for Delete */}
+        <ConfirmationModal
+          isOpen={!!resumeToDelete}
+          title="Delete Resume"
+          message="Are you sure you want to delete this resume? This action cannot be undone."
+          confirmText="Delete Resume"
+          isDangerous={true}
+          onConfirm={() => {
+            if (resumeToDelete) {
+              handleDeleteResume(resumeToDelete);
+              setResumeToDelete(null);
+            }
+          }}
+          onCancel={() => setResumeToDelete(null)}
+        />
+
         {/* Loading Overlay for Preview Fetch */}
         {fetchingPreview && (
-          <div className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center backdrop-blur-sm">
-            <div className="bg-white p-4 rounded-xl shadow-xl flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-              <span className="font-medium text-gray-700">
+          <div className="fixed inset-0 bg-white/50 z-50 flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-white p-4 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-900 border-t-transparent"></div>
+              <span className="font-medium text-gray-900">
                 Loading preview...
               </span>
             </div>
@@ -357,22 +392,6 @@ const ResumeDashboard = () => {
   );
 };
 
-// Simple Document Icon for Empty State if not imported
-const DocumentIcon = ({ size = 24, color = "currentColor" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-    <polyline points="14 2 14 8 20 8"></polyline>
-  </svg>
-);
+// End of file
 
 export default ResumeDashboard;

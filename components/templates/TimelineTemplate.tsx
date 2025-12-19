@@ -6,6 +6,7 @@ export const TimelineTemplate = ({
   sections,
   themeColor,
   hexToRgba,
+  font,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -18,7 +19,12 @@ export const TimelineTemplate = ({
     <div
       id="resume-preview-content"
       className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto flex"
-      style={{ width: "210mm", minHeight: "297mm", color: "#475569" }}
+      style={{
+        width: "210mm",
+        minHeight: "297mm",
+        color: "#475569",
+        fontFamily: font || "inherit",
+      }}
     >
       {/* Narrow Sidebar for Dates/Icons - 20% */}
       <div className="w-[20%] border-r border-gray-200 relative">
@@ -86,7 +92,8 @@ export const TimelineTemplate = ({
                   </div>
                 )}
 
-                {section_type === "skills" && (
+                {(section_type === "skills" ||
+                  section_type === "languages") && (
                   <div className="flex flex-wrap gap-2">
                     {(Array.isArray(section_data)
                       ? section_data
@@ -96,13 +103,19 @@ export const TimelineTemplate = ({
                         key={idx}
                         className="bg-gray-100 px-3 py-1 rounded-full text-xs font-bold text-gray-600"
                       >
-                        {typeof s === "string" ? s : s.name}
+                        {typeof s === "string"
+                          ? s
+                          : section_type === "languages"
+                          ? `${s.language}${
+                              s.proficiency ? ` (${s.proficiency})` : ""
+                            }`
+                          : s.name || s.language}
                       </span>
                     ))}
                   </div>
                 )}
 
-                {!["summary", "skills"].includes(section_type) && (
+                {!["summary", "skills", "languages"].includes(section_type) && (
                   <div className="space-y-8">
                     {(Array.isArray(section_data)
                       ? section_data

@@ -5,6 +5,7 @@ export const ExecutiveTemplate = ({
   sections,
   themeColor,
   hexToRgba,
+  font,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -16,8 +17,13 @@ export const ExecutiveTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[15mm] font-serif"
-      style={{ width: "210mm", minHeight: "297mm", color: "#333" }}
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[15mm]"
+      style={{
+        width: "210mm",
+        minHeight: "297mm",
+        color: "#333",
+        fontFamily: font || "inherit",
+      }}
     >
       <div
         className="w-full h-2 mb-8"
@@ -83,23 +89,29 @@ export const ExecutiveTemplate = ({
               </p>
             )}
 
-            {section_type === "skills" && (
-              <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
+            {(section_type === "skills" || section_type === "languages") && (
+              <div className="flex flex-wrap gap-2 mt-4">
                 {(Array.isArray(section_data)
                   ? section_data
                   : section_data?.items || []
                 ).map((s: any, idx: number) => (
                   <span
                     key={idx}
-                    className="text-xs font-semibold uppercase tracking-wider text-gray-600 border border-gray-200 px-3 py-1.5 hover:bg-gray-50 transition-colors"
+                    className="bg-gray-100 px-3 py-1 rounded text-xs font-medium text-gray-700 border border-gray-200"
                   >
-                    {typeof s === "string" ? s : s.name}
+                    {typeof s === "string"
+                      ? s
+                      : section_type === "languages"
+                      ? `${s.language}${
+                          s.proficiency ? ` (${s.proficiency})` : ""
+                        }`
+                      : s.name || s.language}
                   </span>
                 ))}
               </div>
             )}
 
-            {!["summary", "skills"].includes(section_type) && (
+            {!["summary", "skills", "languages"].includes(section_type) && (
               <div className="space-y-6">
                 {(Array.isArray(section_data)
                   ? section_data

@@ -104,10 +104,18 @@ const SharedModal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div style={overlayStyles} onClick={onClose}>
-      <div style={contentStyles} onClick={(e) => e.stopPropagation()}>
+    <div
+      style={overlayStyles}
+      onClick={onClose}
+      className="shared-modal-overlay"
+    >
+      <div
+        style={contentStyles}
+        onClick={(e) => e.stopPropagation()}
+        className="shared-modal-content"
+      >
         {title && (
-          <div style={headerStyles}>
+          <div style={headerStyles} className="shared-modal-header">
             <h3 style={titleStyles}>{title}</h3>
             <button
               onClick={onClose}
@@ -118,7 +126,9 @@ const SharedModal: React.FC<ModalProps> = ({
             </button>
           </div>
         )}
-        <div style={bodyStyles}>{children}</div>
+        <div style={bodyStyles} className="shared-modal-body">
+          {children}
+        </div>
       </div>
     </div>
   );

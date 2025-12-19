@@ -6,6 +6,7 @@ export const GridTemplate = ({
   sections,
   themeColor,
   hexToRgba,
+  font,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -17,8 +18,13 @@ export const GridTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-slate-100 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[10mm] font-sans text-xs"
-      style={{ width: "210mm", minHeight: "297mm", color: "#334155" }}
+      className="bg-slate-100 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[10mm] text-xs"
+      style={{
+        width: "210mm",
+        minHeight: "297mm",
+        color: "#334155",
+        fontFamily: font || "inherit",
+      }}
     >
       {/* Header Card */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-4 flex justify-between items-center">
@@ -83,7 +89,7 @@ export const GridTemplate = ({
                 </p>
               )}
 
-              {section_type === "skills" && (
+              {(section_type === "skills" || section_type === "languages") && (
                 <div className="flex flex-wrap gap-2">
                   {(Array.isArray(section_data)
                     ? section_data
@@ -93,13 +99,19 @@ export const GridTemplate = ({
                       key={idx}
                       className="bg-slate-50 text-slate-600 px-2 py-1 rounded border border-slate-100 text-[10px] font-bold uppercase"
                     >
-                      {typeof s === "string" ? s : s.name}
+                      {typeof s === "string"
+                        ? s
+                        : section_type === "languages"
+                        ? `${s.language}${
+                            s.proficiency ? ` (${s.proficiency})` : ""
+                          }`
+                        : s.name || s.language}
                     </span>
                   ))}
                 </div>
               )}
 
-              {!["summary", "skills"].includes(section_type) && (
+              {!["summary", "skills", "languages"].includes(section_type) && (
                 <div className="space-y-4">
                   {(Array.isArray(section_data)
                     ? section_data

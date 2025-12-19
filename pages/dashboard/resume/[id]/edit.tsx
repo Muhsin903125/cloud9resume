@@ -42,15 +42,16 @@ const ResumeEditor = () => {
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showGenerationModal, setShowGenerationModal] = useState(false);
+  const [resumeTitle, setResumeTitle] = useState("");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   // UI State
   const [activeTab, setActiveTab] = useState("personal_info");
-  const [template, setTemplate] = useState<"modern" | "classic" | "minimal">(
-    "modern"
-  );
+  const [template, setTemplate] = useState<any>("modern");
   const [themeColor, setThemeColor] = useState("#3b82f6");
+  const [settings, setSettings] = useState<any>({});
 
-  const sectionTypes = [
+  const baseSectionTypes = [
     { id: "personal_info", label: "Personal Info", Icon: UserIcon },
     { id: "summary", label: "Summary", Icon: DocumentIcon },
     { id: "experience", label: "Experience", Icon: BriefcaseIcon },
@@ -60,7 +61,24 @@ const ResumeEditor = () => {
     { id: "certifications", label: "Certifications", Icon: AwardIcon },
     { id: "achievements", label: "Achievements", Icon: AwardIcon },
     { id: "languages", label: "Languages", Icon: GlobeIcon },
+    { id: "declaration", label: "Declaration", Icon: DocumentIcon },
   ];
+
+  const getOrderedSectionTypes = () => {
+    const order = settings?.section_order || [];
+    if (order.length === 0) return baseSectionTypes;
+
+    return [...baseSectionTypes].sort((a, b) => {
+      const idxA = order.indexOf(a.id);
+      const idxB = order.indexOf(b.id);
+      if (idxA === -1 && idxB === -1) return 0;
+      if (idxA === -1) return 1;
+      if (idxB === -1) return -1;
+      return idxA - idxB;
+    });
+  };
+
+  const sectionTypes = getOrderedSectionTypes();
 
   useEffect(() => {
     if (id) fetchResume();
@@ -76,13 +94,23 @@ const ResumeEditor = () => {
 
       if (data.success && data.data) {
         setResume(data.data);
-        const sectionsData =
-          data.data.resume_sections || data.data.sections || [];
+        const sectionsData = Array.isArray(data.data.sections)
+          ? data.data.sections
+          : Array.isArray(data.data.resume_sections)
+          ? data.data.resume_sections
+          : [];
         setSections(sectionsData);
 
         // Load preferences
-        if (data.data.template_id) setTemplate(data.data.template_id);
+        const s = data.data.settings || {};
+        const templateFromSettings = s.template_id;
+
+        if (templateFromSettings) setTemplate(templateFromSettings);
+        else if (data.data.template_id) setTemplate(data.data.template_id);
+
         if (data.data.theme_color) setThemeColor(data.data.theme_color);
+        if (data.data.settings) setSettings(data.data.settings);
+        if (data.data.title) setResumeTitle(data.data.title);
 
         // Initialize Form Data
         const initialData: any = {};
@@ -108,6 +136,36 @@ const ResumeEditor = () => {
       [activeTab]: { ...prev[activeTab], [field]: value },
     }));
     setIsDirty(true);
+  };
+
+  const handleTitleUpdate = async () => {
+    if (!resumeTitle.trim() || resumeTitle === resume?.title) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    try {
+      const userId = localStorage.getItem("x_user_id");
+      const res = await patch(
+        `/api/resumes/${id}`,
+        {
+          title: resumeTitle,
+        },
+        { "x-user-id": userId || "" }
+      );
+
+      if (res.success) {
+        setResume((prev: any) => ({ ...prev, title: resumeTitle }));
+        toast.success("Resume renamed");
+      } else {
+        toast.error("Failed to rename");
+        setResumeTitle(resume?.title || "");
+      }
+    } catch (err) {
+      toast.error("Failed to rename");
+    } finally {
+      setIsEditingTitle(false);
+    }
   };
 
   // Generic Array Helpers
@@ -218,7 +276,23 @@ const ResumeEditor = () => {
 
       if (res.success) {
         setIsDirty(false);
-        setFormData((prev: any) => ({ ...prev, [sectionKey]: cleanedData }));
+        // Do not overwrite local data with cleaned data to preserve user input state
+        // setFormData((prev: any) => ({ ...prev, [sectionKey]: cleanedData }));
+
+        // Update sections state with returned data (includes ID)
+        if (res.data) {
+          setSections((prev) => {
+            const idx = prev.findIndex((s) => s.section_type === sectionKey);
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx] = res.data;
+              return updated;
+            } else {
+              return [...prev, res.data];
+            }
+          });
+        }
+
         toast.success("Saved");
         return true;
       } else {
@@ -235,21 +309,25 @@ const ResumeEditor = () => {
 
   const handlePreferencesSave = async (
     newTemplate: string,
-    newColor: string
+    newColor: string,
+    newSettings?: any
   ) => {
     try {
       const userId = localStorage.getItem("x_user_id");
       await patch(
         `/api/resumes/${id}`,
         {
-          template_id: newTemplate,
+          template_id: newTemplate, // API now handles if this is slug or UUID
           theme_color: newColor,
+          settings: newSettings || settings,
         },
         { "x-user-id": userId || "" }
       );
 
       setTemplate(newTemplate as any);
       setThemeColor(newColor);
+      if (newSettings) setSettings(newSettings);
+
       toast.success("Preferences saved!");
       return true;
     } catch (e) {
@@ -289,6 +367,30 @@ const ResumeEditor = () => {
     return updated;
   };
 
+  // Apply sorting and filtering for the main preview
+  const getProcessedPreviewSections = () => {
+    const rawSections = getPreviewSections();
+
+    // Sort by section_type
+    const order = settings?.section_order || [];
+    let sorted = [...rawSections];
+
+    if (order.length > 0) {
+      sorted.sort((a, b) => {
+        const idxA = order.indexOf(a.section_type);
+        const idxB = order.indexOf(b.section_type);
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
+    }
+
+    // Filter Hidden by section_type
+    const hidden = settings?.hidden_sections || [];
+    return sorted.filter((s) => !hidden.includes(s.section_type));
+  };
+
   const activeSectionIndex = sectionTypes.findIndex((s) => s.id === activeTab);
   const progress = ((activeSectionIndex + 1) / sectionTypes.length) * 100;
 
@@ -317,9 +419,26 @@ const ResumeEditor = () => {
               <ChevronLeftIcon size={20} />
             </button>
             <div className="h-6 w-px bg-gray-200 hidden md:block"></div>
-            <h1 className="font-bold text-lg text-gray-900 truncate max-w-[200px] hidden md:block">
-              {resume?.title}
-            </h1>
+
+            {isEditingTitle ? (
+              <input
+                type="text"
+                value={resumeTitle}
+                onChange={(e) => setResumeTitle(e.target.value)}
+                onBlur={handleTitleUpdate}
+                onKeyDown={(e) => e.key === "Enter" && handleTitleUpdate()}
+                className="font-bold text-lg text-gray-900 border-b-2 border-blue-500 focus:outline-none bg-transparent min-w-[200px]"
+                autoFocus
+              />
+            ) : (
+              <h1
+                onClick={() => setIsEditingTitle(true)}
+                className="font-bold text-lg text-gray-900 truncate max-w-[200px] hidden md:block cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors"
+                title="Click to rename"
+              >
+                {resumeTitle || resume?.title || "Untitled Resume"}
+              </h1>
+            )}
           </div>
 
           {/* Stepper (Desktop) */}
@@ -362,9 +481,22 @@ const ResumeEditor = () => {
 
           <div className="flex items-center gap-3">
             {/* Template Trigger (Simplified) */}
-            <div className="text-xs text-gray-400 font-medium hidden md:block">
-              Auto-saving...
-            </div>
+            {/* Manual Save Button */}
+            <button
+              onClick={() => saveSection()}
+              className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors flex items-center gap-1.5 ${
+                isDirty
+                  ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                  : "bg-gray-50 text-gray-400 border-gray-200"
+              }`}
+            >
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${
+                  isDirty ? "bg-blue-500" : "bg-gray-300"
+                }`}
+              />
+              {isDirty ? "Save Changes" : "Saved"}
+            </button>
 
             <button
               onClick={() => {
@@ -492,9 +624,10 @@ const ResumeEditor = () => {
               >
                 <ResumeRenderer
                   resume={resume}
-                  sections={getPreviewSections()}
+                  sections={getProcessedPreviewSections()}
                   template={template}
                   themeColor={themeColor}
+                  settings={settings}
                 />
               </div>
             </div>
@@ -512,6 +645,7 @@ const ResumeEditor = () => {
           sections={getPreviewSections()}
           template={template}
           themeColor={themeColor}
+          settings={settings}
           onSave={handlePreferencesSave}
         />
       </div>
@@ -520,9 +654,10 @@ const ResumeEditor = () => {
       <div className="print-only">
         <ResumeRenderer
           resume={resume}
-          sections={getPreviewSections()}
+          sections={getProcessedPreviewSections()}
           template={template}
           themeColor={themeColor}
+          settings={settings}
         />
       </div>
     </div>
@@ -722,6 +857,7 @@ const renderSectionForm = (
           <Textarea
             label="Professional Summary"
             value={data.text}
+            rows={8}
             onChange={(e: any) => handleChange("text", e.target.value)}
             placeholder="A brief overview of your career highlights, skills, and goals..."
           />
@@ -1048,6 +1184,151 @@ const renderSectionForm = (
           >
             <PortfolioIcon size={16} /> Add Project
           </button>
+        </div>
+      );
+
+    case "certifications":
+      return (
+        <div className="space-y-4 animate-fade-in-up">
+          {(data.items || []).map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3 relative group hover:shadow-md transition-shadow"
+            >
+              <button
+                onClick={() => onRemove("items", idx)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+              >
+                ×
+              </button>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Certification Name"
+                  value={item.title}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "title", e.target.value)
+                  }
+                  placeholder="AWS Certified Solutions Architect"
+                />
+                <Input
+                  label="Issuing Organization"
+                  value={item.issuer}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "issuer", e.target.value)
+                  }
+                  placeholder="Amazon Web Services"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Date"
+                  value={item.date}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "date", e.target.value)
+                  }
+                  placeholder="2023"
+                />
+                <Input
+                  label="Credential URL"
+                  value={item.url}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "url", e.target.value)
+                  }
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+          >
+            <AwardIcon size={16} /> Add Certification
+          </button>
+        </div>
+      );
+
+    case "achievements":
+      return (
+        <div className="space-y-4 animate-fade-in-up">
+          {(data.items || []).map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3 relative group hover:shadow-md transition-shadow"
+            >
+              <button
+                onClick={() => onRemove("items", idx)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+              >
+                ×
+              </button>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Achievement Title"
+                  value={item.title}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "title", e.target.value)
+                  }
+                  placeholder="Best Employee of the Year"
+                />
+                <Input
+                  label="Date"
+                  value={item.date}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "date", e.target.value)
+                  }
+                  placeholder="2023"
+                />
+              </div>
+              <Textarea
+                label="Description"
+                value={item.description}
+                onChange={(e: any) =>
+                  onArrayChange(idx, "description", e.target.value)
+                }
+                placeholder="Details about the achievement..."
+              />
+            </div>
+          ))}
+          <button
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+          >
+            <AwardIcon size={16} /> Add Achievement
+          </button>
+        </div>
+      );
+
+    case "declaration":
+      return (
+        <div className="animate-fade-in-up">
+          <Textarea
+            label="Declaration Text"
+            value={data.text}
+            rows={6}
+            onChange={(e: any) => handleChange("text", e.target.value)}
+            placeholder="I hereby declare that the above-mentioned information is correct to the best of my knowledge..."
+          />
+          <div className="mt-2">
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">
+              Suggestions
+            </p>
+            <div className="flex flex-col gap-2">
+              {[
+                "I hereby declare that the above-mentioned information is correct to the best of my knowledge.",
+                "I solemnly declare that the information provided above is true and correct.",
+                "I certify that the information contained in this resume is correct to the best of my knowledge.",
+              ].map((text, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleChange("text", text)}
+                  className="text-left text-xs text-gray-600 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 px-3 py-2 rounded-lg transition-all"
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       );
 

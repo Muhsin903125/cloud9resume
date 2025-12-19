@@ -6,6 +6,7 @@ export const DenseTemplate = ({
   sections,
   themeColor,
   hexToRgba,
+  font,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -38,6 +39,7 @@ export const DenseTemplate = ({
         color: "#0f172a",
         fontSize: "9pt",
         lineHeight: "1.3",
+        fontFamily: font || "inherit",
       }}
     >
       {/* Header - Very Compact */}
@@ -201,14 +203,20 @@ export const DenseTemplate = ({
                     ).map((item: any, idx: number) => (
                       <div key={idx}>
                         <div className="font-bold text-[9pt] leading-tight">
-                          {item.school || item.degree || item.language}
+                          {section_type === "languages"
+                            ? item.language
+                            : item.school || item.degree}
                         </div>
                         <div className="text-[8.5pt] text-gray-600 leading-tight">
-                          {item.degree || item.school || item.proficiency}
+                          {section_type === "languages"
+                            ? item.proficiency
+                            : item.degree || item.school}
                         </div>
-                        <div className="text-[8pt] text-gray-400">
-                          {item.date || item.year}
-                        </div>
+                        {section_type !== "languages" && (
+                          <div className="text-[8pt] text-gray-400">
+                            {item.date || item.year}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

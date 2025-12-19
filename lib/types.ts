@@ -7,6 +7,12 @@ export interface Resume {
   is_primary: boolean
   template_id?: string
   theme_color?: string
+  settings?: {
+    font?: string;
+    secondary_color?: string;
+    hidden_sections?: string[];
+    [key: string]: any;
+  }
   created_at: string
   updated_at: string
 }
@@ -41,6 +47,7 @@ export interface Portfolio {
     [key: string]: any;
   }
   is_active: boolean
+  views?: number
   created_at: string
   updated_at: string
 }

@@ -5,6 +5,7 @@ export const BoldTemplate = ({
   sections,
   themeColor,
   hexToRgba,
+  font,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -17,8 +18,12 @@ export const BoldTemplate = ({
     <div
       id="resume-preview-content"
       // Using Slate 900 as base text color instead of pure black
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[15mm] font-sans text-slate-900"
-      style={{ width: "210mm", minHeight: "297mm" }}
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[15mm] text-slate-900"
+      style={{
+        width: "210mm",
+        minHeight: "297mm",
+        fontFamily: font || "inherit",
+      }}
     >
       <header className="mb-12">
         <h1
@@ -66,7 +71,7 @@ export const BoldTemplate = ({
                 </p>
               )}
 
-              {section_type === "skills" && (
+              {(section_type === "skills" || section_type === "languages") && (
                 <div className="flex flex-wrap gap-3">
                   {(Array.isArray(section_data)
                     ? section_data
@@ -76,13 +81,19 @@ export const BoldTemplate = ({
                       key={idx}
                       className="text-sm font-bold border-2 border-slate-900 px-3 py-1 uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-default"
                     >
-                      {typeof s === "string" ? s : s.name}
+                      {typeof s === "string"
+                        ? s
+                        : section_type === "languages"
+                        ? `${s.language}${
+                            s.proficiency ? ` (${s.proficiency})` : ""
+                          }`
+                        : s.name || s.language}
                     </span>
                   ))}
                 </div>
               )}
 
-              {!["summary", "skills"].includes(section_type) && (
+              {!["summary", "skills", "languages"].includes(section_type) && (
                 <div className="space-y-8 border-l-4 border-slate-900 pl-6">
                   {(Array.isArray(section_data)
                     ? section_data
