@@ -51,6 +51,7 @@ export default async function handler(
         slug,
         is_active,
         settings,
+        content,
       } = req.body;
 
       if (!title || !resume_id) {
@@ -88,6 +89,7 @@ export default async function handler(
           slug: slug || null,
           is_active: is_active ?? true,
           settings: settings || {},
+          content: content || null,
         })
         .select()
         .single();

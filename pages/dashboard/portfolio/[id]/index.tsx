@@ -85,6 +85,59 @@ export default function PortfolioEditorPage() {
   const loadData = async () => {
     try {
       setLoading(true);
+
+      // --- Handle "NEW" mode ---
+      if (id === "new") {
+        const { resumeId } = router.query;
+        if (!resumeId) throw new Error("Missing resume ID");
+
+        const resumeRes = await get<any>(
+          `/api/resumes/${resumeId}?_t=${Date.now()}`
+        );
+        if (!resumeRes.success || !resumeRes.data)
+          throw new Error("Failed to load resume");
+
+        setResume(resumeRes.data);
+        const fetchedSections = (resumeRes.data.sections || []).map(
+          (s: any) => ({
+            ...s,
+            content: s.section_data,
+          })
+        );
+        setSections(fetchedSections);
+
+        // Generate default slug
+        const baseSlug = (resumeRes.data.title || "portfolio")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        const defaultSlug = `${baseSlug}-${Math.floor(Math.random() * 1000)}`;
+        setSlugCheck((prev) => ({ ...prev, value: defaultSlug }));
+
+        // Initial Config
+        setConfig({
+          templateId: "modern",
+          themeColor: "#2563EB",
+          settings: {
+            visibleSections: ["experience", "education", "skills", "projects"],
+            showPhoto: true,
+            customTitle: resumeRes.data.title || "My Portfolio",
+          },
+        });
+
+        setPortfolio({
+          title: resumeRes.data.title || "My Portfolio",
+          resume_id: resumeId as string,
+          template_id: "modern",
+          slug: defaultSlug,
+          is_active: true,
+        } as any);
+
+        return; // Skip the rest of regular loading
+      }
+
+      // --- Regular "EDIT" mode ---
       const portRes = await get<Portfolio>(`/api/portfolios/${id}`);
       if (!portRes.success || !portRes.data)
         throw new Error("Failed to load portfolio");
@@ -153,6 +206,7 @@ export default function PortfolioEditorPage() {
       }
     } catch (e) {
       toast.error("Failed to load editor");
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -161,11 +215,20 @@ export default function PortfolioEditorPage() {
   const saveChanges = async () => {
     setSaving(true);
     try {
-      // Prepare section order
+      // Prepare section order and custom sections
       const sectionOrder = sections.map((s) => s.section_type);
-      const customSections = sections.filter((s) => s.isCustom); // filter out standard ones if we only want to save custom
+      const customSections = sections.filter((s) => s.isCustom);
 
-      const res = await patch(`/api/portfolios/${id}`, {
+      // Prepare the "content" snapshot for persistence
+      const contentSnapshot = {
+        resume: resume,
+        sections: sections,
+        config: config,
+      };
+
+      const payload = {
+        title:
+          config.settings?.customTitle || portfolio?.title || "My Portfolio",
         template_id: config.templateId,
         theme_color: config.themeColor,
         settings: {
@@ -173,17 +236,42 @@ export default function PortfolioEditorPage() {
           sectionOrder,
           customSections,
         },
-        slug: slugCheck.value, // Save slug if changed
-      });
+        slug: slugCheck.value,
+        content: contentSnapshot, // The snapshot for live website loading
+      };
 
-      if (res.success) {
-        toast.success("Saved successfully");
+      let res;
+      if (id === "new") {
+        // Create new portfolio
+        res = await post("/api/portfolios", {
+          ...payload,
+          resume_id: router.query.resumeId,
+          is_active: true,
+        });
+      } else {
+        // Update existing
+        res = await patch(`/api/portfolios/${id}`, payload);
+      }
+
+      if (res.success && res.data) {
+        toast.success(
+          id === "new" ? "Portfolio launched!" : "Saved successfully"
+        );
         setIsDirty(false);
-        setPortfolio((prev) => ({ ...prev!, slug: slugCheck.value })); // Update local
+        setPortfolio(res.data);
+
+        if (id === "new") {
+          // Transition from 'new' to the actual ID without a full page reload if possible,
+          // but pushing to the new ID is safest for router consistency.
+          router.push(`/dashboard/portfolio/${res.data.id}`, undefined, {
+            shallow: true,
+          });
+        }
       } else {
         toast.error(res.error || "Failed to save");
       }
     } catch (e) {
+      console.error("Save error:", e);
       toast.error("Error saving");
     } finally {
       setSaving(false);
@@ -366,15 +454,17 @@ export default function PortfolioEditorPage() {
               Unsaved changes
             </span>
           )}
-          <a
-            href={`/${portfolio?.slug || id}`}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 hover:text-blue-600 hover:border-blue-300 rounded-lg flex items-center justify-center gap-2 transition font-medium text-sm"
-            title="Open in new tab"
-          >
-            <EyeIcon size={16} /> Preview
-          </a>
+          {id !== "new" && (
+            <a
+              href={`/${portfolio?.slug || id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 bg-white border border-gray-200 text-gray-700 hover:text-blue-600 hover:border-blue-300 rounded-lg flex items-center justify-center gap-2 transition font-medium text-sm"
+              title="Open in new tab"
+            >
+              <EyeIcon size={16} /> Preview
+            </a>
+          )}
           <button
             onClick={saveChanges}
             disabled={
@@ -737,32 +827,34 @@ export default function PortfolioEditorPage() {
                     </button>
                   </div>
 
-                  <div className="p-6 bg-red-50 rounded-xl border border-red-100 space-y-4">
-                    <div>
-                      <h3 className="text-sm font-bold text-red-700">
-                        Danger Zone
-                      </h3>
-                      <p className="text-xs text-red-600 mt-1">
-                        Once you delete your portfolio, there is no going back.
-                        Please be certain.
-                      </p>
+                  {id !== "new" && (
+                    <div className="p-6 bg-red-50 rounded-xl border border-red-100 space-y-4">
+                      <div>
+                        <h3 className="text-sm font-bold text-red-700">
+                          Danger Zone
+                        </h3>
+                        <p className="text-xs text-red-600 mt-1">
+                          Once you delete your portfolio, there is no going
+                          back. Please be certain.
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (
+                            confirm(
+                              "Are you sure? This will delete your portfolio permanently."
+                            )
+                          ) {
+                            await del(`/api/portfolios/${id}`);
+                            router.push("/dashboard/portfolio");
+                          }
+                        }}
+                        className="w-full py-2.5 bg-white border border-red-200 text-red-600 font-bold rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
+                      >
+                        Delete Portfolio
+                      </button>
                     </div>
-                    <button
-                      onClick={async () => {
-                        if (
-                          confirm(
-                            "Are you sure? This will delete your portfolio permanently."
-                          )
-                        ) {
-                          await del(`/api/portfolios/${id}`);
-                          router.push("/dashboard/portfolio");
-                        }
-                      }}
-                      className="w-full py-2.5 bg-white border border-red-200 text-red-600 font-bold rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
-                    >
-                      Delete Portfolio
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
             </div>

@@ -1,68 +1,96 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
-import crypto from 'crypto'
+import { NextApiRequest, NextApiResponse } from "next";
+import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+);
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { slug } = req.query
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const { slug } = req.query;
   // const { password } = req.body // Future: Add password protection back if needed
 
-  if (req.method !== 'GET' && req.method !== 'POST') {
-     return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== "GET" && req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    if (req.method === 'GET') {
+    if (req.method === "GET") {
       // Fetch portfolio by slug (public endpoint)
       // Joined with resumes table to get resume data
       const { data: portfolio, error } = await supabase
-        .from('portfolios')
-        .select('*, resumes(*)')
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single()
+        .from("portfolios")
+        .select("*, resumes(*)")
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .single();
 
       if (error || !portfolio) {
-        return res.status(404).json({ error: 'Portfolio not found' })
+        return res.status(404).json({ error: "Portfolio not found" });
       }
 
       // Track view
       try {
         // Try RPC first (more atomic)
-        const { error: rpcError } = await supabase.rpc('increment_page_view', { page_slug: slug })
-        
+        const { error: rpcError } = await supabase.rpc("increment_page_view", {
+          page_slug: slug,
+        });
+
         // Fallback to direct update if RPC fails (e.g. doesn't exist)
         if (rpcError) {
-             const currentViews = portfolio.views || 0
-             /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-             const { error: updateError } = await supabase.from('portfolios')
-               .update({ views: currentViews + 1 })
-               .eq('id', portfolio.id)
+          const currentViews = portfolio.views || 0;
+          /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+          const { error: updateError } = await supabase
+            .from("portfolios")
+            .update({ views: currentViews + 1 })
+            .eq("id", portfolio.id);
         }
       } catch (err) {
-        console.warn('Analytics tracking failed', err)
+        console.warn("Analytics tracking failed", err);
+      }
+
+      const portData = {
+        ...portfolio,
+        resume: portfolio.resumes, // Map nested resume data
+      };
+
+      // If we have a persisted content snapshot, prioritize it
+      if (portfolio.content) {
+        const {
+          resume: snapshotResume,
+          sections: snapshotSections,
+          config: snapshotConfig,
+        } = portfolio.content;
+        return res.status(200).json({
+          success: true,
+          data: {
+            ...portData,
+            resume: snapshotResume || portData.resume,
+            sections: snapshotSections || [],
+            // Use snapshot config if available to ensure full visual persistence
+            template_id: snapshotConfig?.templateId || portfolio.template_id,
+            theme_color: snapshotConfig?.themeColor || portfolio.theme_color,
+            settings: snapshotConfig?.settings || portfolio.settings,
+          },
+        });
       }
 
       return res.status(200).json({
         success: true,
-        data: {
-          ...portfolio,
-          resume: portfolio.resumes, // Map nested resume data
-        }
-      })
+        data: portData,
+      });
     }
 
     // POST usually used for analytics/download tracking
-    if (req.method === 'POST') {
-       return res.status(200).json({ success: true })
+    if (req.method === "POST") {
+      return res.status(200).json({ success: true });
     }
-
   } catch (error) {
-    console.error('Public portfolio error:', error)
-    return res.status(500).json({ error: 'Internal server error' })
+    console.error("Public portfolio error:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
