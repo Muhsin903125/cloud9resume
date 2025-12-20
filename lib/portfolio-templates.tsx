@@ -1359,6 +1359,8 @@ const GridTemplate = ({
   const skills = getListItems(sections, "skills");
   const languages = getListItems(sections, "languages");
   const achievements = getListItems(sections, "achievements");
+  const certifications = getListItems(sections, "certifications");
+  const custom = getListItems(sections, "custom");
   const personalInfo = getPersonalInfo(sections);
   const summary = getSummary(sections);
 
@@ -1484,6 +1486,66 @@ const GridTemplate = ({
               </p>
             </div>
           ))}
+        {/* Education & Certs */}
+        <div className="col-span-1 md:col-span-1 space-y-4">
+          {education.length > 0 && (
+            <div className="bg-white p-6 rounded-3xl shadow-sm">
+              <h3 className="font-bold text-lg mb-4">Education</h3>
+              <div className="space-y-4">
+                {education.map((edu: any, i: number) => (
+                  <div key={i}>
+                    <div className="font-bold text-sm">{edu.degree}</div>
+                    <div className="text-xs text-stone-500">{edu.school}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {certifications.length > 0 && (
+            <div className="bg-blue-600 text-white p-6 rounded-3xl shadow-sm">
+              <h3 className="font-bold text-lg mb-4">Certificates</h3>
+              <div className="space-y-3">
+                {certifications.map((cert: any, i: number) => (
+                  <div key={i} className="text-sm">
+                    <div className="font-bold line-clamp-1">{cert.name}</div>
+                    <div className="text-blue-100 text-xs">{cert.issuer}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Languages & Custom */}
+        <div className="col-span-1 md:col-span-1 space-y-4">
+          {languages.length > 0 && (
+            <div className="bg-stone-900 text-white p-6 rounded-3xl shadow-sm">
+              <h3 className="font-bold text-lg mb-4">Languages</h3>
+              <div className="space-y-2">
+                {languages.map((lang: any, i: number) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span>{lang.language}</span>
+                    <span className="text-stone-400 font-mono text-[10px]">
+                      {lang.proficiency}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {custom.length > 0 && (
+            <div className="bg-white p-6 rounded-3xl shadow-sm border-2 border-dashed border-stone-200">
+              {custom.slice(0, 1).map((item: any, i: number) => (
+                <div key={i}>
+                  <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+                  <p className="text-sm text-stone-500 line-clamp-4">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1507,6 +1569,8 @@ const GlassTemplate = ({
   const skills = getListItems(sections, "skills");
   const languages = getListItems(sections, "languages");
   const achievements = getListItems(sections, "achievements");
+  const certifications = getListItems(sections, "certifications");
+  const custom = getListItems(sections, "custom");
   const personalInfo = getPersonalInfo(sections);
   const summary = getSummary(sections);
 
@@ -1725,6 +1789,44 @@ const GlassTemplate = ({
                 ))}
               </div>
             )}
+
+            {certifications.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8">
+                <h2 className="text-2xl font-bold mb-6 text-primary">
+                  Certifications
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {certifications.map((cert: any, i: number) => (
+                    <div
+                      key={i}
+                      className="bg-white/5 p-6 rounded-2xl border border-white/5 group hover:bg-white/10 transition-colors"
+                    >
+                      <h4 className="font-bold text-lg mb-1">{cert.name}</h4>
+                      <p className="text-primary text-sm mb-4">{cert.issuer}</p>
+                      <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
+                        {cert.date}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {custom.length > 0 && (
+              <div className="space-y-8">
+                {custom.map((item: any, i: number) => (
+                  <div
+                    key={i}
+                    className="bg-gradient-to-r from-white/5 to-transparent backdrop-blur-md border-l-4 border-primary rounded-r-2xl p-8"
+                  >
+                    <h2 className="text-2xl font-bold mb-4">{item.title}</h2>
+                    <p className="text-white/70 leading-relaxed font-light">
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1751,19 +1853,8 @@ export const generatePortfolioHTML = (
       TemplateComponent = CreativeTemplate;
       break;
     case "minimalist":
-      TemplateComponent = MinimalistTemplate;
-      break;
-    case "grid":
-      TemplateComponent = GridTemplate;
-      break;
-    case "professional":
-      TemplateComponent = ProfessionalTemplate;
-      break;
     case "minimal":
       TemplateComponent = MinimalistTemplate;
-      break;
-    case "creative":
-      TemplateComponent = CreativeTemplate;
       break;
     case "grid":
       TemplateComponent = GridTemplate;
