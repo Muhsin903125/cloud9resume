@@ -108,7 +108,7 @@ export default async function handler(
     // 2. Fetch Resumes
     const { data: resumes, error: resumesError } = await supabase
       .from("resumes")
-      .select("id, title, status, ats_score, created_at, updated_at")
+      .select("id, title, status, created_at, updated_at")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
@@ -159,8 +159,7 @@ export default async function handler(
         stats: {
           resumesCreated: fetchedResumes.length,
           portfoliosCreated: fetchedPortfolios.length,
-          atsScores: fetchedResumes.filter((r: any) => (r.ats_score || 0) > 0)
-            .length,
+          atsScores: 0,
           templatesUsed: 8,
           creditsRemaining: credits,
         },
