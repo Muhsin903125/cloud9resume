@@ -15,6 +15,7 @@ export default function Footer() {
                   src="/logo.png?v=2"
                   alt="Cloud9Profile Logo"
                   fill
+                  unoptimized
                   className="object-contain object-left filter brightness-0 invert"
                 />
               </div>

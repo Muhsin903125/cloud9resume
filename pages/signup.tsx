@@ -205,6 +205,7 @@ const SignupPage: NextPage = () => {
                 alt="Cloud9Profile"
                 width={160}
                 height={48}
+                unoptimized
                 className="h-auto"
               />
             </Link>

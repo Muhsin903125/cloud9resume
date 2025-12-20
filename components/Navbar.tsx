@@ -52,6 +52,7 @@ export default function Navbar() {
                   alt="Cloud9Profile Logo"
                   width={150}
                   height={40}
+                  unoptimized
                   className="rounded-lg object-contain h-10 w-auto transition-all"
                 />
               </motion.div>
