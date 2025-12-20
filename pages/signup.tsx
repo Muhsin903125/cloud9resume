@@ -201,7 +201,7 @@ const SignupPage: NextPage = () => {
           <div className="text-center mb-8">
             <Link href="/" className="inline-block mb-6">
               <Image
-                src="/logo.png?v=2"
+                src="/logo.png"
                 alt="Cloud9Profile"
                 width={160}
                 height={48}

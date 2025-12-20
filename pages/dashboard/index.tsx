@@ -15,27 +15,28 @@ import {
   AnalyticsIcon,
   ArrowRightIcon,
 } from "../../components/Icons";
+import { motion, AnimatePresence } from "framer-motion";
+import { apiClient } from "../../lib/apiClient";
 
 const DashboardPage: NextPage = () => {
   const router = useRouter();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [displayName, setDisplayName] = useState<string>("User");
 
-  const [stats] = useState({
-    resumesCreated: 3,
-    portfoliosCreated: 1,
-    atsScores: 5,
-    creditsRemaining: 75,
+  const [stats, setStats] = useState({
+    resumesCreated: 0,
+    portfoliosCreated: 0,
+    atsScores: 0,
+    templatesUsed: 8,
+    creditsRemaining: 0,
   });
+
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   // Get display name from user data
   useEffect(() => {
     if (user) {
-      // Try to get name in order of preference:
-      // 1. user.name (from Google OAuth)
-      // 2. user.profile?.first_name (from email auth)
-      // 3. Extract from email
-      // 4. Default to 'User'
       const name =
         user.name ||
         user.profile?.first_name ||
@@ -45,6 +46,54 @@ const DashboardPage: NextPage = () => {
       setDisplayName(name);
     }
   }, [user]);
+
+  // Fetch real data
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated]);
+
+  const fetchDashboardData = async () => {
+    setIsDataLoading(true);
+    try {
+      const result = await apiClient.get("/dashboard");
+
+      if (result.data && (result.data as any).success) {
+        const payload = (result.data as any).data;
+        setStats(payload.stats);
+
+        // Format activities for display
+        const activityList = payload.recentActivities.map((act: any) => ({
+          ...act,
+          timestamp: formatTimestamp(new Date(act.timestamp)),
+        }));
+
+        setRecentActivities(activityList);
+      } else {
+        console.error(
+          "Dashboard data fetch failed:",
+          result.error || result.message
+        );
+      }
+    } catch (err) {
+      console.error("Dashboard data fetch error:", err);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
+  const formatTimestamp = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -172,17 +221,22 @@ const DashboardPage: NextPage = () => {
         {/* Content */}
         <main className="max-w-5xl mx-auto px-4 py-8 relative z-10">
           {/* Credits Banner */}
-          <div className="mb-8 p-6 bg-gray-900 rounded-xl text-white shadow-lg shadow-gray-200/50">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8 p-6 bg-gray-900 rounded-xl text-white shadow-lg shadow-gray-200/50"
+          >
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">
                   Available Credits
                 </p>
                 <p className="text-3xl font-bold tracking-tight">
-                  {user?.profile?.credits || stats.creditsRemaining}
+                  {isDataLoading ? "..." : stats.creditsRemaining}
                 </p>
               </div>
-              <Link href="/plans">
+              <Link href="/plans" passHref>
                 <Button
                   variant="primary"
                   size="small"
@@ -192,72 +246,70 @@ const DashboardPage: NextPage = () => {
                 </Button>
               </Link>
             </div>
-          </div>
+          </motion.div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">
-                    Resumes
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">
-                    {stats.resumesCreated}
-                  </p>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1,
+                },
+              },
+            }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+          >
+            {[
+              {
+                label: "Resumes",
+                value: stats.resumesCreated,
+                icon: DocumentIcon,
+              },
+              {
+                label: "Portfolios",
+                value: stats.portfoliosCreated,
+                icon: PortfolioIcon,
+              },
+              {
+                label: "ATS Scans",
+                value: stats.atsScores,
+                icon: AnalyticsIcon,
+              },
+              {
+                label: "Templates",
+                value: stats.templatesUsed,
+                icon: TemplateIcon,
+              },
+            ].map((stat, idx) => (
+              <motion.div
+                key={idx}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">
+                      {stat.label}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {isDataLoading ? "..." : stat.value}
+                    </p>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <stat.icon size={20} className="text-gray-400" />
+                  </div>
                 </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <DocumentIcon size={20} className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">
-                    Portfolios
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">
-                    {stats.portfoliosCreated}
-                  </p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <PortfolioIcon size={20} className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">
-                    ATS Scans
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">
-                    {stats.atsScores}
-                  </p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <AnalyticsIcon size={20} className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">
-                    Templates
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">8</p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <TemplateIcon size={20} className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            ))}
+          </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Quick Actions */}
@@ -265,10 +317,36 @@ const DashboardPage: NextPage = () => {
               <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                 Quick Actions
               </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: {
+                      staggerChildren: 0.1,
+                      delayChildren: 0.4,
+                    },
+                  },
+                }}
+                className="grid sm:grid-cols-2 gap-4"
+              >
                 {quickActions.map((action, index) => (
-                  <Link key={index} href={action.href}>
-                    <div className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 transition-all cursor-pointer h-full">
+                  <Link key={index} href={action.href} passHref>
+                    <motion.div
+                      variants={{
+                        hidden: { opacity: 0, scale: 0.95 },
+                        visible: { opacity: 1, scale: 1 },
+                      }}
+                      whileHover={{
+                        scale: 1.02,
+                        y: -2,
+                        transition: { duration: 0.2 },
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 transition-all cursor-pointer h-full"
+                    >
                       <div className="flex items-start justify-between mb-3">
                         <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
                           <action.icon size={20} />
@@ -284,10 +362,10 @@ const DashboardPage: NextPage = () => {
                       <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
                         {action.description}
                       </p>
-                    </div>
+                    </motion.div>
                   </Link>
                 ))}
-              </div>
+              </motion.div>
             </div>
 
             {/* Recent Activity */}
@@ -295,42 +373,62 @@ const DashboardPage: NextPage = () => {
               <h2 className="text-base font-bold text-gray-900">
                 Recent Activity
               </h2>
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="divide-y divide-gray-100">
-                  {recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="p-4 hover:bg-gray-50/50 transition-colors"
-                    >
-                      <div className="flex gap-3">
-                        <div className="mt-0.5 p-1.5 bg-gray-100 rounded text-gray-500 flex-shrink-0">
-                          {getActivityIcon(activity.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {activity.title}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 uppercase tracking-wide">
-                              {activity.action}
-                            </span>
-                            <span className="text-[10px] text-gray-400">
-                              {activity.timestamp}
-                            </span>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-full"
+              >
+                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[400px]">
+                  {isDataLoading ? (
+                    <div className="p-8 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-xs text-gray-400">
+                        Loading activity...
+                      </p>
+                    </div>
+                  ) : recentActivities.length > 0 ? (
+                    recentActivities.map((activity) => (
+                      <motion.div
+                        key={activity.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 hover:bg-gray-50/50 transition-colors"
+                      >
+                        <div className="flex gap-3">
+                          <div className="mt-0.5 p-1.5 bg-gray-100 rounded text-gray-500 flex-shrink-0">
+                            {getActivityIcon(activity.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {activity.title}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 uppercase tracking-wide">
+                                {activity.action}
+                              </span>
+                              <span className="text-[10px] text-gray-400">
+                                {activity.timestamp}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-gray-400 text-sm">
+                      No recent activity found.
                     </div>
-                  ))}
+                  )}
                 </div>
-                <Link href="/dashboard/history">
-                  <div className="p-3 bg-gray-50 text-center border-t border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer">
+                <Link href="/dashboard/history" passHref>
+                  <div className="p-3 bg-gray-50 text-center border-t border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer mt-auto">
                     <p className="text-xs font-medium text-gray-600">
                       View full history
                     </p>
                   </div>
                 </Link>
-              </div>
+              </motion.div>
             </div>
           </div>
         </main>
