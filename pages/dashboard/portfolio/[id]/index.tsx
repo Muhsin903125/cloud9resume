@@ -377,7 +377,9 @@ export default function PortfolioEditorPage() {
           </a>
           <button
             onClick={saveChanges}
-            disabled={saving}
+            disabled={
+              saving || slugCheck.available === false || slugCheck.checking
+            }
             className="flex items-center gap-2 px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition font-medium disabled:opacity-50 shadow-lg shadow-gray-900/10"
           >
             {saving ? "Saving..." : <>Save & Publish</>}
@@ -645,7 +647,12 @@ export default function PortfolioEditorPage() {
                           {slugCheck.checking ? (
                             <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
                           ) : slugCheck.available === true ? (
-                            <CheckIcon size={20} className="text-green-600" />
+                            <div className="flex items-center gap-1">
+                              <span className="text-green-600 font-bold text-xs">
+                                Available
+                              </span>
+                              <CheckIcon size={20} className="text-green-600" />
+                            </div>
                           ) : slugCheck.available === false ? (
                             <span className="text-red-500 font-bold text-xs">
                               Taken

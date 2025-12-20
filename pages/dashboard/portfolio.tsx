@@ -483,15 +483,22 @@ function DetailsWizardStep({ onBack, onCreate, creating, defaultTitle }: any) {
                 onChange={(e) => checkSlug(e.target.value)}
                 className={`flex-1 px-4 py-3 border rounded-r-xl outline-none focus:ring-2 transition ${
                   slugCheck.available === false
-                    ? "border-red-300 bg-red-50"
-                    : "border-gray-200"
+                    ? "border-red-300 bg-red-50 focus:ring-red-200"
+                    : slugCheck.available === true
+                    ? "border-green-300 bg-green-50 focus:ring-green-200"
+                    : "border-gray-200 focus:ring-blue-500"
                 }`}
               />
               <div className="absolute right-3 top-3.5">
                 {slugCheck.checking ? (
                   <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
                 ) : slugCheck.available === true ? (
-                  <CheckIcon size={16} className="text-green-600" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-600 font-bold text-xs">
+                      Available
+                    </span>
+                    <CheckIcon size={16} className="text-green-600" />
+                  </div>
                 ) : slugCheck.available === false ? (
                   <span className="text-red-500 font-bold text-xs">Taken</span>
                 ) : null}
