@@ -65,6 +65,17 @@ export default async function handler(
       return res.status(200).json({ success: true, data });
     }
 
+    if (req.method === "GET") {
+      const { data, error } = await supabase
+        .from("portfolios")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      return res.status(200).json({ success: true, data });
+    }
+
     if (req.method === "DELETE") {
       const { error } = await supabase.from("portfolios").delete().eq("id", id);
 
@@ -79,11 +90,9 @@ export default async function handler(
       .json({ success: false, error: "Method not allowed" });
   } catch (error: any) {
     console.error("Portfolio API error:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        error: error.message || "Internal server error",
-      });
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Internal server error",
+    });
   }
 }

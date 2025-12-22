@@ -336,15 +336,7 @@ const ModernTemplate = ({
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-100 py-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} {personalInfo.name || "Portfolio"}. All
-            rights reserved.
-          </p>
-        </div>
-      </footer>
+      
     </div>
   );
 };
