@@ -167,6 +167,32 @@ export const ProfessionalTemplate = ({
             </div>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <div className="break-inside-avoid">
+              <div className="flex items-center gap-4 mb-4">
+                <h3
+                  className="text-base font-bold uppercase tracking-wider min-w-fit px-2"
+                  style={{
+                    backgroundColor: hexToRgba(themeColor, 0.1),
+                    color: themeColor,
+                  }}
+                >
+                  Declaration
+                </h3>
+                <div className="h-px bg-gray-200 flex-1"></div>
+              </div>
+              <p className="text-sm leading-relaxed text-justify text-gray-700">
+                {
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data.text
+                }
+              </p>
+            </div>
+          )}
       </div>
     </div>
   );

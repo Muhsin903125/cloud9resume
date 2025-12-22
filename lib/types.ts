@@ -31,6 +31,7 @@ export interface ResumeSection {
     | "personal_info"
     | "languages"
     | "achievements"
+    | "declaration"
     | "custom"
     | string;
   title: string;

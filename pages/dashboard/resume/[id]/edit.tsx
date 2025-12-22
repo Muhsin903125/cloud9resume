@@ -27,6 +27,9 @@ import {
 
 import { ResumeRenderer } from "../../../../components/ResumeRenderer";
 import { ResumePreviewModal } from "../../../../components/ResumePreviewModal";
+import { SparklesIcon } from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
+import { TEMPLATE_REGISTRY } from "@/lib/template-registry";
 
 const ResumeEditor = () => {
   const router = useRouter();
@@ -482,23 +485,27 @@ const ResumeEditor = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Template Trigger (Simplified) */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Manual Save Button */}
             <button
               onClick={() => saveSection()}
-              className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors flex items-center gap-1.5 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold border transition-all flex items-center gap-1.5 ${
                 isDirty
-                  ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                  ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 active:scale-95"
                   : "bg-gray-50 text-gray-400 border-gray-200"
               }`}
             >
               <div
                 className={`w-1.5 h-1.5 rounded-full ${
-                  isDirty ? "bg-blue-500" : "bg-gray-300"
+                  isDirty ? "bg-blue-500 animate-pulse" : "bg-gray-300"
                 }`}
               />
-              {isDirty ? "Save Changes" : "Saved"}
+              {isDirty ? (
+                <span className="hidden xs:inline">Save Changes</span>
+              ) : (
+                "Saved"
+              )}
+              {isDirty && <span className="xs:hidden">Save</span>}
             </button>
 
             <button
@@ -506,10 +513,11 @@ const ResumeEditor = () => {
                 if (isDirty) saveSection();
                 setShowGenerationModal(true);
               }}
-              className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors flex items-center gap-2 shadow-lg shadow-gray-900/10"
+              className="px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-[10px] sm:text-sm font-bold hover:bg-black transition-all active:scale-95 flex items-center gap-2 shadow-lg shadow-gray-900/10"
             >
-              <ZapIcon size={16} className="text-yellow-400" />
+              <ZapIcon size={14} className="text-yellow-400" />
               <span className="hidden sm:inline">Generate Resume</span>
+              <span className="sm:hidden">Generate</span>
             </button>
           </div>
         </header>
@@ -540,63 +548,79 @@ const ResumeEditor = () => {
             </div>
 
             {/* Mobile Section Drawer */}
-            {isMobileMenuOpen && (
-              <div
-                className="fixed inset-0 z-[60] flex flex-col justify-end sm:justify-center bg-gray-900/60 backdrop-blur-sm"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <div
-                  className="bg-white rounded-t-2xl sm:rounded-2xl p-6 max-h-[85vh] overflow-y-auto w-full max-w-lg mx-auto shadow-2xl animate-slide-up"
-                  onClick={(e) => e.stopPropagation()}
+            <AnimatePresence>
+              {isMobileMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[60] flex flex-col justify-end bg-gray-900/60 backdrop-blur-sm"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Jump to Section
-                    </h3>
-                    <button
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"
-                    >
-                      <ChevronDownIcon size={20} className="rotate-180" />
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {sectionTypes.map((s) => (
+                  <motion.div
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "100%" }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="bg-white rounded-t-3xl p-6 sm:p-8 max-h-[85vh] overflow-y-auto w-full max-w-lg mx-auto shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <h3 className="text-2xl font-black text-gray-900">
+                          Jump to Section
+                        </h3>
+                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+                          Navigate through steps
+                        </p>
+                      </div>
                       <button
-                        key={s.id}
-                        onClick={() => {
-                          handleStepChange(s.id);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
-                          activeTab === s.id
-                            ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
-                            : "border-gray-100 hover:bg-gray-50 text-gray-600"
-                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
                       >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              activeTab === s.id
-                                ? "bg-blue-200 text-blue-700"
-                                : "bg-gray-100 text-gray-500"
-                            }`}
-                          >
-                            <s.Icon size={16} />
-                          </div>
-                          <span className="font-bold text-sm">{s.label}</span>
-                        </div>
-                        {activeTab === s.id && (
-                          <div className="bg-blue-600 text-white rounded-full p-1">
-                            <CheckIcon size={12} />
-                          </div>
-                        )}
+                        <ChevronDownIcon size={24} className="rotate-0" />
                       </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+                    </div>
+                    <div className="space-y-3">
+                      {sectionTypes.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => {
+                            handleStepChange(s.id);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all ${
+                            activeTab === s.id
+                              ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md shadow-blue-600/5 ring-4 ring-blue-50"
+                              : "border-gray-50 hover:border-gray-100 hover:bg-gray-50 text-gray-600"
+                          }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                                activeTab === s.id
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-gray-100 text-gray-500"
+                              }`}
+                            >
+                              <s.Icon size={20} />
+                            </div>
+                            <span className="font-black text-sm tracking-tight text-left">
+                              {s.label}
+                            </span>
+                          </div>
+                          {activeTab === s.id && (
+                            <div className="bg-blue-600 text-white rounded-full p-1.5">
+                              <CheckIcon size={14} />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Scrollable Form Content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar bg-white relative">
@@ -623,28 +647,52 @@ const ResumeEditor = () => {
                   </div>
                 </div>
 
-                {renderSectionForm(
-                  activeTab,
-                  formData[activeTab],
-                  handleInputChange,
-                  handleAddArrayItem,
-                  handleRemoveArrayItem,
-                  handleArrayFieldChange
-                )}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    {renderSectionForm(
+                      activeTab,
+                      formData[activeTab],
+                      handleInputChange,
+                      handleAddArrayItem,
+                      handleRemoveArrayItem,
+                      handleArrayFieldChange
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
 
             {/* Sticky Navigation Footer */}
-            <div className="shrink-0 p-4 bg-white border-t border-gray-100 flex justify-between items-center z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <div className="shrink-0 p-4 sm:p-5 bg-white border-t border-gray-100 flex justify-between items-center z-20 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] pb-[calc(1rem+env(safe-area-inset-bottom))]">
               <button
                 disabled={activeSectionIndex === 0}
                 onClick={() =>
                   handleStepChange(sectionTypes[activeSectionIndex - 1].id)
                 }
-                className="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-6 py-3 rounded-2xl border-2 border-gray-100 text-gray-600 font-black text-sm hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
               >
                 Back
               </button>
+              <div className="hidden sm:flex items-center gap-1.5 h-1.5 px-4 bg-gray-50 rounded-full">
+                {sectionTypes.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      i === activeSectionIndex
+                        ? "bg-blue-600 w-4"
+                        : i < activeSectionIndex
+                        ? "bg-blue-200"
+                        : "bg-gray-200"
+                    }`}
+                  />
+                ))}
+              </div>
               <button
                 onClick={async () => {
                   if (activeSectionIndex === sectionTypes.length - 1) {
@@ -654,12 +702,12 @@ const ResumeEditor = () => {
                     handleStepChange(sectionTypes[activeSectionIndex + 1].id);
                   }
                 }}
-                className="px-8 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                className="px-8 py-3 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 active:scale-95 flex items-center gap-3"
               >
                 {activeSectionIndex === sectionTypes.length - 1
                   ? "Finish & Generate"
                   : "Next Step"}
-                <ArrowRightIcon size={16} />
+                <ArrowRightIcon size={18} />
               </button>
             </div>
           </div>
@@ -675,15 +723,39 @@ const ResumeEditor = () => {
           </div>
 
           {/* RIGHT: Live Preview (40%) */}
-          <div className="hidden lg:flex w-2/5 bg-slate-100 overflow-y-auto items-start justify-center p-8 relative custom-scrollbar overflow-x-hidden">
-            <div className="sticky top-8 pb-8">
+          <div className="hidden lg:flex w-2/5 bg-slate-100 overflow-y-auto flex-col items-center px-8 relative custom-scrollbar overflow-x-hidden">
+            {/* Sticky Template Switcher Overlay - Pane Level */}
+            <div className="sticky top-0 right-0 z-50 w-full flex justify-end  bg-gray/60 backdrop-blur-md pointer-events-none">
+              <div className="pointer-events-auto bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-200/50 shadow-sm flex items-center gap-2 mr-4 mt-4">
+                <TemplateIcon size={12} className="text-gray-400" />
+                <select
+                  value={template}
+                  onChange={(e) =>
+                    handlePreferencesSave(e.target.value, themeColor)
+                  }
+                  className="bg-transparent text-[10px] font-bold text-gray-500 hover:text-gray-900 transition-all outline-none appearance-none cursor-pointer pr-4"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right center",
+                    backgroundSize: "0.6rem",
+                  }}
+                >
+                  {TEMPLATE_REGISTRY.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="sticky top-0 pb-8 origin-top scale-[0.65] xl:scale-[0.8] flex flex-col items-center">
               <div
                 className="bg-white shadow-2xl shadow-slate-200/50 rounded-sm overflow-hidden transition-all duration-300 transform"
                 style={{
                   width: "210mm",
                   minHeight: "297mm",
-                  transform: "scale(0.65)",
-                  transformOrigin: "top center",
                 }}
               >
                 <ResumeRenderer
@@ -746,10 +818,12 @@ const Input = ({
   type = "text",
   value,
   onChange,
+  required,
+  helperText,
 }: any) => (
   <div className="mb-3">
     <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-      {label}
+      {label} {required && <span className="text-red-500 font-bold">*</span>}
     </label>
     <input
       type={type}
@@ -760,21 +834,34 @@ const Input = ({
       className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium"
       readOnly={!onChange}
     />
+    {helperText && (
+      <p className="text-[9px] text-gray-400 mt-1 italic leading-tight">
+        {helperText}
+      </p>
+    )}
   </div>
 );
 
-const Textarea = ({ label, name, placeholder, value, onChange }: any) => (
+const Textarea = ({
+  label,
+  name,
+  placeholder,
+  value,
+  onChange,
+  rows = 4,
+  required,
+}: any) => (
   <div className="mb-3">
     <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-      {label}
+      {label} {required && <span className="text-red-500 font-bold">*</span>}
     </label>
     <textarea
       value={value || ""}
       onChange={onChange ? onChange : undefined}
       name={name}
       placeholder={placeholder}
-      rows={4}
-      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium resize-none"
+      rows={rows}
+      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium resize-none shadow-inner"
       readOnly={!onChange}
     />
   </div>
@@ -817,24 +904,27 @@ const renderSectionForm = (
     case "personal_info":
       return (
         <div className="space-y-1 animate-fade-in-up">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Full Name"
               value={data.name}
+              required
               onChange={(e: any) => handleChange("name", e.target.value)}
               placeholder="John Doe"
             />
             <Input
               label="Job Title"
               value={data.jobTitle}
+              required
               onChange={(e: any) => handleChange("jobTitle", e.target.value)}
               placeholder="Software Engineer"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Email"
               value={data.email}
+              required
               onChange={(e: any) => handleChange("email", e.target.value)}
               placeholder="john@example.com"
             />
@@ -851,9 +941,10 @@ const renderSectionForm = (
               value={data.photoUrl}
               onChange={(e: any) => handleChange("photoUrl", e.target.value)}
               placeholder="https://example.com/photo.jpg"
+              helperText="Provide a public link to your profile photo (ideal for portfolios)."
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Address"
               value={data.address}
@@ -867,7 +958,7 @@ const renderSectionForm = (
               placeholder="New York"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Country"
               value={data.country}
@@ -885,7 +976,7 @@ const renderSectionForm = (
             <h3 className="text-xs font-bold text-gray-900 mb-4 flex items-center gap-2">
               <LinkIcon size={14} className="text-gray-400" /> Social Links
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <Input
                 label="LinkedIn"
                 value={data.linkedin}
@@ -916,15 +1007,41 @@ const renderSectionForm = (
       );
 
     case "summary":
+      const suggestions = [
+        "Results-oriented professional with a strong track record of success in building high-scale applications and managing cross-functional teams.",
+        "Passionate and innovative developer with expertise in modern web technologies and a commitment to delivering high-quality user experiences.",
+        "Accomplished specialist with extensive experience in strategic planning, cloud architecture, and optimizing enterprise-grade systems.",
+        "Dynamic leader and team player with a solid foundation in software engineering and a focus on driving continuous improvement.",
+        "Resourceful and analytical thinker with a passion for solving complex technical challenges and a history of successful project delivery.",
+      ];
+
       return (
-        <div className="animate-fade-in-up">
+        <div className="animate-fade-in-up space-y-6">
           <Textarea
             label="Professional Summary"
             value={data.text}
-            rows={8}
+            rows={12}
             onChange={(e: any) => handleChange("text", e.target.value)}
             placeholder="A brief overview of your career highlights, skills, and goals..."
+            required
           />
+
+          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 sm:p-5">
+            <h4 className="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <SparklesIcon className="w-3 h-3" /> Quick Suggestions
+            </h4>
+            <div className="flex flex-col gap-2.5">
+              {suggestions.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleChange("text", s)}
+                  className="text-left p-3 rounded-lg bg-white border border-gray-100 text-[11px] leading-relaxed text-gray-600 hover:border-blue-400 hover:text-blue-700 hover:shadow-sm transition-all active:scale-[0.99]"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       );
 
@@ -946,10 +1063,10 @@ const renderSectionForm = (
                   </div>
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                    Company
+                    Company <span className="text-red-500">*</span>
                   </label>
                   <input
                     value={item.company || ""}
@@ -957,12 +1074,12 @@ const renderSectionForm = (
                       onArrayChange(idx, "company", e.target.value)
                     }
                     className="w-full mt-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                    placeholder="Google"
+                    placeholder="e.g. Google, Microsoft"
                   />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                    Role
+                    Role / Position <span className="text-red-500">*</span>
                   </label>
                   <input
                     value={item.position || ""}
@@ -970,12 +1087,12 @@ const renderSectionForm = (
                       onArrayChange(idx, "position", e.target.value)
                     }
                     className="w-full mt-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                    placeholder="Senior Developer"
+                    placeholder="e.g. Senior Software Engineer"
                   />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                    Start Date
+                    Start Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     value={item.startDate || ""}
@@ -983,7 +1100,7 @@ const renderSectionForm = (
                       onArrayChange(idx, "startDate", e.target.value)
                     }
                     className="w-full mt-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                    placeholder="Jan 2020"
+                    placeholder="MM/YYYY or Year"
                   />
                 </div>
                 <div className="relative">
@@ -1079,22 +1196,24 @@ const renderSectionForm = (
                   </div>
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="School / University"
                   value={item.school}
+                  required
                   onChange={(e: any) =>
                     onArrayChange(idx, "school", e.target.value)
                   }
-                  placeholder="Stanford University"
+                  placeholder="e.g. Stanford University"
                 />
                 <Input
-                  label="Degree"
+                  label="Degree / Field of Study"
                   value={item.degree}
+                  required
                   onChange={(e: any) =>
                     onArrayChange(idx, "degree", e.target.value)
                   }
-                  placeholder="BSc Computer Science"
+                  placeholder="e.g. BSc Computer Science"
                 />
                 <Input
                   label="Graduation Date"
@@ -1128,10 +1247,10 @@ const renderSectionForm = (
       return (
         <div className="space-y-4 animate-fade-in-up">
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-[11px] text-gray-400 mb-4 font-medium italic">
               Add skills to your profile. Press Enter to add.
             </p>
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-2 mb-6 min-h-[40px] p-3 bg-gray-50 rounded-lg border border-dashed border-gray-200">
               {(data.items || []).map((skill: any, idx: number) => {
                 const skillName =
                   typeof skill === "string" ? skill : skill.name;
@@ -1150,6 +1269,50 @@ const renderSectionForm = (
                   </span>
                 );
               })}
+              {(data.items || []).length === 0 && (
+                <span className="text-gray-300 text-xs italic">
+                  No skills added yet...
+                </span>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                Suggested Skills
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "React",
+                  "TypeScript",
+                  "Node.js",
+                  "Python",
+                  "AWS",
+                  "SQL",
+                  "Project Management",
+                  "UI/UX Design",
+                ].map((skill) => (
+                  <button
+                    key={skill}
+                    onClick={() => {
+                      const exists = (data.items || []).some(
+                        (s: any) =>
+                          (typeof s === "string" ? s : s.name).toLowerCase() ===
+                          skill.toLowerCase()
+                      );
+                      if (!exists) {
+                        const newItems = [
+                          ...(data.items || []),
+                          { name: skill },
+                        ];
+                        onChange("items", newItems);
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-md bg-gray-100 text-gray-600 text-[10px] font-bold hover:bg-blue-100 hover:text-blue-700 transition-colors border border-gray-200"
+                  >
+                    + {skill}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="relative">
               <input
@@ -1196,25 +1359,27 @@ const renderSectionForm = (
               >
                 ×
               </button>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Project Title"
                   value={item.title}
+                  required
                   onChange={(e: any) =>
                     onArrayChange(idx, "title", e.target.value)
                   }
-                  placeholder="Task Manager App"
+                  placeholder="e.g. AI Portfolio Builder"
                 />
                 <Input
                   label="Technologies"
                   value={item.technologies}
+                  required
                   onChange={(e: any) =>
                     onArrayChange(idx, "technologies", e.target.value)
                   }
-                  placeholder="React, Node.js"
+                  placeholder="e.g. Next.js, OpenAI, Supabase"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Link / URL"
                   value={item.link}
@@ -1265,25 +1430,27 @@ const renderSectionForm = (
               >
                 ×
               </button>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Certification Name"
                   value={item.title}
+                  required
                   onChange={(e: any) =>
                     onArrayChange(idx, "title", e.target.value)
                   }
-                  placeholder="AWS Certified Solutions Architect"
+                  placeholder="e.g. AWS Solutions Architect"
                 />
                 <Input
                   label="Issuing Organization"
                   value={item.issuer}
+                  required
                   onChange={(e: any) =>
                     onArrayChange(idx, "issuer", e.target.value)
                   }
-                  placeholder="Amazon Web Services"
+                  placeholder="e.g. Amazon Web Services"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Date"
                   value={item.date}
@@ -1326,7 +1493,7 @@ const renderSectionForm = (
               >
                 ×
               </button>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Achievement Title"
                   value={item.title}
@@ -1402,7 +1569,7 @@ const renderSectionForm = (
           {(data.items || []).map((item: any, idx: number) => (
             <div
               key={idx}
-              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center gap-4 relative group"
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4 relative group"
             >
               <button
                 onClick={() => onRemove("items", idx)}

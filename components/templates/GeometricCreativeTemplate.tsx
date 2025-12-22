@@ -58,14 +58,18 @@ export const GeometricCreativeTemplate = ({
           const { section_type, section_data } = section;
           if (
             !section_data ||
-            (Array.isArray(section_data) && section_data.length === 0)
+            (Array.isArray(section_data) && section_data.length === 0) ||
+            section_type === "declaration"
           )
             return null;
 
           // Determine column span based on content type
-          const isFullWidth = ["experience", "projects", "summary"].includes(
-            section_type
-          );
+          const isFullWidth = [
+            "experience",
+            "projects",
+            "summary",
+            "declaration",
+          ].includes(section_type);
           const colSpan = isFullWidth ? "col-span-12" : "col-span-6";
 
           return (
@@ -146,6 +150,23 @@ export const GeometricCreativeTemplate = ({
           );
         })}
       </div>
+
+      {/* Explicit Declaration at Bottom */}
+      {sections.find((s: any) => s.section_type === "declaration") &&
+        sections.find((s: any) => s.section_type === "declaration").section_data
+          ?.text && (
+          <div className="mt-8 bg-white border-2 border-slate-900 p-6 relative break-inside-avoid">
+            <div className="absolute -top-3 left-6 px-3 py-1 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+              Declaration
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed font-bold">
+              {
+                sections.find((s: any) => s.section_type === "declaration")
+                  .section_data.text
+              }
+            </p>
+          </div>
+        )}
     </div>
   );
 };

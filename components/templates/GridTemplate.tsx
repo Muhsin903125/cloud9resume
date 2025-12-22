@@ -66,7 +66,8 @@ export const GridTemplate = ({
           const { section_type, section_data } = section;
           if (
             !section_data ||
-            (Array.isArray(section_data) && section_data.length === 0)
+            (Array.isArray(section_data) && section_data.length === 0) ||
+            section_type === "declaration"
           )
             return null;
 
@@ -83,7 +84,7 @@ export const GridTemplate = ({
                 {section_type.replace("_", " ")}
               </h3>
 
-              {section_type === "summary" && (
+              {["summary", "declaration"].includes(section_type) && (
                 <p className="leading-relaxed text-slate-600">
                   {section_data.text || section_data}
                 </p>
@@ -111,7 +112,9 @@ export const GridTemplate = ({
                 </div>
               )}
 
-              {!["summary", "skills", "languages"].includes(section_type) && (
+              {!["summary", "skills", "languages", "declaration"].includes(
+                section_type
+              ) && (
                 <div className="space-y-4">
                   {(Array.isArray(section_data)
                     ? section_data
@@ -139,6 +142,27 @@ export const GridTemplate = ({
           );
         })}
       </div>
+
+      {/* Explicit Declaration at Bottom */}
+      {sections.find((s: any) => s.section_type === "declaration") &&
+        sections.find((s: any) => s.section_type === "declaration").section_data
+          ?.text && (
+          <div className="mt-4 break-inside-avoid bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+            <h3 className="text-sm font-bold uppercase mb-3 flex items-center gap-2 text-slate-800">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: themeColor }}
+              ></div>
+              Declaration
+            </h3>
+            <p className="leading-relaxed text-slate-600">
+              {
+                sections.find((s: any) => s.section_type === "declaration")
+                  .section_data.text
+              }
+            </p>
+          </div>
+        )}
     </div>
   );
 };

@@ -149,6 +149,28 @@ export const TimelineTemplate = ({
               </div>
             );
           })}
+
+          {/* Explicit Declaration at Bottom */}
+          {sections.find((s: any) => s.section_type === "declaration") &&
+            sections.find((s: any) => s.section_type === "declaration")
+              .section_data?.text && (
+              <div className="relative">
+                <h3 className="text-sm font-bold uppercase mb-6 flex items-center gap-4 text-gray-400">
+                  Declaration
+                  <div className="h-px bg-gray-200 flex-1"></div>
+                </h3>
+                <div className="relative">
+                  <div className="absolute -left-[59px] top-1.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ring-1 ring-gray-200 bg-gray-400"></div>
+                  <p className="text-sm leading-7 text-gray-700">
+                    {
+                      sections.find(
+                        (s: any) => s.section_type === "declaration"
+                      ).section_data.text
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
         </div>
       </div>
     </div>

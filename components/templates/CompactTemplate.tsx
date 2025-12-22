@@ -133,6 +133,26 @@ export const CompactTemplate = ({
             </div>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <div className="break-inside-avoid">
+              <h3
+                className="text-[10px] font-bold uppercase mb-2 border-b border-gray-200 pb-0.5"
+                style={{ color: themeColor }}
+              >
+                Declaration
+              </h3>
+              <p className="leading-snug text-justify text-gray-800">
+                {
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data.text
+                }
+              </p>
+            </div>
+          )}
       </div>
     </div>
   );

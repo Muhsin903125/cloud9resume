@@ -11,6 +11,9 @@ interface ProfessionalAtsTemplateProps {
 export const ProfessionalAtsTemplate: React.FC<
   ProfessionalAtsTemplateProps
 > = ({ resume, sections, font = "'Merriweather', serif" }) => {
+  const sortedSections = [...sections].sort(
+    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+  );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
@@ -58,9 +61,12 @@ export const ProfessionalAtsTemplate: React.FC<
 
       {/* Sections */}
       <div className="space-y-8">
-        {sections.map((section: any) => {
+        {sortedSections.map((section: any) => {
           const { section_type, section_data } = section;
           if (!section_data || section_type === "personal_info") return null;
+
+          // Skip declaration
+          if (section_type === "declaration") return null;
 
           return (
             <section key={section.id} className="break-inside-avoid">
@@ -184,6 +190,23 @@ export const ProfessionalAtsTemplate: React.FC<
             </section>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <section className="break-inside-avoid">
+              <h2 className="text-sm font-bold uppercase tracking-[0.25em] border-b border-black/80 mb-4 pb-1">
+                Declaration
+              </h2>
+              <p className="text-[13px] leading-relaxed text-justify whitespace-pre-wrap">
+                {
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data.text
+                }
+              </p>
+            </section>
+          )}
       </div>
     </div>
   );

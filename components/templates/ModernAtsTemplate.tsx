@@ -14,6 +14,9 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
   themeColor = "#3b82f6",
   font = "'Inter', sans-serif",
 }) => {
+  const sortedSections = [...sections].sort(
+    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+  );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
@@ -66,11 +69,13 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
         </div>
       </header>
 
-      {/* Sections */}
       <div className="space-y-10">
-        {sections.map((section: any) => {
+        {sortedSections.map((section: any) => {
           const { section_type, section_data } = section;
           if (!section_data || section_type === "personal_info") return null;
+
+          // Skip declaration
+          if (section_type === "declaration") return null;
 
           return (
             <section key={section.id} className="break-inside-avoid">
@@ -216,6 +221,29 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
             </section>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <section className="break-inside-avoid">
+              <div className="flex items-center gap-4 mb-5">
+                <h2
+                  className="text-[13px] font-black uppercase tracking-[0.2em] whitespace-nowrap"
+                  style={{ color: themeColor }}
+                >
+                  Declaration
+                </h2>
+                <div className="h-px bg-slate-100 flex-1"></div>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed text-justify whitespace-pre-wrap">
+                {
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data.text
+                }
+              </p>
+            </section>
+          )}
       </div>
     </div>
   );

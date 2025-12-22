@@ -12,13 +12,15 @@ export const VibrantCreativeTemplate = ({
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
 
-  const mainSections = sections.filter((s: any) =>
-    ["summary", "experience", "projects", "declaration"].includes(
-      s.section_type
-    )
+  const sortedSections = [...sections].sort(
+    (a, b) => (a.order_index || 0) - (b.order_index || 0)
   );
 
-  const sidebarSections = sections.filter(
+  const mainSections = sortedSections.filter((s: any) =>
+    ["summary", "experience", "projects"].includes(s.section_type)
+  );
+
+  const sidebarSections = sortedSections.filter(
     (s: any) =>
       ![
         "personal_info",
@@ -223,6 +225,32 @@ export const VibrantCreativeTemplate = ({
                 </section>
               );
             })}
+
+            {/* Explicit Declaration at Bottom */}
+            {sections.find((s: any) => s.section_type === "declaration") &&
+              sections.find((s: any) => s.section_type === "declaration")
+                .section_data?.text && (
+                <section className="relative break-inside-avoid">
+                  <div className="flex items-center gap-4 mb-8">
+                    <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 whitespace-nowrap">
+                      Declaration
+                    </h2>
+                    <div className="h-0.5 flex-1 bg-slate-100 relative">
+                      <div
+                        className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: themeColor }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                    {
+                      sections.find(
+                        (s: any) => s.section_type === "declaration"
+                      ).section_data.text
+                    }
+                  </p>
+                </section>
+              )}
           </div>
         </div>
       </div>

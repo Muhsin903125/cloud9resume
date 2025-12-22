@@ -151,6 +151,29 @@ export const TechTemplate = ({
             </div>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <div className="break-inside-avoid">
+              <h3 className="text-sm font-bold uppercase mb-4 flex items-center gap-2">
+                <span style={{ color: themeColor }}>const</span> declaration =
+                <span className="text-gray-400">{"{"}</span>
+              </h3>
+              <div className="pl-4 border-l-2 border-gray-200 ml-1.5">
+                <p className="text-xs leading-relaxed text-gray-700">
+                  "
+                  {
+                    sections.find((s: any) => s.section_type === "declaration")
+                      .section_data.text
+                  }
+                  "
+                </p>
+              </div>
+              <div className="text-gray-400 mt-2 font-bold">{"}"}</div>
+            </div>
+          )}
       </div>
     </div>
   );

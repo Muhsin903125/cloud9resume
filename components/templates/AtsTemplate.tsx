@@ -13,6 +13,9 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
   sections,
   font = "'Inter', sans-serif",
 }) => {
+  const sortedSections = [...sections].sort(
+    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+  );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
@@ -65,9 +68,12 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
 
       {/* Sections */}
       <div className="space-y-6">
-        {sections.map((section: any) => {
+        {sortedSections.map((section: any) => {
           const { section_type, section_data } = section;
           if (!section_data || section_type === "personal_info") return null;
+
+          // Special sections handled separately
+          if (section_type === "declaration") return null;
 
           return (
             <section key={section.id} className="break-inside-avoid">
@@ -202,6 +208,26 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
             </section>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <section className="break-inside-avoid">
+              <h2
+                className="text-lg font-bold uppercase border-b border-black mb-3 pb-1 text-black"
+                style={{ letterSpacing: "0.05em" }}
+              >
+                Declaration
+              </h2>
+              <p className="whitespace-pre-wrap text-sm text-black text-justify">
+                {
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data.text
+                }
+              </p>
+            </section>
+          )}
       </div>
     </div>
   );

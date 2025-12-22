@@ -12,16 +12,22 @@ export const ModernTemplate = ({
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
 
-  const mainSections = sections.filter((s: any) =>
-    ["summary", "experience", "projects", "declaration"].includes(
-      s.section_type
-    )
+  const sortedSections = [...sections].sort(
+    (a, b) => (a.order_index || 0) - (b.order_index || 0)
   );
-  const sidebarSections = sections.filter(
+
+  const mainSections = sortedSections.filter((s: any) =>
+    ["summary", "experience", "projects"].includes(s.section_type)
+  );
+  const sidebarSections = sortedSections.filter(
     (s: any) =>
-      !["personal_info", "summary", "experience", "projects"].includes(
-        s.section_type
-      )
+      ![
+        "personal_info",
+        "summary",
+        "experience",
+        "projects",
+        "declaration",
+      ].includes(s.section_type)
   );
 
   return (
@@ -214,8 +220,7 @@ export const ModernTemplate = ({
                   )
                     return null;
 
-                  // Skip declaration; we render it explicitly at the end
-                  if (section_type === "declaration") return null;
+                  // Declaration is handled explicitly at the bottom
 
                   return (
                     <div key={section.id} className="mb-6 break-inside-avoid">

@@ -15,6 +15,9 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
   font = "'Poppins', sans-serif",
   hexToRgba,
 }) => {
+  const sortedSections = [...sections].sort(
+    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+  );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
@@ -68,9 +71,12 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
 
       {/* Sections */}
       <div className="space-y-12">
-        {sections.map((section: any) => {
+        {sortedSections.map((section: any) => {
           const { section_type, section_data } = section;
           if (!section_data || section_type === "personal_info") return null;
+
+          // Skip declaration
+          if (section_type === "declaration") return null;
 
           return (
             <section key={section.id} className="break-inside-avoid">
@@ -223,6 +229,29 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
             </section>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <section className="break-inside-avoid">
+              <div className="flex items-center mb-6">
+                <div
+                  className="w-12 h-1.5 rounded-full mr-4"
+                  style={{ backgroundColor: themeColor }}
+                ></div>
+                <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">
+                  Declaration
+                </h2>
+              </div>
+              <p className="text-[15px] text-gray-600 leading-relaxed font-medium">
+                {
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data.text
+                }
+              </p>
+            </section>
+          )}
       </div>
     </div>
   );

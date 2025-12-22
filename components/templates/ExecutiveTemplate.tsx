@@ -111,7 +111,9 @@ export const ExecutiveTemplate = ({
               </div>
             )}
 
-            {!["summary", "skills", "languages"].includes(section_type) && (
+            {!["summary", "skills", "languages", "declaration"].includes(
+              section_type
+            ) && (
               <div className="space-y-6">
                 {(Array.isArray(section_data)
                   ? section_data
@@ -142,6 +144,29 @@ export const ExecutiveTemplate = ({
           </div>
         );
       })}
+
+      {/* Explicit Declaration at Bottom */}
+      {sections.find((s: any) => s.section_type === "declaration") &&
+        sections.find((s: any) => s.section_type === "declaration").section_data
+          ?.text && (
+          <div className="break-inside-avoid">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="flex-1 h-px bg-gray-300"></div>
+              <h3 className="font-bold text-sm uppercase tracking-widest text-gray-800 text-center min-w-[120px]">
+                Declaration
+              </h3>
+              <div className="flex-1 h-px bg-gray-300"></div>
+            </div>
+            <p className="text-sm leading-7 text-center text-gray-700 italic max-w-2xl mx-auto">
+              "
+              {
+                sections.find((s: any) => s.section_type === "declaration")
+                  .section_data.text
+              }
+              "
+            </p>
+          </div>
+        )}
     </div>
   );
 };

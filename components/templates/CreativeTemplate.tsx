@@ -12,14 +12,22 @@ export const CreativeTemplate = ({
     sections.find((s: any) => s.section_type === "personal_info")
       ?.section_data || {};
 
-  const mainSections = sections.filter((s: any) =>
+  const sortedSections = [...sections].sort(
+    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+  );
+
+  const mainSections = sortedSections.filter((s: any) =>
     ["summary", "experience", "projects"].includes(s.section_type)
   );
-  const sidebarSections = sections.filter(
+  const sidebarSections = sortedSections.filter(
     (s: any) =>
-      !["personal_info", "summary", "experience", "projects"].includes(
-        s.section_type
-      )
+      ![
+        "personal_info",
+        "summary",
+        "experience",
+        "projects",
+        "declaration",
+      ].includes(s.section_type)
   );
 
   return (
@@ -207,6 +215,24 @@ export const CreativeTemplate = ({
             </div>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <div className="break-inside-avoid">
+              <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 mb-6 flex items-baseline gap-3">
+                Declaration
+                <span className="flex-1 h-1 bg-gray-100 rounded-full"></span>
+              </h3>
+              <p className="text-sm text-gray-600 leading-7 font-medium">
+                {
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data.text
+                }
+              </p>
+            </div>
+          )}
       </div>
     </div>
   );

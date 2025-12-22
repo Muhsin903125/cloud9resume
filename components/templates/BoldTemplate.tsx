@@ -52,7 +52,8 @@ export const BoldTemplate = ({
           const { section_type, section_data } = section;
           if (
             !section_data ||
-            (Array.isArray(section_data) && section_data.length === 0)
+            (Array.isArray(section_data) && section_data.length === 0) ||
+            section_type === "declaration"
           )
             return null;
 
@@ -65,7 +66,7 @@ export const BoldTemplate = ({
                 {section_type}
               </h3>
 
-              {section_type === "summary" && (
+              {["summary", "declaration"].includes(section_type) && (
                 <p className="text-lg font-medium leading-relaxed max-w-3xl">
                   {section_data.text || section_data}
                 </p>
@@ -93,7 +94,9 @@ export const BoldTemplate = ({
                 </div>
               )}
 
-              {!["summary", "skills", "languages"].includes(section_type) && (
+              {!["summary", "skills", "languages", "declaration"].includes(
+                section_type
+              ) && (
                 <div className="space-y-8 border-l-4 border-slate-900 pl-6">
                   {(Array.isArray(section_data)
                     ? section_data
@@ -121,6 +124,26 @@ export const BoldTemplate = ({
             </div>
           );
         })}
+
+        {/* Explicit Declaration at Bottom */}
+        {sections.find((s: any) => s.section_type === "declaration") &&
+          sections.find((s: any) => s.section_type === "declaration")
+            .section_data?.text && (
+            <div className="break-inside-avoid">
+              <h3
+                className="text-4xl font-black uppercase mb-6 tracking-tighter opacity-10"
+                style={{ color: themeColor }}
+              >
+                Declaration
+              </h3>
+              <p className="text-lg font-medium leading-relaxed max-w-3xl">
+                {
+                  sections.find((s: any) => s.section_type === "declaration")
+                    .section_data.text
+                }
+              </p>
+            </div>
+          )}
       </div>
     </div>
   );
