@@ -8,7 +8,7 @@ export const getAssetUrl = (assetPath: string) => {
   if (assetPath.startsWith("http://") || assetPath.startsWith("https://")) {
     return assetPath; // Return absolute URLs as is
   }
-  const assetPrefix = process.env.NEXT_PUBLIC_ASSET_PREFIX || "";
+  const assetPrefix = process.env.NEXT_PUBLIC_APP_URL || "";
   const cleanPath = assetPath.startsWith("/") ? assetPath : `/${assetPath}`;
   return `${assetPrefix}${cleanPath}`;
 };

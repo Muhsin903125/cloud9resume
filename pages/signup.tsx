@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import logo from "../public/logo.png";
+import { getAssetUrl } from "../lib/common-functions";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import Button from "../components/Button";
@@ -201,7 +201,7 @@ const SignupPage: NextPage = () => {
           <div className="text-center mb-8">
             <Link href="/" className="inline-block mb-6">
               <img
-                src={logo.src}
+                src={getAssetUrl("/logo.png")}
                 alt="Cloud9Profile"
                 style={{ height: "48px", width: "auto", objectFit: "contain" }}
               />

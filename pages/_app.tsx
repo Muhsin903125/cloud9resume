@@ -1,5 +1,5 @@
 import type { AppProps } from "next/app";
-import logo from "../public/logo.png";
+import { getAssetUrl } from "../lib/common-functions";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -212,7 +212,7 @@ function DashboardLayout({
                 <div className="flex items-center justify-between flex-shrink-0 px-4 py-3 border-b border-gray-200">
                   <Link href="/" className="flex items-center  ">
                     <img
-                      src={logo.src}
+                      src={getAssetUrl("/logo.png")}
                       alt="Cloud9Profile Logo"
                       className="h-8 w-auto object-contain"
                     />

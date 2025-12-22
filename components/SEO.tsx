@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import icon from "../public/logo-icon.png";
+import { getAssetUrl } from "../lib/common-functions";
 
 interface SEOProps {
   title?: string;
@@ -52,7 +52,7 @@ const SEO = ({
       {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
 
       <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <link rel="icon" href={icon.src} />
+      <link rel="icon" href={getAssetUrl("/logo-icon.png")} />
     </Head>
   );
 };

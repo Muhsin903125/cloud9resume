@@ -1,5 +1,5 @@
 import Link from "next/link";
-import logo from "../public/logo.png";
+import { getAssetUrl } from "../lib/common-functions";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -12,7 +12,7 @@ export default function Footer() {
             <div className="flex items-center space-x-2">
               <div className="relative">
                 <img
-                  src={logo.src}
+                  src={getAssetUrl("/logo.png")}
                   alt="Cloud9Profile Logo"
                   style={{
                     height: "40px",

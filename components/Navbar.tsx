@@ -1,5 +1,5 @@
 import Link from "next/link";
-import logo from "../public/logo.png";
+import { getAssetUrl } from "../lib/common-functions";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,7 +48,7 @@ export default function Navbar() {
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
                 <img
-                  src={logo.src}
+                  src={getAssetUrl("/logo.png")}
                   alt="Cloud9Profile Logo"
                   style={{
                     height: "40px",
