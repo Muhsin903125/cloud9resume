@@ -1,5 +1,5 @@
 import Link from "next/link";
-import logo from "@/public/logo.png";
+import logo from "../public/logo.png";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";

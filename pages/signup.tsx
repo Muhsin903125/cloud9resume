@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import logo from "@/public/logo.png";
+import logo from "../public/logo.png";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import Button from "../components/Button";

@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import icon from "@/public/logo-icon.png";
+import icon from "../public/logo-icon.png";
 
 interface SEOProps {
   title?: string;

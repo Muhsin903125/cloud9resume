@@ -1,5 +1,5 @@
 import Link from "next/link";
-import logo from "@/public/logo.png";
+import logo from "../public/logo.png";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();

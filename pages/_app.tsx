@@ -1,5 +1,5 @@
 import type { AppProps } from "next/app";
-import logo from "@/public/logo.png";
+import logo from "../public/logo.png";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useState, useEffect } from "react";

@@ -1,5 +1,5 @@
 import { Html, Head, Main, NextScript } from "next/document";
-import icon from "@/public/logo-icon.png";
+import icon from "../public/logo-icon.png";
 
 export default function Document() {
   return (

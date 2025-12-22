@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import { useState, useRef } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import logo from "@/public/logo.png";
+import logo from "../public/logo.png";
 
 interface ATSResult {
   score: number;
