@@ -3,12 +3,17 @@
  */
 export const getAssetUrl = (assetPath: string) => {
   if (!assetPath) {
-    return ""; // Return empty string for missing asset paths
+    return "";
   }
   if (assetPath.startsWith("http://") || assetPath.startsWith("https://")) {
-    return assetPath; // Return absolute URLs as is
+    return assetPath;
   }
-  const assetPrefix = process.env.NEXT_PUBLIC_APP_URL || "";
+
+  // Use NEXT_PUBLIC_APP_URL or NEXT_PUBLIC_SITE_URL as prefix
+  const rawPrefix =
+    process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
+  const assetPrefix = rawPrefix.replace(/\/$/, ""); // Remove trailing slash if any
+
   const cleanPath = assetPath.startsWith("/") ? assetPath : `/${assetPath}`;
   return `${assetPrefix}${cleanPath}`;
 };
