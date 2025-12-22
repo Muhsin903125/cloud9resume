@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import logo from "@/public/logo.png";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -10,13 +10,16 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="space-y-6">
             <div className="flex items-center space-x-2">
-              <div className="relative h-10 w-40">
-                <Image
-                  src="/logo.png"
+              <div className="relative">
+                <img
+                  src={logo.src}
                   alt="Cloud9Profile Logo"
-                  fill
-                  unoptimized
-                  className="object-contain object-left filter brightness-0 invert"
+                  style={{
+                    height: "40px",
+                    width: "auto",
+                    objectFit: "contain",
+                  }}
+                  className="filter brightness-0 invert"
                 />
               </div>
             </div>

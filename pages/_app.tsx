@@ -1,4 +1,5 @@
 import type { AppProps } from "next/app";
+import logo from "@/public/logo.png";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -208,10 +209,14 @@ function DashboardLayout({
               }`}
             >
               <div className="flex flex-col h-full bg-white">
-                <div className="flex items-center justify-between flex-shrink-0 px-6 py-6 border-b border-gray-200">
-                  <span className="text-xl font-bold text-gray-900 tracking-tight">
-                    Cloud9
-                  </span>
+                <div className="flex items-center justify-between flex-shrink-0 px-4 py-3 border-b border-gray-200">
+                  <Link href="/" className="flex items-center  ">
+                    <img
+                      src={logo.src}
+                      alt="Cloud9Profile Logo"
+                      className="h-8 w-auto object-contain"
+                    />
+                  </Link>
                   <button
                     onClick={() => setIsMenuOpen(false)}
                     className="md:hidden p-2 text-gray-500 hover:text-gray-900 rounded-lg hover:bg-gray-100"

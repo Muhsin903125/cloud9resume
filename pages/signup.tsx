@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import Image from "next/image";
+import logo from "@/public/logo.png";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import Button from "../components/Button";
@@ -200,13 +200,10 @@ const SignupPage: NextPage = () => {
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-block mb-6">
-              <Image
-                src="/logo.png"
+              <img
+                src={logo.src}
                 alt="Cloud9Profile"
-                width={160}
-                height={48}
-                unoptimized
-                className="h-auto"
+                style={{ height: "48px", width: "auto", objectFit: "contain" }}
               />
             </Link>
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import logo from "@/public/logo.png";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,13 +47,15 @@ export default function Navbar() {
                 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
-                <Image
-                  src="/logo.png"
+                <img
+                  src={logo.src}
                   alt="Cloud9Profile Logo"
-                  width={150}
-                  height={40}
-                  unoptimized
-                  className="rounded-lg object-contain h-10 w-auto transition-all"
+                  style={{
+                    height: "40px",
+                    width: "auto",
+                    objectFit: "contain",
+                  }}
+                  className="rounded-lg transition-all"
                 />
               </motion.div>
             </Link>

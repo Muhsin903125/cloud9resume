@@ -2,6 +2,7 @@ import { NextPage } from "next";
 import { useState, useRef } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import logo from "@/public/logo.png";
 
 interface ATSResult {
   score: number;
@@ -228,13 +229,20 @@ const PublicATSChecker: NextPage = () => {
               <Link
                 href="/"
                 style={{
-                  fontSize: "20px",
-                  fontWeight: "bold",
-                  color: colors.primary,
+                  display: "flex",
+                  alignItems: "center",
                   textDecoration: "none",
                 }}
               >
-                Cloud9
+                <img
+                  src={logo.src}
+                  alt="Cloud9Profile Logo"
+                  style={{
+                    height: "32px",
+                    width: "auto",
+                    objectFit: "contain",
+                  }}
+                />
               </Link>
               <Link
                 href="/login"
