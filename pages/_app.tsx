@@ -48,6 +48,11 @@ export default function App({ Component, pageProps }: AppProps) {
   const isDashboard = router.pathname.startsWith("/dashboard");
   const isAuthPage =
     authPages.includes(router.pathname) || router.pathname.startsWith("/auth/");
+  const isPortfolioView =
+    router.pathname.startsWith("/portfolio/") ||
+    router.pathname === "/[username]";
+
+  const isNoLayoutPage = isAuthPage || isPortfolioView;
 
   // Dashboard pages have their own layout
   if (isDashboard) {
@@ -68,8 +73,8 @@ export default function App({ Component, pageProps }: AppProps) {
     );
   }
 
-  // Auth pages don't need navbar/footer
-  if (isAuthPage) {
+  // No-layout pages don't need navbar/footer
+  if (isNoLayoutPage) {
     return (
       <>
         <GoogleAnalytics />

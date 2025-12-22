@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import { PortfolioRenderer } from "../../lib/portfolio-templates";
 
 const PublicPortfolio = () => {
   const router = useRouter();
@@ -29,12 +30,10 @@ const PublicPortfolio = () => {
   const fetchPortfolio = async (pwd?: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/portfolio/${slug}`, {
-        method: "GET",
-        headers: pwd ? { "Content-Type": "application/json" } : undefined,
-        body: pwd ? JSON.stringify({ password: pwd }) : undefined,
-      });
-
+      const url = `/api/portfolio/${slug}${
+        pwd ? `?password=${encodeURIComponent(pwd)}` : ""
+      }`;
+      const response = await fetch(url);
       const data = await response.json();
 
       if (response.status === 401) {
@@ -49,8 +48,16 @@ const PublicPortfolio = () => {
         return;
       }
 
-      setPortfolio(data.data);
-      setResume(data.data.resume);
+      const portData = data.data;
+      setPortfolio(portData);
+
+      // Load resume and content from snapshot if available
+      if (portData.content && portData.content.resume) {
+        setResume(portData.content.resume);
+      } else {
+        setResume(portData.resume);
+      }
+
       setPasswordRequired(false);
       setError("");
     } catch (err) {
@@ -65,514 +72,102 @@ const PublicPortfolio = () => {
     fetchPortfolio(password);
   };
 
-  const downloadResume = async () => {
-    try {
-      // Track download
-      await fetch(`/api/portfolio/${slug}`, {
-        method: "POST",
-      });
-
-      // Trigger download
-      const link = document.createElement("a");
-      link.href = `/api/portfolio/download/${slug}`;
-      link.download = `${resume?.title}.pdf`;
-      link.click();
-    } catch (err) {
-      console.error("Download error:", err);
-    }
-  };
-
-  const SectionDisplay = ({ section }: any) => {
-    const { section_type, section_data } = section;
-
-    const renderContent = () => {
-      if (!section_data) return null;
-
-      switch (section_type) {
-        case "personal_info":
-          return (
-            <div>
-              <h3
-                style={{
-                  fontSize: "24px",
-                  fontWeight: "700",
-                  margin: "0 0 4px 0",
-                }}
-              >
-                {section_data.name}
-              </h3>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: colors.secondary,
-                  margin: "0 0 12px 0",
-                }}
-              >
-                {section_data.job_title}
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "16px",
-                  flexWrap: "wrap",
-                  fontSize: "13px",
-                }}
-              >
-                {section_data.email && <span>{section_data.email}</span>}
-                {section_data.phone && <span>{section_data.phone}</span>}
-                {section_data.location && <span>{section_data.location}</span>}
-              </div>
-            </div>
-          );
-
-        case "summary":
-          return (
-            <div>
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  margin: "0 0 8px 0",
-                }}
-              >
-                Professional Summary
-              </h2>
-              <p
-                style={{
-                  fontSize: "13px",
-                  lineHeight: "1.6",
-                  color: colors.secondary,
-                  margin: 0,
-                }}
-              >
-                {section_data}
-              </p>
-            </div>
-          );
-
-        case "experience":
-          return (
-            <div>
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  margin: "0 0 12px 0",
-                }}
-              >
-                Experience
-              </h2>
-              {(section_data || []).map((exp: any, idx: number) => (
-                <div
-                  key={idx}
-                  style={{
-                    marginBottom: "12px",
-                    paddingBottom: "12px",
-                    borderBottom: `1px solid ${colors.border}`,
-                  }}
-                >
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <h3
-                      style={{ fontSize: "14px", fontWeight: "700", margin: 0 }}
-                    >
-                      {exp.position}
-                    </h3>
-                    <span style={{ fontSize: "12px", color: colors.secondary }}>
-                      {exp.startDate} - {exp.endDate}
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: colors.secondary,
-                      margin: "4px 0 8px 0",
-                    }}
-                  >
-                    {exp.company}
-                  </p>
-                  <p style={{ fontSize: "13px", lineHeight: "1.5", margin: 0 }}>
-                    {exp.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          );
-
-        case "education":
-          return (
-            <div>
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  margin: "0 0 12px 0",
-                }}
-              >
-                Education
-              </h2>
-              {(section_data || []).map((edu: any, idx: number) => (
-                <div
-                  key={idx}
-                  style={{
-                    marginBottom: "12px",
-                    paddingBottom: "12px",
-                    borderBottom: `1px solid ${colors.border}`,
-                  }}
-                >
-                  <h3
-                    style={{ fontSize: "14px", fontWeight: "700", margin: 0 }}
-                  >
-                    {edu.degree} in {edu.field}
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: colors.secondary,
-                      margin: "4px 0 0 0",
-                    }}
-                  >
-                    {edu.school} • {edu.graduationDate}
-                  </p>
-                </div>
-              ))}
-            </div>
-          );
-
-        case "skills":
-          return (
-            <div>
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  margin: "0 0 12px 0",
-                }}
-              >
-                Skills
-              </h2>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {(section_data || []).map((skill: any, idx: number) => (
-                  <span
-                    key={idx}
-                    style={{
-                      display: "inline-block",
-                      padding: "6px 12px",
-                      background: colors.light,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: "4px",
-                      fontSize: "13px",
-                    }}
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-
-        case "certifications":
-        case "projects":
-        case "achievements":
-        case "languages":
-          return (
-            <div>
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  margin: "0 0 12px 0",
-                  textTransform: "capitalize",
-                }}
-              >
-                {section_type.replace("_", " ")}
-              </h2>
-              <ul style={{ margin: 0, paddingLeft: "20px" }}>
-                {(section_data || []).map((item: any, idx: number) => (
-                  <li
-                    key={idx}
-                    style={{
-                      fontSize: "13px",
-                      marginBottom: "8px",
-                      color: colors.secondary,
-                    }}
-                  >
-                    {typeof item === "string"
-                      ? item
-                      : item.language
-                      ? `${item.language} - ${item.proficiency}`
-                      : JSON.stringify(item)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-
-        default:
-          return null;
-      }
-    };
-
-    return (
-      <div
-        style={{
-          marginBottom: "24px",
-          paddingBottom: "24px",
-          borderBottom: `2px solid ${colors.border}`,
-        }}
-      >
-        {renderContent()}
-      </div>
-    );
-  };
-
   if (loading) {
     return (
-      <>
-        <Head>
-          <title>Loading Portfolio...</title>
-        </Head>
-        <div
-          style={{
-            padding: "40px",
-            textAlign: "center",
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: "18px",
-                fontWeight: "600",
-                color: colors.primary,
-                marginBottom: "12px",
-              }}
-            >
-              Loading Portfolio...
-            </div>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium">Loading Portfolio...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (passwordRequired) {
     return (
-      <>
-        <Head>
-          <title>Portfolio - Password Required</title>
-        </Head>
-        <div
-          style={{
-            padding: "40px",
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: colors.light,
-          }}
-        >
-          <div style={{ width: "100%", maxWidth: "400px" }}>
-            <div
-              style={{
-                background: "white",
-                borderRadius: "8px",
-                padding: "32px",
-                border: `1px solid ${colors.border}`,
-              }}
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+            <svg
+              className="w-8 h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <h1
-                style={{
-                  fontSize: "24px",
-                  fontWeight: "700",
-                  margin: "0 0 8px 0",
-                }}
-              >
-                Protected Portfolio
-              </h1>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: colors.secondary,
-                  margin: "0 0 24px 0",
-                }}
-              >
-                This portfolio is password protected. Please enter the password
-                to continue.
-              </p>
-
-              <form
-                onSubmit={handlePasswordSubmit}
-                style={{ display: "grid", gap: "12px" }}
-              >
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  style={{
-                    padding: "10px",
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: "6px",
-                    fontSize: "14px",
-                    boxSizing: "border-box",
-                  }}
-                  autoFocus
-                />
-
-                {error && (
-                  <p style={{ fontSize: "13px", color: "#dc2626", margin: 0 }}>
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  style={{
-                    padding: "10px",
-                    background: colors.accent,
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
-                >
-                  Unlock Portfolio
-                </button>
-              </form>
-            </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7h4a4 4 0 118 0v4M14 7h-4"
+              />
+            </svg>
           </div>
+          <h1 className="text-2xl font-bold text-center text-gray-900 mb-2">
+            Private Portfolio
+          </h1>
+          <p className="text-center text-gray-500 mb-8">
+            This portfolio is password protected. Please enter the password to
+            view it.
+          </p>
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              autoFocus
+            />
+            {error && (
+              <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-600/20"
+            >
+              Unlock Portfolio
+            </button>
+          </form>
         </div>
-      </>
+      </div>
     );
   }
 
   if (!portfolio || !resume) {
     return (
-      <>
-        <Head>
-          <title>Portfolio Not Found</title>
-        </Head>
-        <div
-          style={{ padding: "40px", textAlign: "center", minHeight: "100vh" }}
-        >
-          <h1>Portfolio not found</h1>
-        </div>
-      </>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <h1 className="text-4xl font-black text-gray-900 mb-4">404</h1>
+        <p className="text-gray-500">Portfolio Not Found</p>
+      </div>
     );
   }
 
   return (
     <>
       <Head>
-        <title>{resume.title} - Portfolio</title>
+        <title>{portfolio.title || resume.title} | Portfolio</title>
         <meta
           name="description"
-          content={`Professional resume of ${resume.title}`}
+          content={
+            resume.summary || `Professional portfolio of ${resume.title}`
+          }
         />
       </Head>
 
-      <div
-        style={{
-          background: colors.light,
-          minHeight: "100vh",
-          padding: "40px 20px",
+      <PortfolioRenderer
+        resume={resume}
+        sections={
+          portfolio?.content?.sections ||
+          resume.resume_sections ||
+          resume.sections ||
+          []
+        }
+        template={portfolio.template_id || "modern"}
+        settings={{
+          themeColor: portfolio.theme_color || "#2563EB",
+          ...portfolio.settings,
         }}
-      >
-        {/* Header with Download Button */}
-        <div
-          style={{
-            maxWidth: "900px",
-            margin: "0 auto 32px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <h1
-              style={{
-                fontSize: "28px",
-                fontWeight: "700",
-                color: colors.primary,
-                margin: 0,
-              }}
-            >
-              Portfolio
-            </h1>
-          </div>
-          <button
-            onClick={downloadResume}
-            style={{
-              padding: "10px 20px",
-              background: colors.accent,
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-          >
-            ⬇️ Download Resume
-          </button>
-        </div>
-
-        {/* Resume Content */}
-        <div
-          style={{
-            maxWidth: "900px",
-            margin: "0 auto",
-            background: "white",
-            borderRadius: "8px",
-            padding: "40px",
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          {/* Personal Info */}
-          {resume.resume_sections
-            .filter((s: any) => s.section_type === "personal_info")
-            .map((s: any, idx: number) => (
-              <div
-                key={idx}
-                style={{
-                  marginBottom: "32px",
-                  paddingBottom: "32px",
-                  borderBottom: `2px solid ${colors.border}`,
-                }}
-              >
-                <SectionDisplay section={s} />
-              </div>
-            ))}
-
-          {/* All Other Sections */}
-          {resume.resume_sections
-            .filter((s: any) => s.section_type !== "personal_info")
-            .sort((a: any, b: any) => a.order_index - b.order_index)
-            .map((section: any, idx: number) => (
-              <SectionDisplay key={idx} section={section} />
-            ))}
-        </div>
-
-        {/* Footer */}
-        <div
-          style={{
-            maxWidth: "900px",
-            margin: "32px auto 0",
-            textAlign: "center",
-            fontSize: "12px",
-            color: colors.secondary,
-          }}
-        >
-          <p>© Cloud9Profile - Professional Resume Builder</p>
-        </div>
-      </div>
+      />
     </>
   );
 };

@@ -1,6 +1,7 @@
 import { GetStaticProps, GetStaticPaths } from "next";
+// Force rebuild
 import { createClient } from "@supabase/supabase-js";
-import { ResumeRenderer } from "@/components/ResumeRenderer";
+import { PortfolioRenderer } from "@/lib/portfolio-templates";
 import { Portfolio, Resume } from "@/lib/types";
 import SEO from "../components/SEO";
 
@@ -44,50 +45,60 @@ export default function PortfolioPage({
     );
   }
 
-  // Determine sections to show based on portfolio settings
-  const visibleSections = portfolio.settings?.visibleSections;
-  const filteredSections = visibleSections
-    ? sections.filter((s) => visibleSections.includes(s.section_type))
-    : sections;
-
-  // Apply portfolio-specific override data if any
-  // e.g. if portfolio has custom title/content logic
-  // For now, we use resume data + portfolio theme settings
+  // Use portfolio settings if available, otherwise default
+  const themeColor = portfolio.settings?.themeColor || "#3b82f6";
+  const templateId = portfolio.template_id || "modern";
+  const customTitle = portfolio.settings?.customTitle;
 
   return (
     <>
       <SEO
         title={
-          portfolio.settings?.customTitle ||
-          `${resume.title} - ${resume.job_title || "Portfolio"}`
+          customTitle || `${resume.title} - ${resume.job_title || "Portfolio"}`
         }
         description={`Professional portfolio of ${resume.title} - ${resume.job_title}. Built with Cloud9Profile.`}
       />
 
-      <ResumeRenderer
+      <PortfolioRenderer
         resume={resume}
-        sections={filteredSections}
-        template={portfolio.template_id || "modern"}
-        themeColor={portfolio.theme_color || "#3b82f6"}
+        sections={sections}
+        template={templateId}
+        settings={{
+          themeColor: themeColor,
+          visibleSections: portfolio.settings?.visibleSections,
+          isMobile: false, // Default to desktop view for public page
+        }}
       />
 
-      {/* Branding Footer */}
-      <div className="py-6 text-center text-xs text-gray-400 bg-gray-50/50">
-        Powered by{" "}
-        <a
-          href="https://cloud9profile.com"
-          className="font-bold hover:text-gray-600"
-        >
-          Cloud9Profile
-        </a>
-      </div>
+      {/* Premium Footer CTA */}
+      <footer className="bg-slate-900 border-t border-slate-800 py-16 px-4 relative z-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase tracking-widest mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+            Cloud9Profile
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">
+            Make your portfolio too.
+          </h2>
+          <p className="text-slate-400 mb-8 max-w-lg mx-auto text-lg leading-relaxed">
+            Join thousands of professionals building stunning portfolios in
+            minutes. No coding required.
+          </p>
+          <a
+            href="https://cloud9profile.com"
+            target="_blank" // Assuming external or keeping internal logic consistent if it's the same domain
+            rel="noreferrer"
+            className="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-900 font-bold rounded-full hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
+          >
+            Create Your Portfolio
+          </a>
+        </div>
+      </footer>
     </>
   );
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // Pre-render top 50 active portfolios? Or just empty and blocking.
-  // Using empty paths with fallback: blocking for on-demand generation
   return {
     paths: [],
     fallback: "blocking",
@@ -113,42 +124,40 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     if (error || !portfolio) {
       return {
         props: { error: "This portfolio does not exist or is not public." },
-        revalidate: 60, // check again in 1 min
+        revalidate: 60,
       };
     }
 
-    const { resumes: resume, ...portfolioData } = portfolio;
-
-    // Fetch Sections manually if not joined deeply or if standard 'resumes' object doesn't include them
-    // The previous file (portfolio/[slug]) showed resumes(*) which usually implies fields.
-    // But sections might be in a separate table 'resume_sections'.
-
+    const { resumes: initialResume, ...portfolioData } = portfolio;
+    let resume = initialResume;
     let sections = [];
-    if (resume.resume_sections) {
-      sections = resume.resume_sections;
-    } else {
-      // Fetch sections if not included in the join
-      const { data: sectionData } = await supabase
-        .from("resume_sections")
-        .select("*")
-        .eq("resume_id", resume.id)
-        .order("order_index", { ascending: true });
 
-      sections = sectionData || [];
+    // PRIORITIZE SAVED PORTFOLIO CONTENT
+    if (portfolioData.content && portfolioData.content.resume) {
+      // Use the snapshot data from the portfolio
+      resume = portfolioData.content.resume;
+      sections = portfolioData.content.sections || [];
+    } else {
+      // Fallback to live resume data if no snapshot exists
+      if (resume.resume_sections) {
+        sections = resume.resume_sections;
+      } else {
+        const { data: sectionData } = await supabase
+          .from("resume_sections")
+          .select("*")
+          .eq("resume_id", resume.id)
+          .order("order_index", { ascending: true });
+        sections = sectionData || [];
+      }
     }
 
-    // Map 'section_data' to 'content' if needed by renderer, although ResumeRenderer uses section_data directly?
-    // Checking ResumeRenderer: line 43: const { section_type, section_data } = section;
-    // So it expects 'section_data'.
-
-    // Fix: Ensure dates are serialized
     return {
       props: {
         portfolio: JSON.parse(JSON.stringify(portfolioData)),
         resume: JSON.parse(JSON.stringify(resume)),
         sections: JSON.parse(JSON.stringify(sections)),
       },
-      revalidate: 60, // 60 seconds
+      revalidate: 60,
     };
   } catch (e) {
     console.error("Error generating portfolio:", e);

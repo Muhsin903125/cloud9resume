@@ -9,6 +9,7 @@ import {
   CheckIcon,
   GlobeIcon,
   EyeIcon,
+  DeleteIcon,
 } from "../../components/Icons";
 import { useAPIAuth } from "../../hooks/useAPIAuth";
 import { Resume, Portfolio } from "../../lib/types";
@@ -182,72 +183,74 @@ const PortfolioDashboardPage: NextPage = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {portfolios.map((p) => (
-                <Card
-                  key={p.id}
-                  className="group relative p-0 overflow-hidden border border-gray-200 hover:shadow-lg transition-all hover:border-blue-200"
-                >
-                  <div
-                    className={`h-32 ${
-                      TEMPLATES.find((t) => t.id === p.template_id)?.color ||
-                      "bg-gray-100"
-                    } opacity-20`}
-                  ></div>
-                  <div className="p-5 pt-2">
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition truncate pr-2">
-                        {p.title}
-                      </h3>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={(e) => handleDelete(e, p.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+              {portfolios
+                .filter((p) => p.is_active)
+                .map((p) => (
+                  <Card
+                    key={p.id}
+                    className="group relative p-0 overflow-hidden border border-gray-200 hover:shadow-lg transition-all hover:border-blue-200"
+                  >
+                    <div
+                      className={`h-32 ${
+                        TEMPLATES.find((t) => t.id === p.template_id)?.color ||
+                        "bg-gray-100"
+                      } opacity-20`}
+                    ></div>
+                    <div className="p-5 pt-2">
+                      <div className="flex justify-between items-start mb-1">
+                        <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition truncate pr-2">
+                          {p.title}
+                        </h3>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={(e) => handleDelete(e, p.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                          >
+                            <DeleteIcon size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              p.is_active ? "bg-green-500" : "bg-gray-300"
+                            }`}
+                          ></span>
+                          {p.slug ? `cloud9profile.com/${p.slug}` : "No URL"}
+                        </div>
+                        <div
+                          className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-md border border-gray-100"
+                          title="Total Views"
                         >
-                          <PlusIcon size={16} className="rotate-45" />
-                        </button>
+                          <EyeIcon size={12} className="text-gray-400" />
+                          <span className="font-medium text-gray-600">
+                            {p.views || 0}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-xs text-gray-500 mb-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            p.is_active ? "bg-green-500" : "bg-gray-300"
-                          }`}
-                        ></span>
-                        {p.slug ? `cloud9profile.com/${p.slug}` : "No URL"}
-                      </div>
-                      <div
-                        className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-md border border-gray-100"
-                        title="Total Views"
-                      >
-                        <EyeIcon size={12} className="text-gray-400" />
-                        <span className="font-medium text-gray-600">
-                          {p.views || 0}
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="flex gap-2 mt-4">
-                      <button
-                        onClick={() =>
-                          router.push(`/dashboard/portfolio/${p.id}`)
-                        }
-                        className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs transition"
-                      >
-                        Edit
-                      </button>
-                      <a
-                        href={`/${p.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-2 bg-white border border-gray-200 text-gray-500 hover:text-blue-600 rounded-lg flex items-center justify-center transition"
-                      >
-                        <GlobeIcon size={16} />
-                      </a>
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={() =>
+                            router.push(`/dashboard/portfolio/${p.id}`)
+                          }
+                          className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs transition"
+                        >
+                          Edit
+                        </button>
+                        <a
+                          href={`/${p.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-2 bg-white border border-gray-200 text-gray-500 hover:text-blue-600 rounded-lg flex items-center justify-center transition"
+                        >
+                          <GlobeIcon size={16} />
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))}
             </div>
           )}
         </main>

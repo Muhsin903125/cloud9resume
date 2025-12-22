@@ -5,18 +5,29 @@ import React from "react";
 // ==========================================
 // SHARED UTILS
 // ==========================================
-const getListItems = (sections: ResumeSection[], type: string) => {
+const getListItems = (sections: any[], type: string) => {
   return sections
-    .filter((s) => s.section_type === type)
+    .filter((s) => s.section_type === type || (type === "custom" && s.isCustom))
     .flatMap((s) => {
       if (Array.isArray(s.content)) return s.content;
       if (s.content?.items && Array.isArray(s.content.items))
         return s.content.items;
-      if (s.content && typeof s.content === "object" && !s.content.items) {
-        // fallback if it's a single object but treated as a section that might list things?
-        // rarely happens for list types, but safety check.
-        return [];
+
+      // Handle custom sections that are single text blobs
+      if (s.isCustom) {
+        return [
+          {
+            isCustom: true,
+            title: s.title,
+            text:
+              s.section_data?.text ||
+              s.content?.text ||
+              (typeof s.content === "string" ? s.content : ""),
+            id: s.id || s.section_type,
+          },
+        ];
       }
+
       return [];
     });
 };
@@ -298,25 +309,11 @@ const ModernTemplate = ({
 
         {/* Custom Section */}
         {custom.length > 0 && (
-          <section id="custom">
-            <div className="flex items-center gap-4 mb-8">
-              <h3 className="text-2xl font-bold">Additional Info</h3>
-              <div className="h-px bg-gray-200 flex-1"></div>
-            </div>
-            <div className="space-y-6">
-              {custom.map((item: any, i: number) => (
-                <div
-                  key={i}
-                  className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
-                >
-                  <h4 className="font-bold text-gray-900 mb-2">{item.title}</h4>
-                  <div className="text-gray-600 text-sm">
-                    {item.description}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <div id="custom" className="space-y-20 px-2">
+            {custom.map((item: any, i: number) => (
+              <CustomSectionDisplay key={i} item={item} />
+            ))}
+          </div>
         )}
 
         {/* Contact */}
@@ -331,14 +328,42 @@ const ModernTemplate = ({
             opportunities.
           </p>
           <a
-            href={`mailto:${resume.user_id}@example.com`}
+            href={`mailto:${personalInfo.email || ""}`}
             className="inline-block px-8 py-4 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition transform hover:scale-105 active:scale-95"
           >
             Get in Touch
           </a>
         </section>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-100 py-12">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <p className="text-gray-400 text-sm">
+            © {new Date().getFullYear()} {personalInfo.name || "Portfolio"}. All
+            rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
+  );
+};
+
+// Helper for rendering custom sections
+const CustomSectionDisplay = ({ item }: { item: any }) => {
+  if (!item.isCustom) return null;
+  return (
+    <section key={item.id} id={item.id} className="space-y-6">
+      <div className="flex items-center gap-4 mb-8">
+        <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+          {item.title}
+        </h3>
+        <div className="h-px flex-1 bg-gray-100"></div>
+      </div>
+      <div className="prose prose-lg text-gray-600 max-w-none whitespace-pre-wrap">
+        {item.text}
+      </div>
+    </section>
   );
 };
 

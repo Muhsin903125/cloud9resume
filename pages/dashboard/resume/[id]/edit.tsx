@@ -725,7 +725,7 @@ const ResumeEditor = () => {
           {/* RIGHT: Live Preview (40%) */}
           <div className="hidden lg:flex w-2/5 bg-slate-100 overflow-y-auto flex-col items-center px-8 relative custom-scrollbar overflow-x-hidden">
             {/* Sticky Template Switcher Overlay - Pane Level */}
-            <div className="sticky top-0 right-0 z-50 w-full flex justify-end  bg-gray/60 backdrop-blur-md pointer-events-none">
+            <div className="sticky top-0 right-0 z-50 w-full flex justify-end bg-slate-100/60 backdrop-blur-md pointer-events-none">
               <div className="pointer-events-auto bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-200/50 shadow-sm flex items-center gap-2 mr-4 mt-4">
                 <TemplateIcon size={12} className="text-gray-400" />
                 <select
