@@ -108,7 +108,12 @@ export default async function handler(
 
       if (error) throw error;
 
-      const consolidatedData = data.map((r) => ({
+      // Filter in memory to handle potential NULL statuses safely (SQL .neq excludes NULLs)
+      const validResumes = (data || []).filter(
+        (r) => r.status !== "deleted" && r.status !== "archived"
+      );
+
+      const consolidatedData = validResumes.map((r) => ({
         ...r,
         settings: {
           template_id: r.settings?.template_id || r.template_id || "ats",
@@ -176,15 +181,18 @@ export default async function handler(
       };
       const limit = limits[userPlan?.plan || "free"] || 1;
 
-      const { count, error: countError } = await supabase
+      const { data: allResumes, error: countError } = await supabase
         .from("resumes")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("status", "draft");
+        .select("status")
+        .eq("user_id", userId);
 
       if (countError) throw countError;
 
-      if (count && count >= limit) {
+      const activeResumesCount = (allResumes || []).filter(
+        (r) => r.status !== "deleted" && r.status !== "archived"
+      ).length;
+
+      if (activeResumesCount >= limit) {
         return res.status(400).json({
           success: false,
           error: `Resume limit reached. Upgrade your plan to create more resumes.`,

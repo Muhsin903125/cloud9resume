@@ -1,4 +1,5 @@
 import { GetStaticProps, GetStaticPaths } from "next";
+import { useEffect } from "react";
 // Force rebuild
 import { createClient } from "@supabase/supabase-js";
 import { PortfolioRenderer } from "@/lib/portfolio-templates";
@@ -24,6 +25,21 @@ export default function PortfolioPage({
   sections,
   error,
 }: PortfolioPageProps) {
+  useEffect(() => {
+    // Record view
+    if (portfolio?.id) {
+      const recorded = sessionStorage.getItem(`viewed_${portfolio.id}`);
+      if (!recorded) {
+        fetch("/api/portfolios/record-view", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: portfolio.id }),
+        }).catch((err) => console.error("Failed to record view", err));
+        sessionStorage.setItem(`viewed_${portfolio.id}`, "true");
+      }
+    }
+  }, [portfolio?.id]);
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

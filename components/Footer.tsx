@@ -118,18 +118,18 @@ export default function Footer() {
             </h3>
             <ul className="space-y-4">
               {[
-                "Help Center",
-                "Terms of Service",
-                "Privacy Policy",
-                "Cookie Policy",
+                { name: "Help Center", href: "#" },
+                { name: "Terms of Service", href: "/terms" },
+                { name: "Privacy Policy", href: "/privacy" },
+                { name: "Refund Policy", href: "/refund-policy" },
               ].map((item) => (
-                <li key={item}>
-                  <a
-                    href="#"
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
                     className="text-slate-400 hover:text-blue-400 transition-colors text-sm font-medium"
                   >
-                    {item}
-                  </a>
+                    {item.name}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -141,24 +141,24 @@ export default function Footer() {
             &copy; {currentYear} Cloud9Profile. All rights reserved.
           </p>
           <div className="flex space-x-6">
-            <a
-              href="#"
+            <Link
+              href="/privacy"
               className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
             >
               Privacy
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/terms"
               className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
             >
               Terms
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/refund-policy"
               className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
             >
-              Cookies
-            </a>
+              Refunds
+            </Link>
           </div>
         </div>
       </div>

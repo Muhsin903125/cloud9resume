@@ -20,6 +20,7 @@ import {
 import { ResumeRenderer } from "@/components/ResumeRenderer";
 import { PortfolioRenderer } from "@/lib/portfolio-templates";
 import { Resume, Portfolio } from "@/lib/types";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 const TABS = [
   { id: "design", label: "Design", Icon: PaletteIcon },
@@ -80,6 +81,11 @@ export default function PortfolioEditorPage() {
 
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    type: "section" | "portfolio" | null;
+    id: string | null;
+  }>({ open: false, type: null, id: null });
 
   useEffect(() => {
     if (id) loadData();
@@ -345,9 +351,18 @@ export default function PortfolioEditorPage() {
   };
 
   const removeSection = (sectionType: string) => {
-    if (!confirm("Remove this section?")) return;
-    setSections(sections.filter((s) => s.section_type !== sectionType));
-    setIsDirty(true);
+    setConfirmModal({ open: true, type: "section", id: sectionType });
+  };
+
+  const handleConfirmAction = async () => {
+    if (confirmModal.type === "section" && confirmModal.id) {
+      setSections(sections.filter((s) => s.section_type !== confirmModal.id));
+      setIsDirty(true);
+    } else if (confirmModal.type === "portfolio" && confirmModal.id) {
+      await del(`/api/portfolios/${confirmModal.id}`);
+      router.push("/dashboard/portfolio");
+    }
+    setConfirmModal({ open: false, type: null, id: null });
   };
 
   if (loading)
@@ -776,16 +791,13 @@ export default function PortfolioEditorPage() {
                         </p>
                       </div>
                       <button
-                        onClick={async () => {
-                          if (
-                            confirm(
-                              "Are you sure? This will delete your portfolio permanently."
-                            )
-                          ) {
-                            await del(`/api/portfolios/${id}`);
-                            router.push("/dashboard/portfolio");
-                          }
-                        }}
+                        onClick={() =>
+                          setConfirmModal({
+                            open: true,
+                            type: "portfolio",
+                            id: id as string,
+                          })
+                        }
                         className="w-full py-3 bg-white border border-red-100 text-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition text-[10px] uppercase tracking-wider"
                       >
                         Delete Portfolio
@@ -1018,6 +1030,24 @@ export default function PortfolioEditorPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={confirmModal.open}
+        onClose={() => setConfirmModal({ open: false, type: null, id: null })}
+        onConfirm={handleConfirmAction}
+        title={
+          confirmModal.type === "section"
+            ? "Remove Section"
+            : "Delete Portfolio"
+        }
+        message={
+          confirmModal.type === "section"
+            ? "Are you sure you want to remove this section? You can add it back later."
+            : "Are you sure you want to delete this portfolio? This cannot be undone."
+        }
+        confirmText="Confirm"
+        isDestructive={true}
+      />
     </div>
   );
 }

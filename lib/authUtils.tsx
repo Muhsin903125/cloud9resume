@@ -450,13 +450,38 @@ export function useAuth() {
           console.log(
             "✅ useAuth: Found new JWT token, trusting without session validation"
           );
+
+          let plan: "free" | "starter" | "pro" | "pro_plus" | "enterprise" =
+            "free";
+          let credits = 0;
+
+          try {
+            // Fetch fresh profile data
+            const profileRes = await apiClient.get("/credits");
+            if (profileRes.data && profileRes.data.success) {
+              plan = profileRes.data.data.stats.plan;
+              credits = profileRes.data.data.stats.current;
+              console.log("✅ useAuth: Fresh profile loaded", {
+                plan,
+                credits,
+              });
+            }
+          } catch (e) {
+            console.warn("⚠️ useAuth: Failed to fetch fresh profile", e);
+          }
+
           setAuthState({
             user: {
               id: userId,
               email: userEmail || localStorage.getItem("user_email") || "",
               name: localStorage.getItem("user_name") || undefined,
               picture: localStorage.getItem("user_picture") || undefined,
-              profile: undefined,
+              profile: {
+                first_name: "",
+                last_name: "",
+                credits: credits,
+              },
+              plan: plan,
             },
             session: null,
             isLoading: false,

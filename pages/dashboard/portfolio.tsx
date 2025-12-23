@@ -18,6 +18,7 @@ import { PortfolioRenderer } from "../../lib/portfolio-templates";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../lib/authUtils";
 import { canCreateResource, PlanType } from "../../lib/subscription";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const TEMPLATES = [
   { id: "modern", name: "Modern", color: "bg-blue-500" },
@@ -39,6 +40,10 @@ const PortfolioDashboardPage: NextPage = () => {
   // Wizard State
   const [view, setView] = useState<"list" | "select-resume">("list");
   const [loading, setLoading] = useState(true);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    open: boolean;
+    id: string | null;
+  }>({ open: false, id: null });
 
   useEffect(() => {
     fetchData();
@@ -78,9 +83,14 @@ const PortfolioDashboardPage: NextPage = () => {
     setView("select-resume");
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm("Delete this portfolio?")) return;
+    setDeleteConfirmation({ open: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation.id) return;
+    const id = deleteConfirmation.id;
 
     try {
       const res = await del(`/api/portfolios/${id}`);
@@ -90,6 +100,8 @@ const PortfolioDashboardPage: NextPage = () => {
       }
     } catch (err) {
       toast.error("Error deleting");
+    } finally {
+      setDeleteConfirmation({ open: false, id: null });
     }
   };
 
@@ -273,6 +285,15 @@ const PortfolioDashboardPage: NextPage = () => {
             </div>
           )}
         </main>
+        <ConfirmationModal
+          isOpen={deleteConfirmation.open}
+          onClose={() => setDeleteConfirmation({ open: false, id: null })}
+          onConfirm={confirmDelete}
+          title="Delete Portfolio"
+          message="Are you sure you want to delete this portfolio? This cannot be undone."
+          confirmText="Delete"
+          isDestructive={true}
+        />
       </div>
     </>
   );

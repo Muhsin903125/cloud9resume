@@ -201,7 +201,7 @@ export default async function handler(
     if (req.method === "DELETE") {
       const { data, error } = await supabase
         .from("resumes")
-        .update({ status: "archived" })
+        .update({ status: "deleted" })
         .eq("id", id)
         .eq("user_id", userId)
         .select()

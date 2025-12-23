@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import { Resume } from "../../lib/types";
 import { PlusIcon } from "../../components/Icons";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const ResumeDashboard = () => {
   const router = useRouter();
@@ -12,6 +13,10 @@ const ResumeDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewModal, setShowNewModal] = useState(false);
   const [newResumeTitle, setNewResumeTitle] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    open: boolean;
+    id: string | null;
+  }>({ open: false, id: null });
 
   useEffect(() => {
     fetchResumes();
@@ -58,9 +63,14 @@ const ResumeDashboard = () => {
     }
   };
 
-  const handleDeleteResume = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteResume = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this resume?")) return;
+    setDeleteConfirmation({ open: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation.id) return;
+    const id = deleteConfirmation.id;
 
     try {
       const response = await fetch(`/api/resumes/${id}`, {
@@ -73,6 +83,8 @@ const ResumeDashboard = () => {
       }
     } catch (err) {
       setError("Failed to delete resume");
+    } finally {
+      setDeleteConfirmation({ open: false, id: null });
     }
   };
 
@@ -256,6 +268,15 @@ const ResumeDashboard = () => {
             </div>
           </div>
         )}
+        <ConfirmationModal
+          isOpen={deleteConfirmation.open}
+          onClose={() => setDeleteConfirmation({ open: false, id: null })}
+          onConfirm={confirmDelete}
+          title="Delete Resume"
+          message="Are you sure you want to delete this resume? This action cannot be undone."
+          confirmText="Delete"
+          isDestructive={true}
+        />
       </div>
     </>
   );

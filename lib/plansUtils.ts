@@ -25,7 +25,7 @@ export async function fetchPlan(planId: string) {
 
 // Use credits (deduct from account)
 export async function useCredit(creditsUsed: number, action: string) {
-  const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("x_user_auth_token");
   if (!token) {
     return {
       error: "Not authenticated",
@@ -46,7 +46,7 @@ export async function addCredits(
   planId: string,
   paymentIntentId?: string
 ) {
-  const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("x_user_auth_token");
   if (!token) {
     return {
       error: "Not authenticated",
@@ -55,7 +55,6 @@ export async function addCredits(
   }
 
   return apiClient.post("/credits/addCredits", {
-    token,
     creditsToAdd,
     planId,
     paymentIntentId,

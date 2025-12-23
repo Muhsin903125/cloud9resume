@@ -101,7 +101,7 @@ const ResumeDashboard = () => {
   };
 
   const handleDeleteResume = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resume?")) return;
+    // Confirmation handled by modal
 
     try {
       const response = await deleteRequest(`/api/resumes/${id}`);
@@ -207,6 +207,7 @@ const ResumeDashboard = () => {
 
       <div className="bg-gray-50 min-h-screen">
         {/* Header */}
+        {/* Header */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -214,23 +215,47 @@ const ResumeDashboard = () => {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-20">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                  My Resumes
-                </h1>
-                <p className="text-sm text-gray-500 mt-1">
-                  Manage and organize your professional credentials
-                </p>
+              <div className="flex items-center gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                    My Resumes
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Manage and organize your professional credentials
+                  </p>
+                </div>
+                {user?.plan && (
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
+                      (user?.plan as string) === "free"
+                        ? "bg-gray-50 text-gray-600 border-gray-200"
+                        : "bg-blue-50 text-blue-600 border-blue-100"
+                    }`}
+                  >
+                    {(user?.plan as string).replace("_", " ")}
+                  </span>
+                )}
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowNewModal(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-colors shadow-lg shadow-gray-200"
-              >
-                <PlusIcon size={20} color="white" />
-                New Resume
-              </motion.button>
+
+              <div className="flex items-center gap-4">
+                <div className="hidden sm:block text-right">
+                  <p className="text-xs text-gray-400 font-medium uppercase">
+                    Credits
+                  </p>
+                  <p className="text-sm font-bold text-gray-900">
+                    {user?.profile?.credits || 0}
+                  </p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowNewModal(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-colors shadow-lg shadow-gray-200"
+                >
+                  <PlusIcon size={20} color="white" />
+                  <span className="hidden sm:inline">New Resume</span>
+                </motion.button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -382,17 +407,17 @@ const ResumeDashboard = () => {
         {/* Confirmation Modal for Delete */}
         <ConfirmationModal
           isOpen={!!resumeToDelete}
-          title="Delete Resume"
-          message="Are you sure you want to delete this resume? This action cannot be undone."
-          confirmText="Delete Resume"
-          isDangerous={true}
+          onClose={() => setResumeToDelete(null)}
           onConfirm={() => {
             if (resumeToDelete) {
               handleDeleteResume(resumeToDelete);
               setResumeToDelete(null);
             }
           }}
-          onCancel={() => setResumeToDelete(null)}
+          title="Delete Resume"
+          message="Are you sure you want to delete this resume? This action cannot be undone."
+          confirmText="Delete Resume"
+          isDestructive={true}
         />
 
         {/* Loading Overlay for Preview Fetch */}

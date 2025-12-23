@@ -13,7 +13,7 @@ interface DashboardResponse {
       resumesCreated: number;
       portfoliosCreated: number;
       atsScores: number;
-      templatesUsed: number;
+      portfolioViews: number;
       creditsRemaining: number;
       plan: string;
     };
@@ -96,13 +96,31 @@ export default async function handler(
       credits = profile.credits || 0;
       plan = profile.plan || "free";
       console.log("[Dashboard API] Profile loaded:", { plan, credits });
-    } else if (profileError) {
-      console.error(
-        "[Dashboard API] Profile fetch error (profiles):",
-        profileError.message
+    } else {
+      console.log(
+        "[Dashboard API] Profile missing in 'profiles', trying 'users'..."
       );
-      // Fallback or retry with user_profiles if migration incomplete?
-      // For now assuming 'profiles' is the source of truth as per other files.
+      // Fallback: Check 'users' table
+      const { data: userProfile, error: userError } = await supabase
+        .from("users")
+        .select("plan, credits")
+        .eq("id", userId)
+        .single();
+
+      if (userProfile) {
+        credits = userProfile.credits || 0;
+        plan = userProfile.plan || "free";
+        console.log("[Dashboard API] User profile loaded from 'users':", {
+          plan,
+          credits,
+        });
+      } else {
+        console.error(
+          "[Dashboard API] Profile fetch error (both tables):",
+          profileError?.message,
+          userError?.message
+        );
+      }
     }
 
     // 2. Fetch Resumes
@@ -112,14 +130,20 @@ export default async function handler(
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
+    // Filter in JS to safely handle NULL statuses which .neq excludes
+    const validResumes = (resumes || []).filter(
+      (r) => r.status !== "deleted" && r.status !== "archived"
+    );
+
     if (resumesError)
       console.error("[Dashboard API] Resumes fetch error:", resumesError);
-    console.log("[Dashboard API] Resumes found:", resumes?.length || 0);
+    console.log("[Dashboard API] Resumes found (total):", resumes?.length || 0);
+    console.log("[Dashboard API] Resumes found (valid):", validResumes.length);
 
     // 3. Fetch Portfolios
     const { data: portfolios, error: portError } = await supabase
       .from("portfolios")
-      .select("id, title, is_active, created_at, updated_at")
+      .select("id, title, is_active, created_at, updated_at, views")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
@@ -127,8 +151,13 @@ export default async function handler(
       console.error("[Dashboard API] Portfolios fetch error:", portError);
     console.log("[Dashboard API] Portfolios found:", portfolios?.length || 0);
 
-    const fetchedResumes = resumes || [];
+    const fetchedResumes = validResumes || [];
     const fetchedPortfolios = portfolios || [];
+
+    const totalViews = (portfolios as any[] | []).reduce(
+      (acc, curr) => acc + (curr.views || 0),
+      0
+    );
 
     // Combine Activities
     const activities = [
@@ -151,7 +180,7 @@ export default async function handler(
         (a, b) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       )
-      .slice(0, 5);
+      .slice(0, 4);
 
     return res.status(200).json({
       success: true,
@@ -160,7 +189,7 @@ export default async function handler(
           resumesCreated: fetchedResumes.length,
           portfoliosCreated: fetchedPortfolios.length,
           atsScores: 0,
-          templatesUsed: 8,
+          portfolioViews: totalViews,
           creditsRemaining: credits,
           plan: plan,
         },

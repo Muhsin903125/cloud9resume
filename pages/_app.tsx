@@ -206,7 +206,7 @@ function DashboardLayout({
             </button>
 
             <div
-              className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:shadow-sm md:w-64 md:border-r md:border-gray-200 ${
+              className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 md:h-screen md:shadow-sm md:w-64 md:border-r md:border-gray-200 ${
                 isMenuOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
@@ -319,8 +319,8 @@ function DashboardLayout({
         )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <main className="flex-1 overflow-y-auto w-full">{children}</main>
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        <main className="flex-1 w-full">{children}</main>
       </div>
 
       {/* Confirmation Modal */}

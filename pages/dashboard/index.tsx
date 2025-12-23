@@ -17,6 +17,7 @@ import {
 } from "../../components/Icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "../../lib/apiClient";
+import PlanSelectionModal from "../../components/PlanSelectionModal";
 
 const DashboardPage: NextPage = () => {
   const router = useRouter();
@@ -34,6 +35,7 @@ const DashboardPage: NextPage = () => {
 
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   // Get display name from user data
   useEffect(() => {
@@ -221,15 +223,14 @@ const DashboardPage: NextPage = () => {
                 </span>
               </span>
               <div className="h-4 w-px bg-gray-200 mx-1"></div>
-              <Link href="/plans">
-                <Button
-                  variant="secondary"
-                  size="small"
-                  className="text-xs py-1.5 h-8"
-                >
-                  Upgrade
-                </Button>
-              </Link>
+              <Button
+                variant="secondary"
+                size="small"
+                className="text-xs py-1.5 h-8"
+                onClick={() => setShowPlanModal(true)}
+              >
+                Upgrade
+              </Button>
             </div>
           </div>
         </header>
@@ -241,26 +242,42 @@ const DashboardPage: NextPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-8 p-6 bg-gray-900 rounded-xl text-white shadow-lg shadow-gray-200/50"
+            className="mb-8 p-4 bg-white border border-gray-200 rounded-xl shadow-sm"
           >
             <div className="flex justify-between items-center">
-              <div>
-                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">
-                  Available Credits
-                </p>
-                <p className="text-3xl font-bold tracking-tight">
-                  {isDataLoading ? "..." : stats.creditsRemaining}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">
+                    Available Credits
+                  </p>
+                  <p className="text-xl font-bold text-gray-900 leading-none mt-0.5">
+                    {isDataLoading ? "..." : stats.creditsRemaining}
+                  </p>
+                </div>
               </div>
-              <Link href="/plans" passHref>
-                <Button
-                  variant="primary"
-                  size="small"
-                  className="bg-white text-gray-900 hover:bg-gray-100 text-xs font-medium h-9 px-4 border-0"
-                >
-                  Buy Credits
-                </Button>
-              </Link>
+              <Button
+                variant="secondary"
+                size="small"
+                className="text-xs h-8 px-3"
+                onClick={() => setShowPlanModal(true)}
+              >
+                Add Credits
+              </Button>
             </div>
           </motion.div>
 
@@ -296,9 +313,29 @@ const DashboardPage: NextPage = () => {
                 icon: AnalyticsIcon,
               },
               {
-                label: "Templates",
-                value: stats.templatesUsed,
-                icon: TemplateIcon,
+                label: "Total Views",
+                value: stats.portfolioViews,
+                icon: (props: any) => (
+                  <svg
+                    {...props}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                ),
               },
             ].map((stat, idx) => (
               <motion.div
@@ -393,7 +430,7 @@ const DashboardPage: NextPage = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-full"
+                className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col"
               >
                 <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[400px]">
                   {isDataLoading ? (
@@ -404,26 +441,26 @@ const DashboardPage: NextPage = () => {
                       </p>
                     </div>
                   ) : recentActivities.length > 0 ? (
-                    recentActivities.map((activity) => (
+                    recentActivities.slice(0, 4).map((activity) => (
                       <motion.div
                         key={activity.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-4 hover:bg-gray-50/50 transition-colors"
+                        className="p-2.5 hover:bg-gray-50/50 transition-colors"
                       >
-                        <div className="flex gap-3">
-                          <div className="mt-0.5 p-1.5 bg-gray-100 rounded text-gray-500 flex-shrink-0">
+                        <div className="flex gap-2">
+                          <div className="p-1  rounded text-gray-500 flex-shrink-0">
                             {getActivityIcon(activity.type)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-xs font-medium text-gray-900 truncate">
                               {activity.title}
                             </p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 uppercase tracking-wide">
+                              <span className="text-[9px] font-medium px-1 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 uppercase tracking-wide">
                                 {activity.action}
                               </span>
-                              <span className="text-[10px] text-gray-400">
+                              <span className="text-[9px] text-gray-400">
                                 {activity.timestamp}
                               </span>
                             </div>
@@ -449,6 +486,13 @@ const DashboardPage: NextPage = () => {
           </div>
         </main>
       </div>
+
+      <PlanSelectionModal
+        isOpen={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
+        currentPlanId={stats.plan}
+        onSuccess={fetchDashboardData}
+      />
     </>
   );
 };

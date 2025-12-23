@@ -12,6 +12,7 @@ import {
   getGoogleOAuthUrl,
   getLinkedInOAuthUrl,
   getGitHubOAuthUrl,
+  useAuth,
 } from "../lib/authUtils";
 
 const LoginPage: NextPage = () => {
@@ -24,6 +25,14 @@ const LoginPage: NextPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   // Load saved email if remember me was enabled, and check for OAuth errors
   useEffect(() => {
