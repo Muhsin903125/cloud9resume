@@ -15,6 +15,7 @@ interface DashboardResponse {
       atsScores: number;
       templatesUsed: number;
       creditsRemaining: number;
+      plan: string;
     };
     recentActivities: any[];
   };
@@ -81,28 +82,27 @@ export default async function handler(
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
-    // 1. Fetch Credits - Try user_profiles first, then fallback to profiles
+    // 1. Fetch Credits & Plan - standardize on 'profiles'
     let credits = 0;
-    const { data: profileData, error: profileError } = await supabase
-      .from("user_profiles")
-      .select("credits")
+    let plan = "free";
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("plan, credits")
       .eq("id", userId)
-      .maybeSingle();
+      .single(); // Use single() or maybeSingle()
 
-    if (profileData) {
-      credits = profileData.credits || 0;
-      console.log("[Dashboard API] Credits from user_profiles:", credits);
-    } else {
-      const { data: altProfile, error: altError } = await supabase
-        .from("profiles")
-        .select("credits")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (altProfile) {
-        credits = altProfile.credits || 0;
-        console.log("[Dashboard API] Credits from profiles fallback:", credits);
-      }
+    if (profile) {
+      credits = profile.credits || 0;
+      plan = profile.plan || "free";
+      console.log("[Dashboard API] Profile loaded:", { plan, credits });
+    } else if (profileError) {
+      console.error(
+        "[Dashboard API] Profile fetch error (profiles):",
+        profileError.message
+      );
+      // Fallback or retry with user_profiles if migration incomplete?
+      // For now assuming 'profiles' is the source of truth as per other files.
     }
 
     // 2. Fetch Resumes
@@ -162,6 +162,7 @@ export default async function handler(
           atsScores: 0,
           templatesUsed: 8,
           creditsRemaining: credits,
+          plan: plan,
         },
         recentActivities: activities,
       },

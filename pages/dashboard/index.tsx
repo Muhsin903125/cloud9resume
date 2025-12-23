@@ -29,6 +29,7 @@ const DashboardPage: NextPage = () => {
     atsScores: 0,
     templatesUsed: 8,
     creditsRemaining: 0,
+    plan: "free",
   });
 
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
@@ -201,8 +202,23 @@ const DashboardPage: NextPage = () => {
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 flex items-center gap-2">
                 Welcome, {displayName}
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${
+                    stats.plan === "free"
+                      ? "bg-gray-100 text-gray-500"
+                      : stats.plan === "starter"
+                      ? "bg-green-100 text-green-700"
+                      : stats.plan === "pro"
+                      ? "bg-blue-100 text-blue-700"
+                      : stats.plan === "pro_plus"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
+                >
+                  {stats.plan?.replace("_", " ")}
+                </span>
               </span>
               <div className="h-4 w-px bg-gray-200 mx-1"></div>
               <Link href="/plans">

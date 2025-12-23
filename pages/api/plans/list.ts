@@ -1,128 +1,135 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse } from "next";
 
 export interface Plan {
-  id: string
-  name: string
-  displayName: string
-  price: number
-  billingPeriod: 'monthly' | 'yearly'
-  credits: number
-  features: string[]
-  isPopular?: boolean
-  description: string
+  id: string;
+  name: string;
+  displayName: string;
+  price: number;
+  billingPeriod: "monthly" | "yearly";
+  credits: number;
+  features: string[];
+  isPopular?: boolean;
+  description: string;
+  limitations?: string[];
 }
 
 // Define all available plans
 const PLANS: Record<string, Plan> = {
   free: {
-    id: 'free',
-    name: 'Free',
-    displayName: 'Free Plan',
+    id: "free",
+    name: "Free",
+    displayName: "Free Plan",
     price: 0,
-    billingPeriod: 'monthly',
+    billingPeriod: "monthly",
     credits: 5,
-    description: 'Perfect for getting started',
+    description: "Perfect for getting started",
+    features: ["1 Resume", "1 Portfolio", "5 AI Credits", "Standard Templates"],
+    limitations: ["Max 1 Resume", "Max 1 Portfolio"],
+  },
+  starter: {
+    id: "starter",
+    name: "Starter",
+    displayName: "Starter (Fresher)",
+    price: 0,
+    billingPeriod: "monthly",
+    credits: 5,
+    description: "Best for students & freshers",
     features: [
-      '5 AI Resume Credits',
-      '1 Resume Upload',
-      'Basic ATS Scoring',
-      'Community Support',
+      "1 Resume",
+      "1 Portfolio",
+      "5 AI Credits",
+      "Portfolio Publishing",
     ],
+    limitations: ["No Experience Section", "Max 1 Resume"],
   },
   pro: {
-    id: 'pro',
-    name: 'Pro',
-    displayName: 'Pro Plan',
+    id: "pro",
+    name: "Pro",
+    displayName: "Pro Plan",
     price: 9.99,
-    billingPeriod: 'monthly',
-    credits: 100,
+    billingPeriod: "monthly",
+    credits: 150,
     isPopular: true,
-    description: 'Best for job seekers',
+    description: "For serious job seekers",
     features: [
-      '100 AI Resume Credits',
-      'Unlimited Resumes',
-      'Advanced ATS Scoring',
-      'AI Resume Suggestions',
-      'Portfolio Builder',
-      'Email Support',
-      'Cancel Anytime',
+      "5 Resumes",
+      "2 Portfolios",
+      "150 AI Credits",
+      "Advanced ATS Scoring",
+      "AI Resume Suggestions",
+      "Priority Email Support",
     ],
   },
   pro_plus: {
-    id: 'pro_plus',
-    name: 'Pro Plus',
-    displayName: 'Pro Plus Plan',
+    id: "pro_plus",
+    name: "Pro Plus",
+    displayName: "Pro Plus",
     price: 19.99,
-    billingPeriod: 'monthly',
-    credits: 300,
-    description: 'For career professionals',
+    billingPeriod: "monthly",
+    credits: 400,
+    description: "Max power for professionals",
     features: [
-      '300 AI Resume Credits',
-      'Unlimited Resumes',
-      'Priority ATS Scoring',
-      'AI Resume Suggestions',
-      'Portfolio Builder',
-      'Interview Prep',
-      'Priority Email Support',
-      'Phone Support',
-      'Cancel Anytime',
+      "Unlimited Resumes",
+      "10 Portfolios",
+      "400 AI Credits",
+      "Priority ATS Scoring",
+      "Interview Prep",
+      "Priority Support",
     ],
   },
   enterprise: {
-    id: 'enterprise',
-    name: 'Enterprise',
-    displayName: 'Enterprise Plan',
-    price: 0, // Custom pricing
-    billingPeriod: 'yearly',
+    id: "enterprise",
+    name: "Enterprise",
+    displayName: "Enterprise",
+    price: 0,
+    billingPeriod: "yearly",
     credits: 1000,
-    description: 'For teams and organizations',
+    description: "For teams and organizations",
     features: [
-      'Unlimited Credits',
-      'Unlimited Users',
-      'Custom Integrations',
-      'Dedicated Account Manager',
-      'Advanced Analytics',
-      '24/7 Phone Support',
-      'Custom SLA',
-      'On-Premise Option',
+      "Unlimited Everything",
+      "Custom Integrations",
+      "Dedicated Account Manager",
     ],
   },
-}
+};
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // Get specific plan if ID provided
-    const { id } = req.query
+    const { id } = req.query;
 
-    if (id && typeof id === 'string') {
-      const plan = PLANS[id]
+    if (id && typeof id === "string") {
+      const plan = PLANS[id];
       if (!plan) {
         return res.status(404).json({
-          error: 'Plan not found',
-          message: `Plan with ID '${id}' does not exist`,
-        })
+          error: "Plan not found",
+        });
       }
-      return res.status(200).json({ data: plan })
+      return res.status(200).json({ data: plan });
     }
 
-    // Return all plans sorted by price
     const plans = Object.values(PLANS)
-      .filter(plan => plan.id !== 'enterprise') // Enterprise shown separately
-      .sort((a, b) => a.price - b.price)
+      .filter((plan) => plan.id !== "enterprise")
+      .sort((a, b) => {
+        // Custom sort order: Free, Starter, Pro, Pro+
+        const order = ["free", "starter", "pro", "pro_plus"];
+        return order.indexOf(a.id) - order.indexOf(b.id);
+      });
 
     return res.status(200).json({
       data: plans,
       enterprise: PLANS.enterprise,
-    })
+    });
   } catch (error) {
-    console.error('Fetch plans error:', error)
+    console.error("Fetch plans error:", error);
     return res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch plans',
-    })
+      error: "Internal server error",
+    });
   }
 }

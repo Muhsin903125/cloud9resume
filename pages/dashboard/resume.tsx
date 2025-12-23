@@ -11,6 +11,8 @@ import { useAPIAuth } from "../../hooks/useAPIAuth";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import { useAuth } from "../../lib/authUtils";
+import { canCreateResource, PlanType } from "../../lib/subscription";
 
 const ResumeDashboard = () => {
   const router = useRouter();
@@ -55,7 +57,24 @@ const ResumeDashboard = () => {
     }
   };
 
+  const { user } = useAuth();
   const handleCreateResume = async () => {
+    // Check limits
+    if (
+      user &&
+      !canCreateResource(
+        (user.plan || "free") as PlanType,
+        resumes.length,
+        "resumes"
+      )
+    ) {
+      toast.error(
+        `You've reached the limit of resumes for the ${user.plan} plan. Please upgrade.`
+      );
+      router.push("/plans");
+      return;
+    }
+
     if (!newResumeTitle.trim()) return;
 
     try {

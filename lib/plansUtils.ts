@@ -1,60 +1,65 @@
-import { apiClient } from './apiClient'
+import { apiClient } from "./apiClient";
 
 export interface Plan {
-  id: string
-  name: string
-  displayName: string
-  price: number
-  billingPeriod: 'monthly' | 'yearly'
-  credits: number
-  features: string[]
-  isPopular?: boolean
-  description: string
+  id: string;
+  name: string;
+  displayName: string;
+  price: number;
+  billingPeriod: "monthly" | "yearly";
+  credits: number;
+  features: string[];
+  isPopular?: boolean;
+  description: string;
+  limitations?: string[];
 }
 
 // Fetch all plans
 export async function fetchPlans() {
-  return apiClient.get('/plans/list')
+  return apiClient.get("/plans/list");
 }
 
 // Fetch specific plan
 export async function fetchPlan(planId: string) {
-  return apiClient.get(`/plans/list?id=${planId}`)
+  return apiClient.get(`/plans/list?id=${planId}`);
 }
 
 // Use credits (deduct from account)
 export async function useCredit(creditsUsed: number, action: string) {
-  const token = localStorage.getItem('auth_token')
+  const token = localStorage.getItem("auth_token");
   if (!token) {
     return {
-      error: 'Not authenticated',
-      message: 'You must be logged in to use credits',
-    }
+      error: "Not authenticated",
+      message: "You must be logged in to use credits",
+    };
   }
 
-  return apiClient.post('/credits/useCredit', {
+  return apiClient.post("/credits/useCredit", {
     token,
     creditsUsed,
     action,
-  })
+  });
 }
 
 // Add credits (purchase/refill)
-export async function addCredits(creditsToAdd: number, planId: string, paymentIntentId?: string) {
-  const token = localStorage.getItem('auth_token')
+export async function addCredits(
+  creditsToAdd: number,
+  planId: string,
+  paymentIntentId?: string
+) {
+  const token = localStorage.getItem("auth_token");
   if (!token) {
     return {
-      error: 'Not authenticated',
-      message: 'You must be logged in to add credits',
-    }
+      error: "Not authenticated",
+      message: "You must be logged in to add credits",
+    };
   }
 
-  return apiClient.post('/credits/addCredits', {
+  return apiClient.post("/credits/addCredits", {
     token,
     creditsToAdd,
     planId,
     paymentIntentId,
-  })
+  });
 }
 
 // Get credit cost for operation
@@ -65,4 +70,4 @@ export const CREDIT_COSTS = {
   portfolio_creation: 3,
   interview_prep: 2,
   cover_letter: 1,
-}
+};

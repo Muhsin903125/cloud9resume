@@ -51,24 +51,25 @@ const PlansPage: NextPage = () => {
       return;
     }
 
-    // For free plan, just redirect to dashboard
-    if (plan.id === "free") {
-      router.push("/dashboard");
-      return;
-    }
-
     setLoadingPlanId(plan.id);
     try {
-      // Add credits to user account
+      // For paid plans, we would integrate Stripe here
+      // For Free/Starter, just update the plan directly via API
+
+      // Add credits to user account (and update plan)
       const result = await addCredits(plan.credits, plan.id);
 
       if (result.error) {
         setError(result.error);
       } else {
         // Show success and redirect
-        alert(
-          `Successfully upgraded to ${plan.displayName}! ${plan.credits} credits added to your account.`
-        );
+        // For starter, show specific message
+        const msg =
+          plan.id === "starter"
+            ? `Switched to Starter Plan! Experience section disabled. Portfolio unlocked.`
+            : `Successfully upgraded to ${plan.displayName}! ${plan.credits} credits added.`;
+
+        alert(msg);
         router.push("/dashboard");
       }
     } catch (err) {
@@ -122,90 +123,103 @@ const PlansPage: NextPage = () => {
             </div>
           ) : (
             <>
-              {/* Plans Grid */}
-              <div className="grid md:grid-cols-3 gap-8 mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                 {plans.map((plan) => (
                   <div
                     key={plan.id}
-                    className={`relative rounded-xl border-2 overflow-hidden transition-all duration-300 ${
+                    className={`relative flex flex-col rounded-xl border-2 overflow-hidden transition-all duration-300 ${
                       plan.isPopular
-                        ? "border-gray-900 shadow-lg"
-                        : "border-gray-200 hover:border-gray-300"
-                    } ${plan.isPopular ? "md:scale-105 md:shadow-xl" : ""}`}
+                        ? "border-gray-900 shadow-xl scale-105 z-10"
+                        : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+                    } bg-white`}
                   >
                     {plan.isPopular && (
                       <div className="absolute top-0 inset-x-0 bg-gray-900 text-white py-1 text-center">
-                        <span className="text-xs font-semibold tracking-wide">
-                          MOST POPULAR
+                        <span className="text-xs font-semibold tracking-wide uppercase">
+                          Best Value
+                        </span>
+                      </div>
+                    )}
+
+                    {plan.id === "starter" && (
+                      <div className="absolute top-0 inset-x-0 bg-green-600 text-white py-1 text-center">
+                        <span className="text-xs font-semibold tracking-wide uppercase">
+                          For Freshers
                         </span>
                       </div>
                     )}
 
                     <div
-                      className={`p-8 ${
-                        plan.isPopular ? "pt-12" : ""
-                      } bg-white`}
+                      className={`p-6 flex-1 flex flex-col ${
+                        plan.isPopular || plan.id === "starter" ? "pt-10" : ""
+                      }`}
                     >
-                      <div className="mb-8">
-                        <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                      <div className="mb-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">
                           {plan.displayName}
                         </h3>
-                        <p className="text-gray-600 text-sm leading-relaxed">
+                        <p className="text-gray-500 text-xs min-h-[40px]">
                           {plan.description}
                         </p>
                       </div>
 
                       {/* Pricing */}
-                      <div className="mb-8 pb-8 border-b border-gray-200">
-                        {plan.price > 0 ? (
-                          <div>
-                            <div className="flex items-baseline">
-                              <span className="text-5xl font-semibold text-gray-900">
-                                ${plan.price}
-                              </span>
-                              <span className="text-gray-600 ml-3 text-sm">
-                                /
-                                {plan.billingPeriod === "monthly"
-                                  ? "month"
-                                  : "year"}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-4xl font-semibold text-gray-900">
-                            Free
-                          </div>
-                        )}
-                        <div className="mt-3 text-sm font-semibold text-gray-700">
+                      <div className="mb-6 pb-6 border-b border-gray-100">
+                        <div className="flex items-baseline mb-2">
+                          <span className="text-4xl font-extrabold text-gray-900">
+                            {plan.price === 0 ? "Free" : `$${plan.price}`}
+                          </span>
+                          {plan.price > 0 && (
+                            <span className="text-gray-500 ml-1 text-xs">
+                              /mo
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm font-medium text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded">
                           {plan.credits} Credits
                         </div>
+                      </div>
+
+                      {/* Features */}
+                      <div className="space-y-3 mb-8 flex-1">
+                        {plan.features.map((feature, idx) => (
+                          <div key={idx} className="flex items-start">
+                            <CheckIcon className="w-4 h-4 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-600 text-xs text-left">
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                        {/* Limitations (if any) */}
+                        {plan.limitations &&
+                          plan.limitations.map((limit, idx) => (
+                            <div
+                              key={`lim-${idx}`}
+                              className="flex items-start opacity-70"
+                            >
+                              <span className="w-4 h-4 mr-2 text-red-400 flex items-center justify-center text-[10px] border border-red-400 rounded-full flex-shrink-0">
+                                ✕
+                              </span>
+                              <span className="text-gray-500 text-xs text-left italic">
+                                {limit}
+                              </span>
+                            </div>
+                          ))}
                       </div>
 
                       {/* CTA Button */}
                       <Button
                         variant={plan.isPopular ? "primary" : "secondary"}
-                        className="w-full mb-8"
+                        className="w-full mt-auto"
                         disabled={loadingPlanId === plan.id}
                         onClick={() => handleSelectPlan(plan)}
                       >
                         {loadingPlanId === plan.id
                           ? "Processing..."
-                          : plan.id === "free"
-                          ? "Get Started"
-                          : "Choose Plan"}
+                          : plan.price === 0
+                          ? "Select Plan"
+                          : "Upgrade"}
                       </Button>
-
-                      {/* Features */}
-                      <div className="space-y-3">
-                        {plan.features.map((feature, idx) => (
-                          <div key={idx} className="flex items-start">
-                            <CheckIcon className="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" />
-                            <span className="text-gray-700 text-sm">
-                              {feature}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 ))}

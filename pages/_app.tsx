@@ -16,7 +16,7 @@ import {
   TemplateIcon,
 } from "../components/Icons";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import GoogleAnalytics from "../components/GoogleAnalytics";
+
 import * as gtag from "../lib/gtag";
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -58,7 +58,6 @@ export default function App({ Component, pageProps }: AppProps) {
   if (isDashboard) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <GoogleAnalytics />
         <DashboardLayout
           userName={userName}
           userPicture={userPicture}
@@ -77,7 +76,6 @@ export default function App({ Component, pageProps }: AppProps) {
   if (isNoLayoutPage) {
     return (
       <>
-        <GoogleAnalytics />
         <Component {...pageProps} />
       </>
     );
@@ -86,7 +84,6 @@ export default function App({ Component, pageProps }: AppProps) {
   // Regular pages with navbar and footer
   return (
     <div className="min-h-screen flex flex-col">
-      <GoogleAnalytics />
       <Toaster position="bottom-right" />
       <Navbar />
       <main className="flex-1">

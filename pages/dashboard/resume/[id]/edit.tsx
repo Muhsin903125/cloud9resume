@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useAPIAuth } from "@/hooks/useAPIAuth";
-import { isValidEmail } from "@/lib/authUtils";
+import { isValidEmail, useAuth } from "@/lib/authUtils";
 import { toast } from "react-hot-toast";
 
 import {
@@ -70,11 +70,20 @@ const ResumeEditor = () => {
     { id: "declaration", label: "Declaration", Icon: DocumentIcon },
   ];
 
-  const getOrderedSectionTypes = () => {
-    const order = settings?.section_order || [];
-    if (order.length === 0) return baseSectionTypes;
+  const { user } = useAuth(); // Import auth to check plan
 
-    return [...baseSectionTypes].sort((a, b) => {
+  const getOrderedSectionTypes = () => {
+    // FRESHER PLAN RESTRICTION: Remove experience for 'starter' plan
+    let types = [...baseSectionTypes];
+
+    if (user?.plan === "starter") {
+      types = types.filter((t) => t.id !== "experience");
+    }
+
+    const order = settings?.section_order || [];
+    if (order.length === 0) return types;
+
+    return types.sort((a, b) => {
       const idxA = order.indexOf(a.id);
       const idxB = order.indexOf(b.id);
       if (idxA === -1 && idxB === -1) return 0;

@@ -16,6 +16,8 @@ import { Resume, Portfolio } from "../../lib/types";
 import { ResumeRenderer } from "../../components/ResumeRenderer";
 import { PortfolioRenderer } from "../../lib/portfolio-templates";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../lib/authUtils";
+import { canCreateResource, PlanType } from "../../lib/subscription";
 
 const TEMPLATES = [
   { id: "modern", name: "Modern", color: "bg-blue-500" },
@@ -28,6 +30,7 @@ const TEMPLATES = [
 
 const PortfolioDashboardPage: NextPage = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const { get, post, del } = useAPIAuth();
 
   // Data
@@ -45,7 +48,7 @@ const PortfolioDashboardPage: NextPage = () => {
     try {
       const [resRes, portRes] = await Promise.all([
         get<Resume[]>("/api/resumes"),
-        get<any[]>("/api/portfolios"), // Type cast as any[] for now due to join structure differences if any
+        get<any[]>("/api/portfolios"),
       ]);
 
       if (resRes.success && resRes.data) setResumes(resRes.data);
@@ -55,6 +58,24 @@ const PortfolioDashboardPage: NextPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCreatePortfolio = () => {
+    if (
+      user &&
+      !canCreateResource(
+        (user.plan || "free") as PlanType,
+        portfolios.length,
+        "portfolios"
+      )
+    ) {
+      toast.error(
+        `You've reached the limit of portfolios for the ${user.plan} plan. Please upgrade.`
+      );
+      router.push("/plans");
+      return;
+    }
+    setView("select-resume");
   };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
@@ -153,9 +174,7 @@ const PortfolioDashboardPage: NextPage = () => {
               <h1 className="text-xl font-bold text-gray-900">Portfolios</h1>
             </div>
             <button
-              onClick={() => {
-                setView("select-resume");
-              }}
+              onClick={handleCreatePortfolio}
               className="px-4 py-2 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-sm"
             >
               <PlusIcon size={16} color="white" />
@@ -175,7 +194,7 @@ const PortfolioDashboardPage: NextPage = () => {
                 Create a personal website from your resume in seconds.
               </p>
               <button
-                onClick={() => setView("select-resume")}
+                onClick={handleCreatePortfolio}
                 className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
               >
                 Create Portfolio

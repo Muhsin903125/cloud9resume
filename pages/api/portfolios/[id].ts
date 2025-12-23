@@ -33,10 +33,10 @@ export default async function handler(
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
-    // Verify ownership
+    // Verify ownership & get current status
     const { data: existing, error: checkError } = await supabase
       .from("portfolios")
-      .select("id")
+      .select("id, is_active")
       .eq("id", id)
       .eq("user_id", userId)
       .single();
@@ -49,6 +49,68 @@ export default async function handler(
 
     if (req.method === "PATCH") {
       const updates = req.body;
+
+      // Credit Logic
+      let cost = 0;
+      let actionDescription = "";
+
+      // Fetch user profile for plan/credits check
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("plan, credits")
+        .eq("id", userId)
+        .single();
+
+      const currentPlan = profile?.plan || "free";
+      const currentCredits = profile?.credits || 0;
+
+      const isPublishing =
+        updates.is_active === true && existing.is_active === false;
+      const isUpdatingPublished =
+        existing.is_active === true &&
+        (updates.is_active === true || updates.is_active === undefined);
+
+      if (isPublishing) {
+        if (currentPlan === "free") {
+          return res
+            .status(403)
+            .json({
+              success: false,
+              error: "Free plan cannot publish portfolios. Please upgrade.",
+            });
+        }
+        cost = 10; // Publish cost
+        actionDescription = "Publish Portfolio";
+      } else if (isUpdatingPublished) {
+        cost = 2; // Update cost
+        actionDescription = "Update Published Portfolio";
+      }
+
+      // Check Credits
+      if (cost > 0) {
+        if (currentCredits < cost) {
+          return res
+            .status(400)
+            .json({
+              success: false,
+              error: `Insufficient credits. ${actionDescription} costs ${cost} credits.`,
+            });
+        }
+
+        // Deduct
+        await supabase
+          .from("profiles")
+          .update({ credits: currentCredits - cost })
+          .eq("id", userId);
+        await supabase.from("credit_usage").insert({
+          user_id: userId,
+          action: isPublishing ? "portfolio_publish" : "portfolio_update",
+          credits_used: cost,
+          description: actionDescription,
+          // meta: { portfolio_id: id }
+        });
+      }
+
       // Prevent updating sensitive fields if necessary, e.g. user_id
       delete updates.id;
       delete updates.user_id;

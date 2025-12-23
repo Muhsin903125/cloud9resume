@@ -94,7 +94,7 @@ export interface UserProfile {
   first_name?: string;
   last_name?: string;
   credits: number;
-  plan: "free" | "basic" | "premium";
+  plan: "free" | "starter" | "pro" | "pro_plus" | "enterprise";
   created_at: string;
   updated_at: string;
 }
