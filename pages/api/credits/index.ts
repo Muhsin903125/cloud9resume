@@ -11,10 +11,16 @@ interface CreditsResponse {
   data?: {
     stats: {
       current: number;
-      used: number; // calculated from history or just sum of negative usage?
+      used: number;
       plan: string;
-      resetDate: string; // Mock or calculate
+      resetDate: string;
     };
+    subscription: {
+      plan: string;
+      status: string;
+      startedAt: string | null;
+      updatedAt: string | null;
+    } | null;
     history: any[];
   };
   error?: string;
@@ -56,31 +62,43 @@ export default async function handler(
     }
 
     // 1. Get Profile Stats
-    // 1. Get Profile Stats
     let credits = 0;
     let plan = "free";
+    let subscriptionData: any = null;
 
     // Try 'profiles' first
     const { data: profile } = await supabase
       .from("profiles")
-      .select("credits, plan")
+      .select("credits, plan, created_at, updated_at")
       .eq("id", userId)
       .single();
 
     if (profile) {
       credits = profile.credits || 0;
       plan = profile.plan || "free";
+      subscriptionData = {
+        plan: plan,
+        status: plan !== "free" ? "active" : "inactive",
+        startedAt: profile.created_at,
+        updatedAt: profile.updated_at,
+      };
     } else {
       // Fallback: Check 'users' table
       const { data: userProfile } = await supabase
         .from("users")
-        .select("credits, plan")
+        .select("credits, plan, created_at, updated_at")
         .eq("id", userId)
         .single();
 
       if (userProfile) {
         credits = userProfile.credits || 0;
         plan = userProfile.plan || "free";
+        subscriptionData = {
+          plan: plan,
+          status: plan !== "free" ? "active" : "inactive",
+          startedAt: userProfile.created_at,
+          updatedAt: userProfile.updated_at,
+        };
       }
     }
 
@@ -120,6 +138,7 @@ export default async function handler(
             .toISOString()
             .split("T")[0], // Next month 1st
         },
+        subscription: subscriptionData,
         history: history || [],
       },
     });

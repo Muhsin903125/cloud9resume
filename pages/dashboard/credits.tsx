@@ -237,22 +237,47 @@ const CreditsPage: NextPage = () => {
                       </div>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                          data?.stats?.plan === "free"
+                          data?.subscription?.status === "active"
+                            ? "bg-green-100 text-green-700"
+                            : data?.stats?.plan === "free"
                             ? "bg-gray-100 text-gray-600"
                             : "bg-blue-100 text-blue-700"
                         }`}
                       >
-                        Active
+                        {data?.subscription?.status ||
+                          (data?.stats?.plan === "free" ? "Free" : "Active")}
                       </span>
                     </div>
 
                     <div className="space-y-4 mb-8">
                       <div className="flex justify-between text-sm py-2 border-b border-gray-100">
-                        <span className="text-gray-600">Billing Cycle</span>
-                        <span className="font-medium">Monthly</span>
+                        <span className="text-gray-600">Current Credits</span>
+                        <span className="font-medium">
+                          {data?.stats?.current || 0}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm py-2 border-b border-gray-100">
-                        <span className="text-gray-600">Next Billing Date</span>
+                        <span className="text-gray-600">Used This Month</span>
+                        <span className="font-medium">
+                          {data?.stats?.used || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm py-2 border-b border-gray-100">
+                        <span className="text-gray-600">Member Since</span>
+                        <span className="font-medium">
+                          {data?.subscription?.startedAt
+                            ? new Date(
+                                data.subscription.startedAt
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm py-2 border-b border-gray-100">
+                        <span className="text-gray-600">Next Reset Date</span>
                         <span className="font-medium">
                           {data?.stats?.resetDate}
                         </span>

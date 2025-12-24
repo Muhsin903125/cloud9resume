@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import { apiClient } from "../../../../lib/apiClient";
+import { useAuth } from "../../../../lib/authUtils";
 
 const ExportUI = () => {
   const router = useRouter();
   const { id } = router.query;
+  const { user } = useAuth();
   const [resume, setResume] = useState<any>(null);
   const [exports, setExports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,19 +54,12 @@ const ExportUI = () => {
     try {
       setLoading(true);
       const [resumeRes, exportsRes] = await Promise.all([
-        fetch(`/api/resumes/${id}`, {
-          headers: { "x-user-id": "user-id-here" },
-        }),
-        fetch(`/api/resumes/export?resumeId=${id}`, {
-          headers: { "x-user-id": "user-id-here" },
-        }),
+        apiClient.get(`/resumes/${id}`),
+        apiClient.get(`/resumes/export?resumeId=${id}`),
       ]);
 
-      const resumeData = await resumeRes.json();
-      const exportsData = await exportsRes.json();
-
-      setResume(resumeData.data);
-      setExports(exportsData.data || []);
+      if (resumeRes?.data?.data) setResume(resumeRes.data.data);
+      if (exportsRes?.data?.data) setExports(exportsRes.data.data || []);
     } catch (err) {
       setError("Failed to load export data");
     } finally {
@@ -76,25 +72,20 @@ const ExportUI = () => {
 
     try {
       setExporting(true);
-      const response = await fetch("/api/resumes/export", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": "user-id-here",
-        },
-        body: JSON.stringify({ resumeId: id, format: selectedFormat }),
+      const response = await apiClient.post("/resumes/export", {
+        resumeId: id,
+        format: selectedFormat,
       });
 
-      const data = await response.json();
-      if (data.success) {
+      if (response?.data?.success) {
         setError("");
-        setExports([data.data, ...exports]);
+        setExports([response.data.data, ...exports]);
         setSelectedFormat("");
       } else {
-        setError(data.error || "Failed to queue export");
+        setError(response?.data?.error || "Failed to queue export");
       }
-    } catch (err) {
-      setError("Failed to queue export");
+    } catch (err: any) {
+      setError(err?.response?.data?.error || "Failed to queue export");
     } finally {
       setExporting(false);
     }

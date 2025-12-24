@@ -124,20 +124,39 @@ export default async function handler(
     }
 
     // Deduct 1 credit for download
-    const { error: deductError } = await supabase
+    const newCredits = (profile.credits || 0) - 1;
+    const { data: updatedProfile, error: deductError } = await supabase
       .from("profiles")
-      .update({ credits: (profile.credits || 0) - 1 })
-      .eq("id", userId);
+      .update({ credits: newCredits })
+      .eq("id", userId)
+      .select("credits")
+      .single();
 
     if (deductError) {
       console.error("Credit deduction failed:", deductError);
       // Continue anyway - don't block download for credit deduction failure
     } else {
       console.log(
-        `[PDF Download] Deducted 1 credit from user ${userId}. Remaining: ${
-          (profile.credits || 0) - 1
-        }`
+        `[PDF Download] Deducted 1 credit from user ${userId}. New balance: ${updatedProfile?.credits}`
       );
+
+      // Record credit usage in transaction history
+      const { error: recordError } = await supabase
+        .from("credit_usage")
+        .insert({
+          user_id: userId,
+          action: "resume_download",
+          credits_used: 1,
+          description: `PDF download: ${resume.title || "Resume"}`,
+          created_at: new Date().toISOString(),
+        });
+
+      if (recordError) {
+        console.error("Credit usage recording failed:", recordError);
+        // Don't fail if we can't record usage, but log it
+      } else {
+        console.log(`[PDF Download] Credit usage recorded for user ${userId}`);
+      }
     }
 
     // Transform Data
