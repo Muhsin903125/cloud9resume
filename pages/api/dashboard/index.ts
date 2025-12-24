@@ -143,7 +143,7 @@ export default async function handler(
     // 3. Fetch Portfolios
     const { data: portfolios, error: portError } = await supabase
       .from("portfolios")
-      .select("id, title, is_active, created_at, updated_at, views")
+      .select("id, title, is_active, created_at, updated_at, view_count")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
@@ -155,7 +155,7 @@ export default async function handler(
     const fetchedPortfolios = portfolios || [];
 
     const totalViews = (portfolios as any[] | []).reduce(
-      (acc, curr) => acc + (curr.views || 0),
+      (acc, curr) => acc + (curr.view_count || 0),
       0
     );
 

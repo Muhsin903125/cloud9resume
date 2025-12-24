@@ -1,15 +1,13 @@
 import Head from "next/head";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import PublicLayout from "../components/PublicLayout";
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen flex flex-col font-sans text-gray-900 bg-white">
+    <PublicLayout>
       <Head>
         <title>Privacy Policy - Cloud9Profile</title>
       </Head>
-      <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-16">
+      <div className="max-w-4xl mx-auto w-full px-6 py-16">
         <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
         <div className="prose prose-blue max-w-none text-gray-600">
           <p className="mb-4">
@@ -85,10 +83,9 @@ export default function Privacy() {
           <h2 className="text-2xl font-semibold mt-8 mb-4 text-gray-900">
             7. Contact
           </h2>
-          <p>For privacy concerns, please contact privacy@cloud9profile.com.</p>
+          <p>For privacy concerns, please contact support@cloud9profile.com.</p>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </PublicLayout>
   );
 }

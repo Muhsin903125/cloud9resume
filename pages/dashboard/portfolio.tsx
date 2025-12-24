@@ -256,7 +256,7 @@ const PortfolioDashboardPage: NextPage = () => {
                         >
                           <EyeIcon size={12} className="text-gray-400" />
                           <span className="font-medium text-gray-600">
-                            {p.views || 0}
+                            {(p as any).view_count || 0}
                           </span>
                         </div>
                       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import Head from "next/head";
 import { storeAuthData, getReturnUrl } from "../lib/auth-utils";
 import { USER_AUTH_TOKEN_KEY, USER_ID_KEY } from "../lib/token-keys";
@@ -266,7 +267,7 @@ export default function LoginPage() {
             }}
           >
             Don't have an account?{" "}
-            <a
+            <Link
               href="/signup"
               style={{
                 color: colors.primary.blue,
@@ -275,7 +276,7 @@ export default function LoginPage() {
               }}
             >
               Sign up
-            </a>
+            </Link>
           </p>
         </div>
       </div>

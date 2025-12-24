@@ -73,8 +73,9 @@ const HomePage: NextPage = () => {
         className="fixed top-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -z-10"
       />
 
-      {/* Floating Background Elements */}
+      {/* Enhanced Parallax Background with SVG */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        {/* Animated gradient blobs */}
         <motion.div
           animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
@@ -85,10 +86,320 @@ const HomePage: NextPage = () => {
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute top-[40%] right-[10%] w-96 h-96 bg-purple-100/20 rounded-full blur-3xl"
         />
+        <motion.div
+          animate={{ x: [0, 30, 0], y: [0, -40, 0], rotate: [0, 180, 360] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[20%] left-[15%] w-80 h-80 bg-indigo-100/25 rounded-full blur-3xl"
+        />
+
+        {/* Floating SVG Shapes */}
+        <motion.svg
+          className="absolute top-[15%] right-[20%] opacity-10"
+          width="120"
+          height="120"
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 10, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <circle cx="60" cy="60" r="40" fill="#3B82F6" />
+          <circle cx="60" cy="60" r="25" fill="#60A5FA" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute bottom-[30%] right-[30%] opacity-10"
+          width="80"
+          height="80"
+          animate={{
+            y: [0, 15, 0],
+            rotate: [0, -15, 0],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <rect x="20" y="20" width="40" height="40" fill="#A78BFA" rx="8" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[60%] left-[10%] opacity-10"
+          width="100"
+          height="100"
+          animate={{
+            y: [0, -25, 0],
+            x: [0, 10, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <polygon points="50,10 90,90 10,90" fill="#EC4899" />
+        </motion.svg>
+
+        {/* Top Section Dense SVG Shapes - 10+ shapes */}
+        <motion.svg
+          className="absolute top-[5%] left-[15%] opacity-10"
+          width="50"
+          height="50"
+          animate={{ y: [0, 12, 0], rotate: [0, 180, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <circle cx="25" cy="25" r="20" fill="#EF4444" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[8%] right-[35%] opacity-10"
+          width="45"
+          height="45"
+          animate={{ x: [0, 10, 0], y: [0, -8, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <rect x="10" y="10" width="25" height="25" fill="#14B8A6" rx="5" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[12%] left-[40%] opacity-10"
+          width="55"
+          height="55"
+          animate={{ rotate: [0, -180, 0], scale: [1, 1.15, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <polygon points="27.5,5 50,22 40,50 15,50 5,22" fill="#8B5CF6" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[18%] right-[12%] opacity-10"
+          width="48"
+          height="48"
+          animate={{ y: [0, -15, 0], x: [0, 8, 0] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <path d="M24,5 L40,24 L24,43 L8,24 Z" fill="#F97316" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[22%] left-[55%] opacity-10"
+          width="42"
+          height="42"
+          animate={{ rotate: [0, 360, 0] }}
+          transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+        >
+          <circle cx="21" cy="21" r="15" fill="#06B6D4" opacity="0.8" />
+          <circle cx="21" cy="21" r="8" fill="#22D3EE" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[28%] left-[8%] opacity-10"
+          width="52"
+          height="52"
+          animate={{ y: [0, 18, 0], rotate: [0, 25, 0] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <rect x="10" y="10" width="32" height="32" fill="#EC4899" rx="8" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[32%] right-[25%] opacity-10"
+          width="58"
+          height="58"
+          animate={{ x: [0, -12, 0], y: [0, 10, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <polygon points="29,8 50,29 29,50 8,29" fill="#10B981" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[38%] left-[30%] opacity-10"
+          width="46"
+          height="46"
+          animate={{ rotate: [0, -360, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <path
+            d="M23,5 L30,18 L45,23 L30,28 L23,41 L16,28 L1,23 L16,18 Z"
+            fill="#A855F7"
+          />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[42%] right-[40%] opacity-10"
+          width="50"
+          height="50"
+          animate={{ y: [0, -14, 0] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <circle cx="25" cy="25" r="18" fill="#F59E0B" />
+          <circle cx="25" cy="25" r="10" fill="#FBBF24" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[35%] left-[65%] opacity-10"
+          width="44"
+          height="44"
+          animate={{ x: [0, 15, 0], rotate: [0, 45, 0] }}
+          transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <rect x="8" y="8" width="28" height="28" fill="#3B82F6" rx="6" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[48%] left-[45%] opacity-10"
+          width="54"
+          height="54"
+          animate={{ y: [0, 16, 0], rotate: [0, -30, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <polygon points="27,6 48,20 42,45 12,45 6,20" fill="#EF4444" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[10%] left-[70%] opacity-10"
+          width="47"
+          height="47"
+          animate={{ x: [0, -10, 0], y: [0, 12, 0] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <path d="M23.5,8 L35,23.5 L23.5,39 L12,23.5 Z" fill="#6366F1" />
+        </motion.svg>
+
+        {/* Additional SVG Shapes */}
+        <motion.svg
+          className="absolute top-[25%] left-[25%] opacity-10"
+          width="90"
+          height="90"
+          animate={{
+            y: [0, 20, 0],
+            rotate: [0, 360, 0],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <path d="M45,5 L85,45 L45,85 L5,45 Z" fill="#10B981" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute bottom-[15%] right-[15%] opacity-10"
+          width="70"
+          height="70"
+          animate={{
+            y: [0, -18, 0],
+            x: [0, -10, 0],
+          }}
+          transition={{
+            duration: 9,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <circle cx="35" cy="35" r="30" fill="#F59E0B" opacity="0.7" />
+          <circle cx="35" cy="35" r="15" fill="#FBBF24" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[45%] right-[8%] opacity-10"
+          width="60"
+          height="60"
+          animate={{
+            rotate: [0, -360, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 14,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <polygon points="30,5 55,25 45,55 15,55 5,25" fill="#8B5CF6" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute bottom-[45%] left-[5%] opacity-10"
+          width="110"
+          height="110"
+          animate={{
+            y: [0, 22, 0],
+            rotate: [0, 15, 0],
+          }}
+          transition={{
+            duration: 11,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <rect x="15" y="15" width="80" height="80" fill="#06B6D4" rx="15" />
+          <rect x="30" y="30" width="50" height="50" fill="#22D3EE" rx="10" />
+        </motion.svg>
+
+        <motion.svg
+          className="absolute top-[80%] right-[25%] opacity-10"
+          width="95"
+          height="95"
+          animate={{
+            x: [0, 15, 0],
+            y: [0, -20, 0],
+          }}
+          transition={{
+            duration: 13,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <path
+            d="M47.5,10 L60,40 L90,47.5 L60,55 L47.5,85 L35,55 L5,47.5 L35,40 Z"
+            fill="#F43F5E"
+          />
+        </motion.svg>
+
+        {/* Small Minimal Honeycomb Pattern */}
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.1]"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern
+              id="honeycomb-small"
+              width="28"
+              height="48"
+              patternUnits="userSpaceOnUse"
+            >
+              <polygon
+                points="14,3 21,7 21,17 14,21 7,17 7,7"
+                fill="none"
+                stroke="#64748b"
+                strokeWidth="0.5"
+              />
+              <polygon
+                points="0,27 7,31 7,41 0,45 -7,41 -7,31"
+                fill="none"
+                stroke="#64748b"
+                strokeWidth="0.5"
+              />
+              <polygon
+                points="28,27 35,31 35,41 28,45 21,41 21,31"
+                fill="none"
+                stroke="#64748b"
+                strokeWidth="0.5"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#honeycomb-small)" />
+        </svg>
       </div>
 
       {/* 1. Hero Section */}
-      <section className="relative pt-24 pb-16 lg:pt-36 lg:pb-24 overflow-hidden">
+      <section className="relative pt-20 pb-12 md:pt-24 md:pb-16 lg:pt-36 lg:pb-24 overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 relative text-center">
           <motion.div
             initial="initial"
@@ -100,9 +411,19 @@ const HomePage: NextPage = () => {
             }}
           >
             <motion.div variants={fadeIn}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 backdrop-blur-sm border border-slate-100 text-slate-600 font-medium text-xs mb-6 shadow-sm">
-                <SparklesIcon className="w-3.5 h-3.5 text-blue-500" />
-                <span>Free ATS-Friendly Resume Builder</span>
+              <Link href="/" className="inline-block mb-6">
+                <img
+                  src="/logo.png"
+                  alt="Cloud9Profile"
+                  className="h-12 mx-auto"
+                />
+              </Link>
+            </motion.div>
+
+            <motion.div variants={fadeIn}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 text-blue-700 font-bold text-xs mb-6 shadow-sm">
+                <SparklesIcon className="w-3.5 h-3.5 text-blue-600" />
+                <span>Free Portfolio for Every Fresher</span>
               </div>
             </motion.div>
 
@@ -110,17 +431,16 @@ const HomePage: NextPage = () => {
               variants={fadeIn}
               className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 text-slate-900"
             >
-              Build ATS-Friendly Resumes & Professional Profiles{" "}
-              <span className="text-blue-600">That Get Noticed</span>
+              Your <span className="text-blue-600">First Job</span> Starts with
+              a <span className="text-blue-600">Pro Profile</span>
             </motion.h1>
 
             <motion.p
               variants={fadeIn}
               className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed font-normal"
             >
-              Generate text-selectable, searchable, and ATS-readable PDFs.
-              Elevate your job application with a professional public profile at
-              cloud9profile.com.
+              Stand out from day one—free ATS resume + professional portfolio.
+              No experience needed, just ambition.
             </motion.p>
 
             <motion.div
@@ -142,7 +462,7 @@ const HomePage: NextPage = () => {
             {/* Live Dashboard Grid */}
             <motion.div
               variants={fadeIn}
-              className="grid md:grid-cols-3 gap-6 mb-16 max-w-5xl mx-auto"
+              className="hidden md:grid md:grid-cols-3 gap-6 mb-16 max-w-5xl mx-auto"
             >
               {/* Card 1: ATS Score */}
               <motion.div
@@ -241,7 +561,10 @@ const HomePage: NextPage = () => {
               </motion.div>
             </motion.div>
 
-            <motion.p variants={fadeIn} className="mt-6 text-sm text-slate-400">
+            <motion.p
+              variants={fadeIn}
+              className="mt-6 text-sm text-slate-400 hidden md:block"
+            >
               Join 10,000+ applicants landing jobs at top tech companies.
             </motion.p>
           </motion.div>
@@ -249,7 +572,7 @@ const HomePage: NextPage = () => {
       </section>
 
       {/* 2. Problem -> Solution */}
-      <section className="py-24 relative overflow-hidden">
+      <section className="py-24 relative overflow-hidden hidden md:block">
         <div className="max-w-5xl mx-auto px-4">
           <motion.div
             initial="initial"
@@ -433,17 +756,13 @@ const HomePage: NextPage = () => {
       </section>
 
       {/* 4. How It Works */}
-      <section className="py-24 bg-slate-900 text-white relative overflow-hidden rounded-[3rem] mx-4 shadow-2xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_-20%,rgba(59,130,246,0.3),transparent)] pointer-events-none"></div>
-        <div className="max-w-5xl mx-auto px-4 relative">
+      <section className="py-16 relative">
+        <div className="max-w-4xl mx-auto px-4">
           <motion.h2
             {...fadeIn}
-            className="text-3xl font-black text-center mb-16"
+            className="text-2xl md:text-3xl font-bold text-center mb-12 text-slate-900"
           >
-            Three Steps to Your{" "}
-            <span className="text-blue-400 text-gradient bg-clip-text">
-              Dream Job
-            </span>
+            Get Started in <span className="text-blue-600">3 Easy Steps</span>
           </motion.h2>
           <motion.div
             initial="initial"
@@ -451,37 +770,39 @@ const HomePage: NextPage = () => {
             viewport={{ once: true }}
             variants={{
               initial: { opacity: 0 },
-              animate: { opacity: 1, transition: { staggerChildren: 0.2 } },
+              animate: { opacity: 1, transition: { staggerChildren: 0.15 } },
             }}
-            className="grid md:grid-cols-3 gap-12"
+            className="grid md:grid-cols-3 gap-8"
           >
             {[
               {
                 id: "1",
-                title: "Create Profile",
-                text: "Sign up and input your experience and skills details.",
+                title: "Sign Up",
+                text: "Create your free account in seconds.",
               },
               {
                 id: "2",
-                title: "Build & Check",
-                text: "Create an ATS-safe resume and check your score against JDs.",
+                title: "Build",
+                text: "Use our ATS-friendly templates.",
               },
               {
                 id: "3",
-                title: "Export & Share",
-                text: "Download your PDF or share your public portfolio link.",
+                title: "Share",
+                text: "Download PDF or share your link.",
               },
             ].map((s, i) => (
               <motion.div
                 key={i}
                 variants={fadeIn}
-                className="flex flex-col items-center text-center group cursor-default"
+                className="flex flex-col items-center text-center group"
               >
-                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl font-black mb-8 shadow-lg shadow-blue-500/40 rotate-3 group-hover:rotate-0 transition-all duration-300">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-lg font-black mb-4 shadow-lg shadow-blue-500/30 text-white group-hover:scale-110 transition-transform">
                   {s.id}
                 </div>
-                <h3 className="text-xl font-bold mb-4">{s.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed max-w-[200px] font-medium">
+                <h3 className="text-lg font-bold mb-2 text-slate-900">
+                  {s.title}
+                </h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
                   {s.text}
                 </p>
               </motion.div>
@@ -549,7 +870,7 @@ const HomePage: NextPage = () => {
 
             <motion.div
               variants={fadeIn}
-              className="relative group lg:scale-110"
+              className="relative group lg:scale-110 hidden md:block"
             >
               <div className="absolute -inset-12 bg-blue-500/10 blur-[100px] rounded-full group-hover:bg-blue-500/20 transition-all duration-700"></div>
               <motion.div
@@ -572,21 +893,65 @@ const HomePage: NextPage = () => {
                   </div>
                 </div>
                 <div className="pt-14 pb-6 px-4">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-tr from-blue-100 to-indigo-100 rounded-full shadow-inner ring-4 ring-white/40"></div>
+                  {/* Profile Header */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-full shadow-lg flex items-center justify-center text-white font-bold text-xl">
+                      SJ
+                    </div>
                     <div>
-                      <div className="w-32 h-5 bg-slate-900/10 rounded-full mb-2"></div>
-                      <div className="w-48 h-3 bg-slate-900/5 rounded-full"></div>
+                      <div className="font-bold text-slate-900 text-sm mb-1">
+                        Sarah Jones
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Full Stack Developer
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mb-8">
-                    <div className="h-40 bg-slate-900/[0.03] rounded-2xl border border-slate-900/[0.05]"></div>
-                    <div className="h-40 bg-slate-900/[0.03] rounded-2xl border border-slate-900/[0.05]"></div>
+
+                  {/* Skills Tags */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {["React", "Node.js", "TypeScript"].map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-[9px] font-semibold"
+                      >
+                        {skill}
+                      </span>
+                    ))}
                   </div>
-                  <div className="space-y-3">
-                    <div className="w-full h-3 bg-slate-900/5 rounded-full"></div>
-                    <div className="w-5/6 h-3 bg-slate-900/5 rounded-full"></div>
-                    <div className="w-4/6 h-3 bg-slate-900/5 rounded-full"></div>
+
+                  {/* Project Cards */}
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-3 flex flex-col justify-between">
+                      <div className="w-6 h-6 bg-blue-500 rounded-lg"></div>
+                      <div>
+                        <div className="h-2 bg-blue-200 rounded w-3/4 mb-1"></div>
+                        <div className="h-1.5 bg-blue-100 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                    <div className="h-32 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-100 p-3 flex flex-col justify-between">
+                      <div className="w-6 h-6 bg-purple-500 rounded-lg"></div>
+                      <div>
+                        <div className="h-2 bg-purple-200 rounded w-3/4 mb-1"></div>
+                        <div className="h-1.5 bg-purple-100 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Experience Section */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div className="h-2 bg-slate-200 rounded flex-1"></div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <div className="h-2 bg-slate-200 rounded w-4/5"></div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
+                      <div className="h-2 bg-slate-200 rounded w-3/5"></div>
+                    </div>
                   </div>
                 </div>
                 {/* Floating Tooltip */}
@@ -606,152 +971,6 @@ const HomePage: NextPage = () => {
               </motion.div>
             </motion.div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* 6. Plans & Credits (Soft Sell) */}
-      <section className="py-32 relative">
-        <div className="max-w-5xl mx-auto px-4">
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={{
-              initial: { opacity: 0 },
-              animate: { opacity: 1, transition: { staggerChildren: 0.1 } },
-            }}
-            className="text-center mb-16"
-          >
-            <motion.h2
-              variants={fadeIn}
-              className="text-3xl font-black text-slate-900 mb-4"
-            >
-              Simple Pricing,{" "}
-              <span className="text-blue-600">No Subscriptions</span>
-            </motion.h2>
-            <motion.p
-              variants={fadeIn}
-              className="text-slate-500 max-w-lg mx-auto font-medium"
-            >
-              Choose the plan that fits your job search. Upgrade anytime.
-            </motion.p>
-          </motion.div>
-
-          <motion.div
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            variants={{
-              initial: { opacity: 0 },
-              animate: { opacity: 1, transition: { staggerChildren: 0.2 } },
-            }}
-            className="grid sm:grid-cols-2 gap-10 max-w-4xl mx-auto px-4"
-          >
-            <motion.div
-              variants={fadeIn}
-              className="p-10 bg-white/60 backdrop-blur-md rounded-3xl border border-white/40 shadow-xl group hover:shadow-2xl transition-all duration-300 glass-card"
-            >
-              <h3 className="text-xl font-bold mb-2 text-slate-900">
-                Free Plan
-              </h3>
-              <p className="text-4xl font-black mb-8 text-slate-900">
-                $0
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">
-                  /forever
-                </span>
-              </p>
-              <ul className="space-y-4 mb-10 text-sm text-slate-600 font-medium">
-                <li className="flex gap-3 items-center">
-                  <CheckBadgeIcon className="w-5 h-5 text-green-500" /> 1
-                  ATS-Safe Resume
-                </li>
-                <li className="flex gap-3 items-center">
-                  <CheckBadgeIcon className="w-5 h-5 text-green-500" /> Public
-                  Portfolio Profile
-                </li>
-                <li className="flex gap-3 items-center text-slate-300">
-                  <XMarkIcon className="w-5 h-5" /> AI Keyword Optimization
-                </li>
-              </ul>
-              <Link href="/signup">
-                <button className="w-full py-4 border-2 border-slate-100 rounded-2xl hover:bg-slate-50 transition-all font-bold text-slate-900">
-                  Start For Free
-                </button>
-              </Link>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              className="p-10 bg-slate-900 text-white rounded-3xl shadow-2xl relative overflow-hidden group"
-            >
-              <div className="absolute top-6 right-6 text-[10px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-widest animate-pulse z-20">
-                Best Value
-              </div>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(59,130,246,0.25),transparent)] z-0"></div>
-              <div className="relative z-10">
-                <h3 className="text-xl font-bold mb-2">Pro (Credit-Based)</h3>
-                <p className="text-4xl font-black mb-8">
-                  $14
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">
-                    /10 Credits
-                  </span>
-                </p>
-                <ul className="space-y-4 mb-10 text-sm text-slate-300 font-medium">
-                  <li className="flex gap-3 items-center">
-                    <CheckBadgeIcon className="w-5 h-5 text-blue-400" />{" "}
-                    Everything in Free
-                  </li>
-                  <li className="flex gap-3 items-center">
-                    <CheckBadgeIcon className="w-5 h-5 text-blue-400" /> 10 AI
-                    Generation Credits
-                  </li>
-                  <li className="flex gap-3 items-center">
-                    <CheckBadgeIcon className="w-5 h-5 text-blue-400" />{" "}
-                    Priority Support
-                  </li>
-                </ul>
-                <Link href="/signup">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold shadow-xl shadow-blue-600/20 transition-all"
-                  >
-                    Go Pro Now
-                  </motion.button>
-                </Link>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* 7. ATS Trust Section */}
-      <section className="py-20 border-y border-slate-50">
-        <div className="max-w-5xl mx-auto px-4 text-center">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-12">
-            Compatible With Major ATS Platforms
-          </h2>
-          <div className="flex flex-wrap justify-center gap-12 grayscale opacity-50">
-            {[
-              "Workday",
-              "Greenhouse",
-              "Lever",
-              "iCIMS",
-              "SAP SuccessFactors",
-            ].map((name, i) => (
-              <span
-                key={i}
-                className="text-2xl font-bold text-slate-900 font-serif italic"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-          <p className="mt-12 text-slate-500 max-w-2xl mx-auto text-sm leading-relaxed">
-            Our PDFs are 100% text-based. No images, no canvas, and no SVG text
-            hacks. Just raw, searchable data that mirrors the text-extracting
-            logic of 99% of modern ATS software.
-          </p>
         </div>
       </section>
 
@@ -858,20 +1077,20 @@ const HomePage: NextPage = () => {
       </section>
 
       {/* 10. Final CTA */}
-      <section className="py-24 bg-blue-600 text-white text-center">
+      <section className="py-16 bg-blue-600 text-white text-center">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-8">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
             Start Your Career 2.0 Today
           </h2>
-          <p className="text-xl text-blue-100 mb-12">
+          <p className="text-lg text-blue-100 mb-8">
             No credit card required for the free plan.
           </p>
           <Link href="/signup">
-            <button className="px-12 py-5 bg-white text-blue-600 rounded-xl font-bold text-xl hover:bg-slate-50 transition-all shadow-xl">
+            <button className="px-8 py-4 bg-white text-blue-600 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all shadow-xl">
               Start Free – Build My Resume
             </button>
           </Link>
-          <div className="mt-8 flex justify-center gap-6 opacity-80 text-sm font-medium">
+          <div className="mt-6 flex justify-center gap-6 opacity-80 text-sm font-medium">
             <span>ATS Readable</span>
             <span>•</span>
             <span>Dynamic Portfolio</span>

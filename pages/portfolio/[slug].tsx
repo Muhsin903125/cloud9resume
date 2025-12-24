@@ -168,6 +168,42 @@ const PublicPortfolio = () => {
           ...portfolio.settings,
         }}
       />
+
+      {/* View Count Badge */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          background: "rgba(0, 0, 0, 0.7)",
+          backdropFilter: "blur(8px)",
+          color: "white",
+          padding: "8px 14px",
+          borderRadius: "20px",
+          fontSize: "13px",
+          fontWeight: "500",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          zIndex: 1000,
+        }}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        {portfolio.view_count || 0} views
+      </div>
     </>
   );
 };

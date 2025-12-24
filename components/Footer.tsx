@@ -6,8 +6,8 @@ export default function Footer() {
 
   return (
     <footer className="bg-slate-900 text-slate-200 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           <div className="space-y-6">
             <div className="flex items-center space-x-2">
               <div className="relative">
@@ -15,7 +15,7 @@ export default function Footer() {
                   src={getAssetUrl("/logo.png")}
                   alt="Cloud9Profile Logo"
                   style={{
-                    height: "40px",
+                    height: "32px",
                     width: "auto",
                     objectFit: "contain",
                   }}
@@ -23,7 +23,7 @@ export default function Footer() {
                 />
               </div>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+            <p className="text-slate-400 text-xs leading-relaxed max-w-xs">
               Build professional resumes and portfolios with AI-powered tools.
               Stand out from the crowd and land your dream job.
             </p>
@@ -71,10 +71,10 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6 tracking-wide">
+            <h3 className="text-white font-semibold text-base mb-4 tracking-wide">
               Product
             </h3>
-            <ul className="space-y-4">
+            <ul className="space-y-2">
               {[
                 { name: "Pricing", href: "/plans" },
                 { name: "Features", href: "/#features" },
@@ -85,7 +85,7 @@ export default function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-slate-400 hover:text-blue-400 transition-colors text-sm font-medium"
+                    className="text-slate-400 hover:text-blue-400 transition-colors text-xs font-medium"
                   >
                     {item.name}
                   </Link>
@@ -95,15 +95,15 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6 tracking-wide">
+            <h3 className="text-white font-semibold text-base mb-4 tracking-wide">
               Company
             </h3>
-            <ul className="space-y-4">
+            <ul className="space-y-2">
               {["About Us", "Blog", "Careers", "Contact"].map((item) => (
                 <li key={item}>
                   <a
                     href="#"
-                    className="text-slate-400 hover:text-blue-400 transition-colors text-sm font-medium"
+                    className="text-slate-400 hover:text-blue-400 transition-colors text-xs font-medium"
                   >
                     {item}
                   </a>
@@ -113,10 +113,10 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6 tracking-wide">
+            <h3 className="text-white font-semibold text-base mb-4 tracking-wide">
               Support
             </h3>
-            <ul className="space-y-4">
+            <ul className="space-y-2">
               {[
                 { name: "Help Center", href: "#" },
                 { name: "Terms of Service", href: "/terms" },
@@ -126,7 +126,7 @@ export default function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-slate-400 hover:text-blue-400 transition-colors text-sm font-medium"
+                    className="text-slate-400 hover:text-blue-400 transition-colors text-xs font-medium"
                   >
                     {item.name}
                   </Link>
@@ -136,7 +136,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-slate-800 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-slate-500 text-sm">
             &copy; {currentYear} Cloud9Profile. All rights reserved.
           </p>

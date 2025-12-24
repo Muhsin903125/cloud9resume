@@ -104,8 +104,23 @@ export default function ProfilePage() {
               <p className="text-sm text-gray-500 font-mono">
                 {formData.email}
               </p>
-              <div className="mt-2 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full inline-block border border-green-100">
-                Free Plan
+              <div
+                className={`mt-2 text-xs font-medium px-2 py-0.5 rounded-full inline-block border ${
+                  user?.plan === "pro_plus"
+                    ? "text-purple-600 bg-purple-50 border-purple-100"
+                    : user?.plan === "pro"
+                    ? "text-blue-600 bg-blue-50 border-blue-100"
+                    : user?.plan === "starter"
+                    ? "text-orange-600 bg-orange-50 border-orange-100"
+                    : "text-green-600 bg-green-50 border-green-100"
+                }`}
+              >
+                {user?.plan === "pro_plus"
+                  ? "Pro Plus"
+                  : user?.plan
+                  ? user.plan.charAt(0).toUpperCase() + user.plan.slice(1)
+                  : "Free"}{" "}
+                Plan
               </div>
             </div>
           </div>

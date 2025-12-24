@@ -2,6 +2,8 @@ import { NextPage } from "next";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { getAssetUrl } from "../lib/common-functions";
 import Button from "../components/Button";
 import { forgotPassword, validateEmail, isValidEmail } from "../lib/authUtils";
 
@@ -88,7 +90,6 @@ const ForgotPasswordPage: NextPage = () => {
       }
 
       setSuccess(true);
-      setEmail("");
     } catch (err) {
       setError("An error occurred. Please try again.");
       console.error("Forgot password error:", err);
@@ -108,161 +109,194 @@ const ForgotPasswordPage: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
-          <Link href="/">
-            <span className="text-xl font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors">
-              Cloud9Profile
-            </span>
-          </Link>
-          <h1 className="mt-4 text-2xl font-light text-gray-900">
-            Reset your password
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Enter your email address and we'll send you a link to reset your
-            password.
-          </p>
+      <div className="min-h-screen bg-[#F8FAFC] relative overflow-hidden flex items-center justify-center px-4 font-sans text-slate-900">
+        {/* Animated Background blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[10%] left-[5%] w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px]"
+          />
+          <motion.div
+            animate={{ x: [0, -40, 0], y: [0, 60, 0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute bottom-[10%] right-[5%] w-[600px] h-[600px] bg-purple-200/20 rounded-full blur-[100px]"
+          />
         </div>
 
-        {/* Form Container */}
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        {/* Honeycomb Pattern */}
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.05] pointer-events-none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern
+              id="honeycomb-small"
+              width="28"
+              height="48"
+              patternUnits="userSpaceOnUse"
+            >
+              <polygon
+                points="14,3 21,7 21,17 14,21 7,17 7,7"
+                fill="none"
+                stroke="#64748b"
+                strokeWidth="0.5"
+              />
+              <polygon
+                points="0,27 7,31 7,41 0,45 -7,41 -7,31"
+                fill="none"
+                stroke="#64748b"
+                strokeWidth="0.5"
+              />
+              <polygon
+                points="28,27 35,31 35,41 28,45 21,41 21,31"
+                fill="none"
+                stroke="#64748b"
+                strokeWidth="0.5"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#honeycomb-small)" />
+        </svg>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/50 p-8 rounded-3xl shadow-2xl relative z-10"
+        >
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-block mb-6">
+              <img
+                src={getAssetUrl("/logo.png")}
+                alt="Cloud9Profile"
+                style={{ height: "48px", width: "auto", objectFit: "contain" }}
+              />
+            </Link>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+              Forgot your password?
+            </h1>
+            <p className="text-sm text-gray-600">
+              No worries, we&apos;ll send you reset instructions.
+            </p>
+          </div>
+
           {success ? (
-            <div className="rounded-lg bg-green-50 p-6 border border-green-200">
-              <div className="flex">
-                <div className="flex-shrink-0">
+            <div className="text-center">
+              <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-4 rounded-2xl text-sm flex flex-col items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                   <svg
-                    className="h-5 w-5 text-green-600"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+                    className="w-6 h-6 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
                     <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
                     />
                   </svg>
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-green-800">
-                    Check your email
-                  </h3>
-                  <div className="mt-2 text-sm text-green-700">
-                    <p>
-                      We've sent a password reset link to your email. Please
-                      check your inbox and follow the instructions.
-                    </p>
-                  </div>
-                  <div className="mt-4">
-                    <Link href="/login">
-                      <Button variant="secondary" className="w-full">
-                        Back to Login
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
+                <p className="font-medium text-base">Check your email</p>
+                <p>
+                  If an account exists for {email}, you will receive a reset
+                  link shortly.
+                </p>
               </div>
+              <Link href="/login">
+                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors">
+                  Back to login
+                </button>
+              </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <>
+              {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm leading-relaxed">
                   {error}
                 </div>
               )}
 
-              {/* Email Field */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-xs font-medium text-gray-700 uppercase tracking-wide mb-2"
-                >
-                  Email Address
-                </label>
-                <div className="relative">
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full px-4 py-3 bg-gray-50 border rounded-lg text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:bg-white ${
-                      emailError
-                        ? "border-red-300 focus:border-red-500"
-                        : emailExists === true
-                        ? "border-green-300 focus:border-green-500"
-                        : "border-gray-200 focus:border-gray-400"
-                    }`}
-                    placeholder="you@example.com"
-                  />
-                  {emailValidating && (
-                    <div className="absolute right-3 top-3.5">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                    </div>
+              <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                        emailError
+                          ? "border-red-300 bg-red-50/10"
+                          : emailExists === true
+                          ? "border-green-300 bg-green-50/10"
+                          : "border-gray-300 bg-white"
+                      }`}
+                      placeholder="you@example.com"
+                    />
+                    {emailValidating && (
+                      <div className="absolute right-3 top-2.5">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+                  </div>
+                  {emailError && (
+                    <p className="mt-1.5 text-xs text-red-600 font-medium">
+                      {emailError}
+                    </p>
                   )}
-                  {!emailValidating && emailExists === true && (
-                    <div className="absolute right-3 top-3.5 text-green-600">
-                      <svg
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                  {!emailValidating && emailError && (
-                    <div className="absolute right-3 top-3.5 text-red-600">
-                      <svg
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
+                  {emailExists === true && email && (
+                    <p className="mt-1.5 text-xs text-green-600 font-medium">
+                      Account found
+                    </p>
                   )}
                 </div>
-                {emailError && (
-                  <p className="mt-1 text-sm text-red-600">{emailError}</p>
-                )}
-                {emailExists === true && email && (
-                  <p className="mt-1 text-sm text-green-600">Account found</p>
-                )}
-              </div>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full mt-6"
-                disabled={isLoading}
-              >
-                {isLoading ? "Sending..." : "Send Reset Link"}
-              </Button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={isLoading || emailExists === false}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:shadow-none mt-2"
+                >
+                  {isLoading ? "Sending link..." : "Reset password"}
+                </button>
+              </form>
+            </>
           )}
 
           {/* Back to Login Link */}
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600">
             Remember your password?{" "}
             <Link
               href="/login"
-              className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
+              className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
             >
-              Sign in
+              Back to login
             </Link>
           </p>
-        </div>
+
+          {/* Footer */}
+          <p className="mt-8 text-center text-xs text-gray-500">
+            <Link href="/terms" className="hover:text-gray-700">
+              Terms
+            </Link>
+            {" · "}
+            <Link href="/privacy" className="hover:text-gray-700">
+              Privacy
+            </Link>
+          </p>
+        </motion.div>
       </div>
     </>
   );

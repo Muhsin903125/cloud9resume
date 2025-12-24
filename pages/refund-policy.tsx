@@ -1,15 +1,13 @@
 import Head from "next/head";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import PublicLayout from "../components/PublicLayout";
 
 export default function RefundPolicy() {
   return (
-    <div className="min-h-screen flex flex-col font-sans text-gray-900 bg-white">
+    <PublicLayout>
       <Head>
         <title>Refund & Payment Policy - Cloud9Profile</title>
       </Head>
-      <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-16">
+      <div className="max-w-4xl mx-auto w-full px-6 py-16">
         <h1 className="text-4xl font-bold mb-8">Refund & Payment Policy</h1>
         <div className="prose prose-blue max-w-none text-gray-600">
           <p className="mb-4">
@@ -40,17 +38,21 @@ export default function RefundPolicy() {
             3. Refund Requests
           </h2>
           <p>
-            We offer a 7-day money-back guarantee for first-time purchases of
-            Pro or Pro+ plans if you are unsatisfied with the service. To
-            request a refund, please contact support@cloud9profile.com within 7
-            days of your transaction.
+            We offer refunds only if the associated credits or features have not
+            been used, and if the refund request is submitted within 12 hours of
+            the transaction. To request a refund, please contact
+            support@cloud9profile.com. Approved refunds will be processed within
+            5-7 business days. Tax and service charges will be deducted from the
+            refund amount.
           </p>
           <p>Refunds are not available for:</p>
           <ul className="list-disc pl-5 space-y-2 mb-4">
-            <li>Renewal charges (if not canceled in time).</li>
+            <li>Auto-renewed subscription charges.</li>
             <li>
-              One-time credit packs that have been partially or fully used.
+              Any purchases where credits or features have already been
+              utilized.
             </li>
+            <li>Requests made after 12 hours from the time of transaction.</li>
             <li>Accounts suspended for violation of Terms of Service.</li>
           </ul>
 
@@ -71,8 +73,7 @@ export default function RefundPolicy() {
             resolve any billing issues.
           </p>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </PublicLayout>
   );
 }

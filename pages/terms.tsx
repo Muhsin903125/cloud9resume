@@ -1,15 +1,14 @@
 import Head from "next/head";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import Link from "next/link";
+import PublicLayout from "../components/PublicLayout";
 
 export default function Terms() {
   return (
-    <div className="min-h-screen flex flex-col font-sans text-gray-900 bg-white">
+    <PublicLayout>
       <Head>
         <title>Terms & Conditions - Cloud9Profile</title>
       </Head>
-      <Navbar />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-16">
+      <div className="max-w-4xl mx-auto w-full px-6 py-16">
         <h1 className="text-4xl font-bold mb-8">Terms & Conditions</h1>
         <div className="prose prose-blue max-w-none text-gray-600">
           <p className="mb-4">
@@ -58,9 +57,11 @@ export default function Terms() {
           </h2>
           <p>
             Please refer to our separate{" "}
-            <a href="/refund-policy" className="text-blue-600 underline">
-              Refund Policy
-            </a>
+            <div className="inline-block">
+              <Link href="/refund-policy" className="text-blue-600 underline">
+                Refund Policy
+              </Link>
+            </div>
             . Generally, all purchases are final unless otherwise required by
             law or stated in the specific offer.
           </p>
@@ -97,8 +98,7 @@ export default function Terms() {
           </h2>
           <p>For any questions, contact us at support@cloud9profile.com.</p>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </PublicLayout>
   );
 }

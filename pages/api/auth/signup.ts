@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { generateToken } from "../../../lib/backend/utils/tokenService";
 import bcrypt from "bcryptjs";
+import { emailSender } from "../../../lib/backend/utils/emailSender";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -99,6 +100,11 @@ export default async function handler(
       .then(({ error }) => {
         if (error) console.error("⚠️ Profile creation error:", error.message);
       });
+
+    // Send Welcome Email (Non-blocking)
+    emailSender.sendWelcomeEmail(email, name).catch((err) => {
+      console.error("Failed to send welcome email:", err);
+    });
 
     // Generate JWT token
     const accessToken = await generateToken(

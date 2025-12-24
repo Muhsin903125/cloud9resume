@@ -281,13 +281,13 @@ const LoginPage: NextPage = () => {
 
           {/* Footer */}
           <p className="mt-8 text-center text-xs text-gray-500">
-            <a href="#" className="hover:text-gray-700">
+            <Link href="/terms" className="hover:text-gray-700">
               Terms
-            </a>
+            </Link>
             {" · "}
-            <a href="#" className="hover:text-gray-700">
+            <Link href="/privacy" className="hover:text-gray-700">
               Privacy
-            </a>
+            </Link>
           </p>
         </motion.div>
       </div>

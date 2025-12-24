@@ -28,6 +28,7 @@ const DashboardPage: NextPage = () => {
     resumesCreated: 0,
     portfoliosCreated: 0,
     atsScores: 0,
+    portfolioViews: 0,
     templatesUsed: 8,
     creditsRemaining: 0,
     plan: "free",

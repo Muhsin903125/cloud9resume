@@ -16,6 +16,7 @@ import {
   TemplateIcon,
 } from "../components/Icons";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import Loader from "../components/Loader";
 
 import * as gtag from "../lib/gtag";
 
@@ -31,6 +32,23 @@ export default function App({ Component, pageProps }: AppProps) {
       router.events.off("routeChangeComplete", handleRouteChange);
     };
   }, [router.events]);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const handleStart = () => setIsLoading(true);
+    const handleComplete = () => setIsLoading(false);
+
+    router.events.on("routeChangeStart", handleStart);
+    router.events.on("routeChangeComplete", handleComplete);
+    router.events.on("routeChangeError", handleComplete);
+
+    return () => {
+      router.events.off("routeChangeStart", handleStart);
+      router.events.off("routeChangeComplete", handleComplete);
+      router.events.off("routeChangeError", handleComplete);
+    };
+  }, [router]);
 
   const { user, logout } = useAuth();
   const [userName, setUserName] = useState<string>("");
@@ -58,6 +76,7 @@ export default function App({ Component, pageProps }: AppProps) {
   if (isDashboard) {
     return (
       <div className="min-h-screen bg-gray-50">
+        {isLoading && <Loader />}
         <DashboardLayout
           userName={userName}
           userPicture={userPicture}
@@ -76,6 +95,7 @@ export default function App({ Component, pageProps }: AppProps) {
   if (isNoLayoutPage) {
     return (
       <>
+        {isLoading && <Loader />}
         <Component {...pageProps} />
       </>
     );
@@ -84,6 +104,7 @@ export default function App({ Component, pageProps }: AppProps) {
   // Regular pages with navbar and footer
   return (
     <div className="min-h-screen flex flex-col">
+      {isLoading && <Loader />}
       <Toaster position="bottom-right" />
       <Navbar />
       <main className="flex-1">
@@ -330,10 +351,10 @@ function DashboardLayout({
         message="Are you sure you want to sign out of your account?"
         confirmText="Sign out"
         cancelText="Cancel"
-        isDangerous={true}
+        isDestructive={true}
         isLoading={isSigningOut}
         onConfirm={handleConfirmSignOut}
-        onCancel={handleCancelSignOut}
+        onClose={handleCancelSignOut}
       />
     </div>
   );

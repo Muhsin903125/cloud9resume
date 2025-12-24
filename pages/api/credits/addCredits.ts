@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
+import { emailSender } from "../../../lib/backend/utils/emailSender";
+import { getPlanName } from "../../../lib/subscription";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -213,6 +215,16 @@ export default async function handler(
     if (recordError) {
       console.error("Record usage error:", recordError);
       // Don't fail if we can't record usage, but log it
+    }
+
+    // Send Plan Upgrade Email (Non-blocking)
+    if (userEmail && profile.name) {
+      const planName = getPlanName(planId as any);
+      emailSender
+        .sendPlanUpgradeEmail(userEmail, profile.name, planName, creditsToAdd)
+        .catch((err) => {
+          console.error("Failed to send plan upgrade email:", err);
+        });
     }
 
     return res.status(200).json({

@@ -33,25 +33,30 @@ export default async function handler(
         return res.status(404).json({ error: "Portfolio not found" });
       }
 
-      // Track view
+      // Track view - increment view_count
+      let updatedViewCount = (portfolio.view_count || 0) + 1;
       try {
-        // Try RPC first (more atomic)
-        const { error: rpcError } = await supabase.rpc("increment_page_view", {
-          page_slug: slug,
-        });
+        const { data: updatedData, error: updateError } = await supabase
+          .from("portfolios")
+          .update({ view_count: updatedViewCount })
+          .eq("id", portfolio.id)
+          .select("view_count")
+          .single();
 
-        // Fallback to direct update if RPC fails (e.g. doesn't exist)
-        if (rpcError) {
-          const currentViews = portfolio.views || 0;
-          /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-          const { error: updateError } = await supabase
-            .from("portfolios")
-            .update({ views: currentViews + 1 })
-            .eq("id", portfolio.id);
+        if (updateError) {
+          console.error("View count update failed:", updateError);
+        } else if (updatedData) {
+          updatedViewCount = updatedData.view_count;
+          console.log(
+            `[Portfolio] View count updated to ${updatedViewCount} for ${slug}`
+          );
         }
       } catch (err) {
-        console.warn("Analytics tracking failed", err);
+        console.error("Analytics tracking failed", err);
       }
+
+      // Update portfolio object with new view count
+      portfolio.view_count = updatedViewCount;
 
       const portData = {
         ...portfolio,

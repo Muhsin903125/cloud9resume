@@ -1,21 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
-import * as nodemailer from "nodemailer";
+import { emailSender } from "./utils/emailSender";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-// Initialize email transporter (configure with your email service)
-const emailTransporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
 
 /**
  * Export Worker - Processes resume export jobs from queue
@@ -212,35 +201,7 @@ export class ExportWorker {
     fileUrl: string,
     format: string
   ) {
-    const mailOptions = {
-      from: process.env.SMTP_FROM_EMAIL,
-      to: email,
-      subject: `Your Resume Export is Ready - ${resumeTitle}`,
-      html: `
-        <h2>Your Resume Export is Ready!</h2>
-        <p>Your resume <strong>${resumeTitle}</strong> has been exported as ${format.toUpperCase()}.</p>
-        <p>
-          <a href="${fileUrl}" style="display: inline-block; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">
-            Download Resume
-          </a>
-        </p>
-        <p>This link will expire in 7 days.</p>
-        <hr />
-        <p style="color: #666; font-size: 12px;">© Cloud9Profile - Professional Resume Builder</p>
-      `,
-    };
-
-    return new Promise((resolve, reject) => {
-      emailTransporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Email send error:", error);
-          reject(error);
-        } else {
-          console.log("Email sent:", info.response);
-          resolve(info);
-        }
-      });
-    });
+    return emailSender.sendExportEmail(email, resumeTitle, fileUrl, format);
   }
 
   /**

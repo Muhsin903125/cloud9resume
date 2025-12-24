@@ -8,7 +8,6 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 const navigationItems = [
   { name: "Home", href: "/" },
   { name: "Plans", href: "/plans" },
-  { name: "Features", href: "/#features" },
   { name: "About", href: "/#about" },
 ];
 
@@ -16,10 +15,13 @@ export default function Navbar() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAtTop, setIsAtTop] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const scrollY = window.scrollY;
+      setScrolled(scrollY > 20);
+      setIsAtTop(scrollY === 0);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -28,7 +30,9 @@ export default function Navbar() {
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled
+        isAtTop
+          ? "opacity-0 pointer-events-none"
+          : scrolled
           ? "bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50"
           : "bg-transparent"
       }`}

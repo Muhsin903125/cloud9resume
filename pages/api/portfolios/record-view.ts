@@ -27,7 +27,7 @@ export default async function handler(
     // 1. Fetch current views
     const { data: portfolio, error: fetchError } = await supabase
       .from("portfolios")
-      .select("views")
+      .select("view_count")
       .eq("id", id)
       .single();
 
@@ -38,16 +38,16 @@ export default async function handler(
     }
 
     // 2. Increment
-    const newViews = (portfolio.views || 0) + 1;
+    const newViews = (portfolio.view_count || 0) + 1;
 
     // 3. Update
     const { error: updateError } = await supabase
       .from("portfolios")
-      .update({ views: newViews })
+      .update({ view_count: newViews })
       .eq("id", id);
 
     if (updateError) {
-      console.error("Error updating views:", updateError);
+      console.error("Error updating view_count:", updateError);
       return res
         .status(500)
         .json({ success: false, error: "Failed to update views" });
