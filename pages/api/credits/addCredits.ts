@@ -209,6 +209,7 @@ export default async function handler(
         user_id: userId,
         action: `plan_upgrade_${planId}`,
         credits_used: -creditsToAdd, // Negative to indicate credits added
+        description: `Upgraded to ${getPlanName(planId as any)} Plan`,
         created_at: new Date().toISOString(),
       });
 

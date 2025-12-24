@@ -17,7 +17,28 @@ export default async function handler(
   res: NextApiResponse<ExportResponse>
 ) {
   try {
-    const userId = req.headers["x-user-id"] as string;
+    // Verify authentication
+    let userId = "";
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser(token);
+
+      if (!error && user) {
+        userId = user.id;
+      }
+    }
+
+    // Fallback or explicit check
+    if (!userId) {
+      // Double check header mainly for service-to-service if used inside same network,
+      // but generally we want token auth.
+      userId = req.headers["x-user-id"] as string;
+    }
 
     if (!userId) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
@@ -61,9 +82,11 @@ export default async function handler(
 
       if (planError) throw planError;
 
-      // Calculate cost (Default 5 credits per download as per plan)
-      // Preview is free (handled in frontend), but this is export (download)
-      const creditsNeeded = 5;
+      // Calculate cost
+      let creditsNeeded = 5; // Default fallback
+      if (format === "pdf") creditsNeeded = 1;
+      else if (format === "docx") creditsNeeded = 2;
+      else if (format === "json") creditsNeeded = 0;
 
       if ((userPlan?.credits || 0) < creditsNeeded) {
         return res.status(400).json({
@@ -75,6 +98,14 @@ export default async function handler(
       }
 
       // Create export record
+      console.log("[Export API] Attempting to insert into resume_exports:", {
+        resume_id: resumeId,
+        user_id: userId,
+        format,
+        template_id: templateId,
+        credits_deducted: creditsNeeded,
+      });
+
       const { data: exportRecord, error: exportError } = await supabase
         .from("resume_exports")
         .insert({
@@ -88,23 +119,43 @@ export default async function handler(
         .select()
         .single();
 
-      if (exportError) throw exportError;
+      if (exportError) {
+        console.error("[Export API] Export record insert failed:", exportError);
+        throw exportError;
+      }
+
+      console.log("[Export API] Export record created:", exportRecord?.id);
 
       // Deduct credits
       if (creditsNeeded > 0) {
-        await supabase
-          .from("profiles") // Correct table name
+        console.log(
+          `[Export API] Deducting ${creditsNeeded} credits from user ${userId}`
+        );
+
+        const { error: updateError } = await supabase
+          .from("profiles")
           .update({ credits: (userPlan?.credits || 0) - creditsNeeded })
           .eq("id", userId);
 
-        await supabase
-          .from("credit_usage") // Correct table name
+        if (updateError) {
+          console.error(
+            "[Export API] Profile credit deduction failed:",
+            updateError
+          );
+        }
+
+        const { error: usageError } = await supabase
+          .from("credit_usage")
           .insert({
             user_id: userId,
-            action: "export_resume", // Matches schema in addCredits (action vs action_type)
+            action: "export_resume",
             credits_used: creditsNeeded,
             description: `Export resume as ${format.toUpperCase()}`,
           });
+
+        if (usageError) {
+          console.error("[Export API] Credit usage log failed:", usageError);
+        }
       }
 
       return res.status(201).json({

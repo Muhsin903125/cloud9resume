@@ -195,7 +195,8 @@ const CreditsPage: NextPage = () => {
                           >
                             <div>
                               <p className="font-medium text-gray-900 text-sm capitalize">
-                                {item.action.replace(/_/g, " ")}
+                                {item.description ||
+                                  item.action.replace(/_/g, " ")}
                               </p>
                               <p className="text-xs text-gray-500">
                                 {formatDate(item.created_at)}
