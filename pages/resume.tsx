@@ -1,4 +1,10 @@
+import { NextPage } from "next";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { BoltIcon, CheckBadgeIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import SEO from "../components/SEO";
+import { getAssetUrl } from "../lib/common-functions";
+import FAQ from "@/components/FAQ";
 
 const ResumePage: NextPage = () => {
   const structuredData = {

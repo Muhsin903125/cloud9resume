@@ -133,7 +133,7 @@ class EmailSender {
         ? "Cloud9Profile Contact <contact@cloud9profile.com>"
         : "onboarding@resend.dev", // Use a valid sender
       to: supportEmail,
-      reply_to: email, // Allow replying directly to the user
+      replyTo: email, // Allow replying directly to the user
       subject: `[Contact Form] ${subject}`,
       html,
     });
