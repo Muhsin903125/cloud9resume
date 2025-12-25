@@ -111,6 +111,33 @@ class EmailSender {
       html,
     });
   }
+  async sendContactEmail(
+    name: string,
+    email: string,
+    subject: string,
+    message: string
+  ): Promise<void> {
+    const supportEmail = "Support@cloud9profile.com";
+    const html = `
+      <h2>New Contact Message</h2>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <br/>
+      <p><strong>Message:</strong></p>
+      <p style="white-space: pre-wrap;">${message}</p>
+    `;
+
+    await this.resend.emails.send({
+      from: this.resend.apiKeys
+        ? "Cloud9Profile Contact <contact@cloud9profile.com>"
+        : "onboarding@resend.dev", // Use a valid sender
+      to: supportEmail,
+      reply_to: email, // Allow replying directly to the user
+      subject: `[Contact Form] ${subject}`,
+      html,
+    });
+  }
 }
 
 export const emailSender = new EmailSender();

@@ -2,13 +2,13 @@ import { NextPage } from "next";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import Button from "../components/Button";
 import Card from "../components/Card";
 import { fetchPlans, Plan, addCredits } from "../lib/plansUtils";
 import { useAuth } from "../lib/authUtils";
 import { CheckIcon } from "../components/Icons";
+import FAQ from "../components/FAQ";
+import SEO from "../components/SEO";
 
 const PlansPage: NextPage = () => {
   const router = useRouter();
@@ -85,23 +85,26 @@ const PlansPage: NextPage = () => {
       "mailto:sales@cloud9profile.com?subject=Enterprise Plan Inquiry";
   };
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "PriceSpecification",
+    price: "0",
+    priceCurrency: "USD",
+  };
+
   return (
     <>
-      <Head>
-        <title>Plans & Pricing - Cloud9Profile</title>
-        <meta
-          name="description"
-          content="Choose the perfect plan for your career growth"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-
-      <Navbar />
+      <SEO
+        title="Plans & Pricing - Cloud9Profile"
+        description="Choose the perfect plan for your career growth. Start free or upgrade anytime."
+        keywords={["pricing", "plans", "subscriptions", "free resume builder"]}
+        structuredData={structuredData}
+      />
 
       <div className="min-h-screen bg-white py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto py-8">
           {/* Header */}
-          <div className="text-center mb-16">
+          <div className="text-center mt-2 md:mt-10 mb-16">
             <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 mb-4">
               Simple, Transparent Pricing
             </h1>
@@ -267,54 +270,34 @@ const PlansPage: NextPage = () => {
               )}
 
               {/* FAQ Section */}
-              <div className="max-w-3xl mx-auto mt-24">
-                <h2 className="text-3xl font-semibold text-gray-900 mb-12 text-center">
-                  Frequently Asked Questions
-                </h2>
-
-                <div className="space-y-6">
-                  {[
-                    {
-                      question: "Can I upgrade or downgrade my plan anytime?",
-                      answer:
-                        "Yes, you can change your plan at any time. Your credits never expire and will carry over when you upgrade.",
-                    },
-                    {
-                      question: "Do credits expire?",
-                      answer:
-                        "No, credits never expire. Use them whenever you need, on your own schedule.",
-                    },
-                    {
-                      question: "What happens when I run out of credits?",
-                      answer:
-                        "You can upgrade to a higher plan or purchase additional credits. You can also keep using the free plan with its monthly credit allowance.",
-                    },
-                    {
-                      question: "Is there a money-back guarantee?",
-                      answer:
-                        "We stand behind our service. Contact us if you're not satisfied, and we'll work with you on a solution.",
-                    },
-                  ].map((faq, idx) => (
-                    <div
-                      key={idx}
-                      className="p-6 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-                    >
-                      <h4 className="font-semibold text-gray-900 mb-3">
-                        {faq.question}
-                      </h4>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {faq.answer}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <FAQ
+                items={[
+                  {
+                    question: "Can I upgrade or downgrade my plan anytime?",
+                    answer:
+                      "Yes, you can change your plan at any time. Your credits never expire and will carry over when you upgrade.",
+                  },
+                  {
+                    question: "Do credits expire?",
+                    answer:
+                      "No, credits never expire. Use them whenever you need, on your own schedule.",
+                  },
+                  {
+                    question: "What happens when I run out of credits?",
+                    answer:
+                      "You can upgrade to a higher plan or purchase additional credits. You can also keep using the free plan with its monthly credit allowance.",
+                  },
+                  {
+                    question: "Is there a money-back guarantee?",
+                    answer:
+                      "We stand behind our service. Contact us if you're not satisfied, and we'll work with you on a solution.",
+                  },
+                ]}
+              />
             </>
           )}
         </div>
       </div>
-
-      <Footer />
     </>
   );
 };

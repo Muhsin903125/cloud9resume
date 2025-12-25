@@ -5,21 +5,32 @@ import { getAssetUrl } from "../lib/common-functions";
 interface SEOProps {
   title?: string;
   description?: string;
+  keywords?: string[];
   canonical?: string;
   ogType?: string;
   ogImage?: string;
   twitterHandle?: string;
   noIndex?: boolean;
+  structuredData?: Record<string, any>;
 }
 
 const SEO = ({
   title = "Cloud9Profile - ATS-Friendly Resume & Professional Portfolio Builder",
   description = "Create professional, ATS-friendly resumes and stunning portfolios with AI assistance. Optimize for job success with Cloud9Profile.",
+  keywords = [
+    "resume builder",
+    "portfolio builder",
+    "CV maker",
+    "ATS resume",
+    "job search",
+    "professional portfolio",
+  ],
   canonical,
   ogType = "website",
-  ogImage = "/og-image.png", // Ensure this exists or use a default
+  ogImage = "/og-image.png",
   twitterHandle = "@cloud9profile",
   noIndex = false,
+  structuredData,
 }: SEOProps) => {
   const router = useRouter();
   const siteUrl =
@@ -33,6 +44,7 @@ const SEO = ({
       <title>{title}</title>
       <meta name="title" content={title} />
       <meta name="description" content={description} />
+      <meta name="keywords" content={keywords.join(", ")} />
       {noIndex && <meta name="robots" content="noindex,nofollow" />}
       <link rel="canonical" href={finalCanonical} />
 
@@ -53,6 +65,16 @@ const SEO = ({
 
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <link rel="icon" href={getAssetUrl("/logo-icon.png")} />
+
+      {/* Structured Data (JSON-LD) */}
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData),
+          }}
+        />
+      )}
     </Head>
   );
 };

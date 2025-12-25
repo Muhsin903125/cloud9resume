@@ -1,12 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import { emailSender } from "../../../lib/backend/utils/emailSender";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// Client with service role for admin operations
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(
   req: NextApiRequest,
@@ -56,9 +50,24 @@ export default async function handler(
       });
     }
 
-    if (data?.properties?.action_link) {
+    // CUSTOM FLOW: Construct a direct link using the OTP token
+    // This bypasses Supabase's email template but we still use their token
+    // We will assume the token in action_link is the OTP
+    // action_link format: https://.../verify?token=...&type=recovery&redirect_to=...
+    // We want: https://myapp.com/reset-password?token=...&type=recovery
+
+    // Extract token from action_link
+    const actionLinkUrl = new URL(data.properties.action_link);
+    const recoveryToken = actionLinkUrl.searchParams.get("token");
+
+    if (recoveryToken) {
+      // Construct our DIRECT link
+      const directLink = `${appUrl}/reset-password?token=${recoveryToken}&type=recovery&email=${encodeURIComponent(
+        email
+      )}`;
+
       await emailSender
-        .sendForgotPasswordEmail(email, data.properties.action_link)
+        .sendForgotPasswordEmail(email, directLink)
         .catch((err) => {
           console.error("Failed to send forgot password email:", err);
         });

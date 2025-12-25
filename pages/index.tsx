@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { NextPage } from "next";
 import Link from "next/link";
+import { getAssetUrl } from "../lib/common-functions";
 import {
   motion,
   AnimatePresence,
@@ -26,10 +27,27 @@ import {
   CommandLineIcon,
 } from "@heroicons/react/24/outline";
 import SEO from "../components/SEO";
+import FAQ from "../components/FAQ";
 
 const HomePage: NextPage = () => {
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
-
+  // Structured Data for the Application
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Cloud9Profile",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.8",
+      ratingCount: "1250",
+    },
+  };
   // Mouse tracking for interactive effects
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -410,15 +428,15 @@ const HomePage: NextPage = () => {
               animate: { opacity: 1, transition: { staggerChildren: 0.1 } },
             }}
           >
-            <motion.div variants={fadeIn}>
-              <Link href="/" className="inline-block mb-6">
+            {/* <motion.div variants={fadeIn}>
+              <Link href="/" className="inline-block my-6 md:my-12">
                 <img
                   src="/logo.png"
                   alt="Cloud9Profile"
-                  className="h-12 mx-auto"
+                  className="h-16 mx-auto"
                 />
               </Link>
-            </motion.div>
+            </motion.div> */}
 
             <motion.div variants={fadeIn}>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 text-blue-700 font-bold text-xs mb-6 shadow-sm">
@@ -459,7 +477,7 @@ const HomePage: NextPage = () => {
               </Link>
             </motion.div>
 
-            {/* Live Dashboard Grid */}
+            {/* Dashboard Hero Image */}
             <motion.div
               variants={fadeIn}
               className="hidden md:grid md:grid-cols-3 gap-6 mb-16 max-w-5xl mx-auto"
@@ -572,7 +590,7 @@ const HomePage: NextPage = () => {
       </section>
 
       {/* 2. Problem -> Solution */}
-      <section className="py-24 relative overflow-hidden hidden md:block">
+      <section className="py-4 md:py-16 relative overflow-hidden hidden md:block">
         <div className="max-w-5xl mx-auto px-4">
           <motion.div
             initial="initial"
@@ -622,38 +640,12 @@ const HomePage: NextPage = () => {
 
             <motion.div variants={fadeIn} className="relative group">
               <div className="absolute -inset-4 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 blur-2xl rounded-3xl group-hover:from-blue-500/20 group-hover:to-indigo-500/20 transition-all duration-500"></div>
-              <div className="relative bg-white/80 p-8 rounded-2xl shadow-xl border border-white/40 overflow-hidden glass-panel">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-                    <CheckBadgeIcon className="w-5 h-5 text-green-600" />
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    The Cloud9 Solution
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-50/50 rounded-lg border border-slate-100/50">
-                    <p className="text-xs font-mono text-slate-400 mb-2">
-                      // Text-Selectable PDF Output
-                    </p>
-                    <div className="h-2 bg-blue-600/10 w-full rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "100%" }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                        className="h-full bg-blue-600"
-                      />
-                    </div>
-                  </div>
-                  <div className="p-4 bg-slate-50/50 rounded-lg border border-slate-100/50">
-                    <p className="text-xs font-mono text-slate-400 mb-2">
-                      // Modern Portfolio URL
-                    </p>
-                    <p className="text-sm font-bold text-blue-600">
-                      cloud9profile.com/yourname
-                    </p>
-                  </div>
-                </div>
+              <div className="relative rounded-2xl shadow-xl border border-white/40 overflow-hidden glass-panel">
+                <img
+                  src={getAssetUrl("/resume-vs-portfolio.png")}
+                  alt="Old Resume vs New Portfolio"
+                  className="w-full h-auto object-cover"
+                />
               </div>
             </motion.div>
           </motion.div>
@@ -661,7 +653,7 @@ const HomePage: NextPage = () => {
       </section>
 
       {/* 3. Core Features */}
-      <section className="py-24 relative">
+      <section className="py-4 md:py-16  relative">
         <div className="max-w-5xl mx-auto px-4">
           <motion.div
             initial="initial"
@@ -756,7 +748,7 @@ const HomePage: NextPage = () => {
       </section>
 
       {/* 4. How It Works */}
-      <section className="py-16 relative">
+      <section className="py-4 md:py-16 relative">
         <div className="max-w-4xl mx-auto px-4">
           <motion.h2
             {...fadeIn}
@@ -812,7 +804,7 @@ const HomePage: NextPage = () => {
       </section>
 
       {/* 5. Portfolio Section */}
-      <section className="py-32 relative overflow-hidden">
+      <section className="py-4 md:py-16 relative overflow-hidden">
         <div className="max-w-5xl mx-auto px-4">
           <motion.div
             initial="initial"
@@ -977,7 +969,7 @@ const HomePage: NextPage = () => {
       {/* 8. Audience Section */}
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
+          <h2 className="text-3xl font-bold text-center my-4 md:my-8">
             Who Is Cloud9 For?
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1017,64 +1009,30 @@ const HomePage: NextPage = () => {
       </section>
 
       {/* 9. FAQ Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-4 font-normal">
-            {[
-              {
-                q: "Is it really ATS-friendly?",
-                a: "Yes. Most resume builders use fancy graphics that break ATS. We focus on 'Text Selectable Resume PDF' tech that Greenhouse and Workday love.",
-              },
-              {
-                q: "How does the portfolio link work?",
-                a: "Once you build your resume, you get a unique URL like cloud9profile.com/name. Share it in your LinkedIn bio or email signature.",
-              },
-              {
-                q: "Is there a truly free plan?",
-                a: "Absolutely. You can build and download one full resume for free. Credits are only needed for AI-powered keyword optimization.",
-              },
-              {
-                q: "Do you have an Instagram community?",
-                a: "Yes! Follow @cloud9profile for daily resume hooks, ATS tips, and career advice.",
-              },
-            ].map((faq, i) => (
-              <div
-                key={i}
-                className="border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm transition-all hover:border-blue-100"
-              >
-                <button
-                  onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between p-6 text-left transition-colors hover:bg-slate-50/50"
-                >
-                  <span className="font-bold text-slate-900">{faq.q}</span>
-                  <ChevronDownIcon
-                    className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${
-                      activeFaq === i ? "rotate-180 text-blue-600" : ""
-                    }`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {activeFaq === i && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                    >
-                      <div className="px-6 pb-6 text-slate-500 text-sm leading-relaxed border-t border-slate-50 pt-4">
-                        {faq.a}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FAQ
+        items={[
+          {
+            question: "Is it really ATS-friendly?",
+            answer:
+              "Yes. Most resume builders use fancy graphics that break ATS. We focus on 'Text Selectable Resume PDF' tech that Greenhouse and Workday love.",
+          },
+          {
+            question: "How does the portfolio link work?",
+            answer:
+              "Once you build your resume, you get a unique URL like cloud9profile.com/name. Share it in your LinkedIn bio or email signature.",
+          },
+          {
+            question: "Is there a truly free plan?",
+            answer:
+              "Absolutely. You can build and download one full resume for free. Credits are only needed for AI-powered keyword optimization.",
+          },
+          {
+            question: "Do you have an Instagram community?",
+            answer:
+              "Yes! Follow @cloud9profile for daily resume hooks, ATS tips, and career advice.",
+          },
+        ]}
+      />
 
       {/* 10. Final CTA */}
       <section className="py-16 bg-blue-600 text-white text-center">

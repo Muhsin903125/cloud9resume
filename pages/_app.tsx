@@ -62,7 +62,12 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }, [user]);
 
-  const authPages = ["/login", "/signup"];
+  const authPages = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+  ];
   const isDashboard = router.pathname.startsWith("/dashboard");
   const isAuthPage =
     authPages.includes(router.pathname) || router.pathname.startsWith("/auth/");

@@ -134,8 +134,12 @@ export async function forgotPassword(email: string) {
 }
 
 // Update password with token
-export async function updatePasswordWithToken(token: string, password: string) {
-  return apiClient.post("/auth/update-password", { token, password });
+export async function updatePasswordWithToken(
+  token: string,
+  password: string,
+  email?: string
+) {
+  return apiClient.post("/auth/update-password", { token, password, email });
 }
 
 // Validate email - check if user exists

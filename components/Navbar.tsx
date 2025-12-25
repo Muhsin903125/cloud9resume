@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 const navigationItems = [
-  { name: "Home", href: "/" },
-  { name: "Plans", href: "/plans" },
-  { name: "About", href: "/#about" },
+  { name: "Resume Builder", href: "/resume" },
+  { name: "Portfolio", href: "/portfolio" },
+  { name: "ATS Checker", href: "/ats-checker" },
+  { name: "Pricing", href: "/plans" },
 ];
 
 export default function Navbar() {
@@ -30,19 +31,17 @@ export default function Navbar() {
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isAtTop
-          ? "opacity-0 pointer-events-none"
-          : scrolled
+        scrolled
           ? "bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50"
           : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-8">
             <Link
               href="/"
-              className="font-bold text-blue-600 flex items-center gap-2 group"
+              className="font-bold text-blue-600 flex items-center gap-2 group flex-shrink-0"
             >
               <motion.div
                 whileHover={{
@@ -63,52 +62,54 @@ export default function Navbar() {
                 />
               </motion.div>
             </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-6">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`text-sm font-medium transition-colors relative group ${
+                    router.pathname === item.href
+                      ? "text-blue-600"
+                      : "text-gray-600 hover:text-blue-600"
+                  }`}
+                >
+                  {item.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full" />
+                </Link>
+              ))}
+            </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`text-sm font-medium transition-colors relative group ${
-                  router.pathname === item.href
-                    ? "text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
-                }`}
+          {/* Right Side Actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              href="/login"
+              className="text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link href="/signup">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                animate={{
+                  boxShadow: [
+                    "0 0 0 0px rgba(59, 130, 246, 0.4)",
+                    "0 0 0 10px rgba(59, 130, 246, 0)",
+                  ],
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 2,
+                  ease: "easeInOut",
+                }}
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-medium text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
               >
-                {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full" />
-              </Link>
-            ))}
-            <div className="flex items-center space-x-4 pl-4 border-l border-gray-200">
-              <Link
-                href="/login"
-                className="text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link href="/signup">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={{
-                    boxShadow: [
-                      "0 0 0 0px rgba(59, 130, 246, 0.4)",
-                      "0 0 0 10px rgba(59, 130, 246, 0)",
-                    ],
-                  }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 2,
-                    ease: "easeInOut",
-                  }}
-                  className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-medium text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
-                >
-                  Get Started
-                </motion.button>
-              </Link>
-            </div>
+                Get Started
+              </motion.button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}

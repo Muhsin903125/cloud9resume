@@ -82,16 +82,25 @@ const ForgotPasswordPage: NextPage = () => {
     }
 
     try {
-      const result = await forgotPassword(email);
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-      if (result.error) {
-        setError(result.error);
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || data.error || "Failed to send reset email"
+        );
       }
 
       setSuccess(true);
-    } catch (err) {
-      setError("An error occurred. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "An error occurred. Please try again.");
       console.error("Forgot password error:", err);
     } finally {
       setIsLoading(false);
@@ -183,35 +192,51 @@ const ForgotPasswordPage: NextPage = () => {
           </div>
 
           {success ? (
-            <div className="text-center">
-              <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-4 rounded-2xl text-sm flex flex-col items-center gap-3">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-green-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <p className="font-medium text-base">Check your email</p>
-                <p>
-                  If an account exists for {email}, you will receive a reset
-                  link shortly.
-                </p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
+            >
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg
+                  className="w-10 h-10 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
               </div>
-              <Link href="/login">
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors">
-                  Back to login
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Check your email
+              </h3>
+              <p className="text-gray-600 mb-8 max-w-sm mx-auto">
+                We've sent password reset instructions to{" "}
+                <span className="font-semibold text-gray-900">{email}</span>.
+                Please check your inbox (and spam folder).
+              </p>
+
+              <div className="space-y-4">
+                <Link href="/login" className="block w-full">
+                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25">
+                    Back to login
+                  </button>
+                </Link>
+
+                <button
+                  onClick={() => setSuccess(false)}
+                  className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                >
+                  Click to try another email
                 </button>
-              </Link>
-            </div>
+              </div>
+            </motion.div>
           ) : (
             <>
               {/* Error Message */}
@@ -276,16 +301,17 @@ const ForgotPasswordPage: NextPage = () => {
           )}
 
           {/* Back to Login Link */}
-          <p className="text-center text-sm text-gray-600">
-            Remember your password?{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              Back to login
-            </Link>
-          </p>
-
+          {!success && (
+            <p className="text-center text-sm text-gray-600">
+              Remember your password?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                Back to login
+              </Link>
+            </p>
+          )}
           {/* Footer */}
           <p className="mt-8 text-center text-xs text-gray-500">
             <Link href="/terms" className="hover:text-gray-700">

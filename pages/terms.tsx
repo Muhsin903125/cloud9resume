@@ -8,11 +8,11 @@ export default function Terms() {
       <Head>
         <title>Terms & Conditions - Cloud9Profile</title>
       </Head>
-      <div className="max-w-4xl mx-auto w-full px-6 py-16">
+      <div className="max-w-4xl mx-auto w-full px-6 py-16  mt-16">
         <h1 className="text-4xl font-bold mb-8">Terms & Conditions</h1>
         <div className="prose prose-blue max-w-none text-gray-600">
-          <p className="mb-4">
-            Effective Date: {new Date().toLocaleDateString()}
+          <p className="mb-4 text-xs font-semibold">
+            Effective Date: 01-JAN-2026
           </p>
 
           <h2 className="text-2xl font-semibold mt-8 mb-4 text-gray-900">
@@ -58,8 +58,8 @@ export default function Terms() {
           <p>
             Please refer to our separate{" "}
             <div className="inline-block">
-              <Link href="/refund-policy" className="text-blue-600 underline">
-                Refund Policy
+              <Link href="/privacy" className="text-blue-600 underline">
+                Privacy Policy
               </Link>
             </div>
             . Generally, all purchases are final unless otherwise required by
