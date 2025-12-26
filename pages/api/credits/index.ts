@@ -83,6 +83,8 @@ export default async function handler(
     let plan = "free";
     let subscriptionData: any = null;
 
+    let userProfile: any = null;
+
     // Try 'profiles' first BY EMAIL
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -121,11 +123,13 @@ export default async function handler(
         `⚠️ Credits API: Profile not found for ${email}, checking users table...`
       );
       // Fallback: Check 'users' table BY EMAIL
-      const { data: userProfile } = await supabase
+      const { data: foundUser } = await supabase
         .from("users")
         .select("id, email, credits, plan_id, created_at, updated_at, is_admin")
         .eq("email", email) // Use email instead of ID
         .single();
+
+      userProfile = foundUser;
 
       if (userProfile) {
         credits = userProfile.credits || 0;

@@ -193,7 +193,7 @@ const UserDetailsPage: NextPage = () => {
                   </Button>
                 )}
                 <Button
-                  size="sm"
+                  size="small"
                   variant="outline"
                   className="!text-xs !py-1.5"
                   onClick={() => handleUpdate({ is_active: !user.is_active })}
