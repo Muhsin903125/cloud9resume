@@ -18,11 +18,13 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "../../lib/apiClient";
 import PlanSelectionModal from "../../components/PlanSelectionModal";
+import OnboardingModal from "../../components/OnboardingModal";
 
 const DashboardPage: NextPage = () => {
   const router = useRouter();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [displayName, setDisplayName] = useState<string>("User");
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const [stats, setStats] = useState({
     resumesCreated: 0,
@@ -54,9 +56,12 @@ const DashboardPage: NextPage = () => {
   // Fetch real data
   useEffect(() => {
     if (isAuthenticated) {
+      if (user && user.profile && user.profile.onboarding_completed === false) {
+        setShowOnboarding(true);
+      }
       fetchDashboardData();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.profile?.onboarding_completed]);
 
   const fetchDashboardData = async () => {
     setIsDataLoading(true);
@@ -518,6 +523,15 @@ const DashboardPage: NextPage = () => {
         onClose={() => setShowPlanModal(false)}
         currentPlanId={stats.plan}
         onSuccess={fetchDashboardData}
+      />
+
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onComplete={() => {
+          setShowOnboarding(false);
+          // Reload to refresh user state (plan, credits, onboarding status)
+          window.location.reload();
+        }}
       />
     </>
   );

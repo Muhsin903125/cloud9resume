@@ -15,6 +15,7 @@ interface CreditsResponse {
       plan: string;
       resetDate: string;
       isAdmin: boolean;
+      onboarding_completed?: boolean;
     };
     subscription: {
       plan: string;
@@ -85,7 +86,9 @@ export default async function handler(
     // Try 'profiles' first BY EMAIL
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, email, credits, plan_id, created_at, updated_at, is_admin")
+      .select(
+        "id, email, credits, plan_id, created_at, updated_at, is_admin, onboarding_completed"
+      )
       .eq("email", email) // Use email instead of ID
       .single();
 
@@ -186,6 +189,8 @@ export default async function handler(
           used: usedThisMonth,
           plan: plan,
           isAdmin: isAdmin, // Return it here
+          onboarding_completed:
+            (profile || userProfile)?.onboarding_completed ?? false,
           resetDate: new Date(now.getFullYear(), now.getMonth() + 1, 1)
             .toISOString()
             .split("T")[0],

@@ -12,6 +12,7 @@ export interface User {
     first_name: string;
     last_name: string;
     credits: number;
+    onboarding_completed?: boolean;
   };
   plan?: "free" | "starter" | "pro" | "pro_plus" | "enterprise";
   is_admin?: boolean;
@@ -460,6 +461,7 @@ export function useAuth() {
             "free";
           let credits = 0;
           let isAdmin = false;
+          let onboardingCompleted: boolean | undefined = undefined;
 
           try {
             // Fetch fresh profile data
@@ -468,6 +470,8 @@ export function useAuth() {
               plan = profileRes.data.data.stats.plan;
               credits = profileRes.data.data.stats.current;
               isAdmin = profileRes.data.data.stats.isAdmin || false;
+              onboardingCompleted =
+                profileRes.data.data.stats.onboarding_completed;
 
               // Persist isAdmin
               localStorage.setItem("x_user_is_admin", isAdmin.toString());
@@ -494,6 +498,7 @@ export function useAuth() {
                 first_name: "",
                 last_name: "",
                 credits: credits,
+                onboarding_completed: onboardingCompleted,
               },
               plan: plan,
               is_admin: isAdmin,
