@@ -1,113 +1,118 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
+import { NextApiRequest, NextApiResponse } from "next";
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+);
 
 // Mock OpenAI integration (replace with real OpenAI SDK)
 const callOpenAI = async (prompt: string) => {
   // TODO: Replace with actual OpenAI API call
   // const response = await openai.createChatCompletion({...})
-  return { content: `AI-enhanced result for: ${prompt}` }
-}
+  return { content: `AI-enhanced result for: ${prompt}` };
+};
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const userId = req.headers['x-user-id'] as string
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const userId = req.headers["x-user-id"] as string;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-  const { method } = req
-  const { id } = req.query
+  const { method } = req;
+  const { id } = req.query;
 
   try {
-    if (method === 'POST') {
-      const { feature, sectionType, content } = req.body
+    if (method === "POST") {
+      const { feature, sectionType, content } = req.body;
 
-      if (!feature) return res.status(400).json({ error: 'Feature required' })
+      if (!feature) return res.status(400).json({ error: "Feature required" });
 
       // Verify resume ownership
       const { data: resume } = await supabase
-        .from('resumes')
-        .select('user_id')
-        .eq('id', id)
-        .single()
+        .from("resumes")
+        .select("user_id")
+        .eq("id", id)
+        .single();
 
       if (!resume || resume.user_id !== userId) {
-        return res.status(403).json({ error: 'Forbidden' })
+        return res.status(403).json({ error: "Forbidden" });
       }
 
       const creditCosts: { [key: string]: number } = {
-        'generate-summary': 2,
-        'optimize-keywords': 3,
-        'enhance-bullets': 2,
-        'cover-letter': 5,
-        'grammar-check': 1,
-        'section-rewrite': 4
-      }
+        "generate-summary": 2,
+        "optimize-keywords": 3,
+        "enhance-bullets": 2,
+        "cover-letter": 5,
+        "grammar-check": 1,
+        "section-rewrite": 4,
+      };
 
-      const creditCost = creditCosts[feature] || 1
+      const creditCost = creditCosts[feature] || 1;
 
       // Check credits
-      const { data: creditsData } = await supabase
-        .from('credits_usage')
-        .select('credits_amount')
-        .eq('user_id', userId)
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("credits")
+        .eq("id", userId)
+        .single();
 
-      const totalCredits = creditsData?.reduce((sum, c) => sum + (c.credits_amount || 0), 0) || 0
+      const currentCredits = profile?.credits || 0;
 
-      if (totalCredits < creditCost) {
-        return res.status(403).json({ error: 'Insufficient credits' })
+      if (currentCredits < creditCost) {
+        return res.status(403).json({ error: "Insufficient credits" });
       }
 
-      let prompt = ''
+      let prompt = "";
 
       switch (feature) {
-        case 'generate-summary':
-          prompt = `Generate a professional summary for a resume based on: ${content}`
-          break
-        case 'optimize-keywords':
-          prompt = `Optimize this resume content for ATS by adding relevant keywords: ${content}`
-          break
-        case 'enhance-bullets':
-          prompt = `Improve these achievement bullets to be more impactful: ${content}`
-          break
-        case 'cover-letter':
-          prompt = `Generate a professional cover letter based on: ${content}`
-          break
-        case 'grammar-check':
-          prompt = `Check and improve the grammar in: ${content}`
-          break
-        case 'section-rewrite':
-          prompt = `Completely rewrite this resume section professionally: ${content}`
-          break
+        case "generate-summary":
+          prompt = `Generate a professional summary for a resume based on: ${content}`;
+          break;
+        case "optimize-keywords":
+          prompt = `Optimize this resume content for ATS by adding relevant keywords: ${content}`;
+          break;
+        case "enhance-bullets":
+          prompt = `Improve these achievement bullets to be more impactful: ${content}`;
+          break;
+        case "cover-letter":
+          prompt = `Generate a professional cover letter based on: ${content}`;
+          break;
+        case "grammar-check":
+          prompt = `Check and improve the grammar in: ${content}`;
+          break;
+        case "section-rewrite":
+          prompt = `Completely rewrite this resume section professionally: ${content}`;
+          break;
       }
 
       // Call OpenAI API
-      const aiResponse = await callOpenAI(prompt)
+      const aiResponse = await callOpenAI(prompt);
 
-      // Deduct credits
-      await supabase.from('credits_usage').insert({
+      // Log usage
+      await supabase.from("credit_usage").insert({
         user_id: userId,
-        action_type: `ai_${feature}`,
-        resume_id: id,
-        credits_amount: creditCost,
-        metadata: { section_type: sectionType }
-      })
+        action: `ai_${feature}`,
+        credits_used: creditCost,
+        description:
+          `AI ${feature} for resume ${id}` +
+          (sectionType ? ` (section: ${sectionType})` : ""),
+      });
 
       return res.status(200).json({
         success: true,
         data: {
           feature,
           result: aiResponse.content,
-          creditsCost: creditCost
-        }
-      })
+          creditsCost: creditCost,
+        },
+      });
     }
 
-    return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ error: "Method not allowed" });
   } catch (error) {
-    console.error('AI error:', error)
-    return res.status(500).json({ error: 'Internal server error' })
+    console.error("AI error:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }

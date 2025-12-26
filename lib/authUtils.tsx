@@ -14,6 +14,7 @@ export interface User {
     credits: number;
   };
   plan?: "free" | "starter" | "pro" | "pro_plus" | "enterprise";
+  is_admin?: boolean;
 }
 
 export interface Session {
@@ -458,6 +459,7 @@ export function useAuth() {
           let plan: "free" | "starter" | "pro" | "pro_plus" | "enterprise" =
             "free";
           let credits = 0;
+          let isAdmin = false;
 
           try {
             // Fetch fresh profile data
@@ -465,13 +467,21 @@ export function useAuth() {
             if (profileRes.data && profileRes.data.success) {
               plan = profileRes.data.data.stats.plan;
               credits = profileRes.data.data.stats.current;
+              isAdmin = profileRes.data.data.stats.isAdmin || false;
+
+              // Persist isAdmin
+              localStorage.setItem("x_user_is_admin", isAdmin.toString());
+
               console.log("✅ useAuth: Fresh profile loaded", {
                 plan,
                 credits,
+                isAdmin,
               });
             }
           } catch (e) {
             console.warn("⚠️ useAuth: Failed to fetch fresh profile", e);
+            // Fallback to local storage if API fails
+            isAdmin = localStorage.getItem("x_user_is_admin") === "true";
           }
 
           setAuthState({
@@ -486,6 +496,7 @@ export function useAuth() {
                 credits: credits,
               },
               plan: plan,
+              is_admin: isAdmin,
             },
             session: null,
             isLoading: false,
@@ -500,9 +511,52 @@ export function useAuth() {
           const result = await getSession();
 
           if (result.data) {
-            console.log("✅ useAuth: Session validation successful");
+            console.log(
+              "✅ useAuth: Session validation successful. Migrating to new token storage."
+            );
+
+            // MIGRATION: Save to new keys so apiClient can work
+            if (result.data.session?.access_token) {
+              localStorage.setItem(
+                "x_user_auth_token",
+                result.data.session.access_token
+              );
+              // Also set invalid expiry to force re-check or set reasonably?
+              // Let's just set it.
+            }
+            if (result.data.user?.id) {
+              localStorage.setItem("x_user_id", result.data.user.id);
+            }
+
+            // Now fetch profile stats with the token in place
+            let plan: "free" | "starter" | "pro" | "pro_plus" | "enterprise" =
+              "free";
+            let credits = 0;
+            let isAdmin = false;
+
+            try {
+              const profileRes = await apiClient.get("/credits");
+              if (profileRes.data && profileRes.data.success) {
+                plan = profileRes.data.data.stats.plan;
+                credits = profileRes.data.data.stats.current;
+                isAdmin = profileRes.data.data.stats.isAdmin || false;
+                localStorage.setItem("x_user_is_admin", isAdmin.toString());
+              }
+            } catch (e) {
+              console.warn("Profile fetch failed during migration", e);
+              isAdmin = localStorage.getItem("x_user_is_admin") === "true";
+            }
+
             setAuthState({
-              user: result.data.user,
+              user: {
+                ...result.data.user,
+                plan,
+                is_admin: isAdmin,
+                profile: {
+                  ...result.data.user.profile,
+                  credits,
+                },
+              },
               session: result.data.session,
               isLoading: false,
               isAuthenticated: true,

@@ -70,3 +70,12 @@ export const CREDIT_COSTS = {
   interview_prep: 2,
   cover_letter: 1,
 };
+
+// Verify Coupon
+export async function verifyCoupon(
+  code: string,
+  planId?: string,
+  userId?: string
+) {
+  return apiClient.post("/coupons/verify", { code, planId, userId });
+}

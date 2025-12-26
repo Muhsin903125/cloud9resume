@@ -14,6 +14,7 @@ interface CreditsResponse {
       used: number;
       plan: string;
       resetDate: string;
+      isAdmin: boolean;
     };
     subscription: {
       plan: string;
@@ -26,7 +27,9 @@ interface CreditsResponse {
   error?: string;
 }
 
-async function extractUserId(req: NextApiRequest): Promise<string | null> {
+async function extractUserInfo(
+  req: NextApiRequest
+): Promise<{ userId: string; email: string } | null> {
   try {
     let token = "";
     const authHeader = req.headers.authorization;
@@ -36,10 +39,18 @@ async function extractUserId(req: NextApiRequest): Promise<string | null> {
     if (!token) return null;
 
     const { data, error } = await supabase.auth.getUser(token);
-    if (!error && data.user) return data.user.id;
+    if (!error && data.user) {
+      return { userId: data.user.id, email: data.user.email || "" };
+    }
 
     const decoded = jwt.decode(token) as any;
-    return decoded?.sub || decoded?.userId || null;
+    const userId = decoded?.sub || decoded?.userId || null;
+    const email = decoded?.email || "";
+
+    if (userId && email) {
+      return { userId, email };
+    }
+    return null;
   } catch (e) {
     return null;
   }
@@ -56,26 +67,46 @@ export default async function handler(
   }
 
   try {
-    const userId = await extractUserId(req);
-    if (!userId) {
+    const userInfo = await extractUserInfo(req);
+    if (!userInfo) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
-    // 1. Get Profile Stats
+    const { userId, email } = userInfo;
+    console.log(
+      `Credits API: Looking up user by email: ${email} (token userId: ${userId})`
+    );
+
+    // 1. Get Profile Stats - LOOKUP BY EMAIL not ID
     let credits = 0;
     let plan = "free";
     let subscriptionData: any = null;
 
-    // Try 'profiles' first
-    const { data: profile } = await supabase
+    // Try 'profiles' first BY EMAIL
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("credits, plan, created_at, updated_at")
-      .eq("id", userId)
+      .select("id, email, credits, plan_id, created_at, updated_at, is_admin")
+      .eq("email", email) // Use email instead of ID
       .single();
+
+    let isAdmin = false;
 
     if (profile) {
       credits = profile.credits || 0;
-      plan = profile.plan || "free";
+      // Map plan_id to string, default to free
+      const planId = profile.plan_id || 0;
+      if (planId === 1) plan = "free";
+      else if (planId === 2) plan = "starter";
+      else if (planId === 3) plan = "pro";
+      else if (planId === 4) plan = "pro_plus";
+      else if (planId === 5) plan = "enterprise";
+      else plan = "free";
+
+      isAdmin = profile.is_admin || false;
+      console.log(
+        `✅ Credits API: Profile found by email ${email}. ProfileID: ${profile.id}, Admin: ${isAdmin}, Plan: ${plan}, Credits: ${credits}`
+      );
+
       subscriptionData = {
         plan: plan,
         status: plan !== "free" ? "active" : "inactive",
@@ -83,39 +114,59 @@ export default async function handler(
         updatedAt: profile.updated_at,
       };
     } else {
-      // Fallback: Check 'users' table
+      console.log(
+        `⚠️ Credits API: Profile not found for ${email}, checking users table...`
+      );
+      // Fallback: Check 'users' table BY EMAIL
       const { data: userProfile } = await supabase
         .from("users")
-        .select("credits, plan, created_at, updated_at")
-        .eq("id", userId)
+        .select("id, email, credits, plan_id, created_at, updated_at, is_admin")
+        .eq("email", email) // Use email instead of ID
         .single();
 
       if (userProfile) {
         credits = userProfile.credits || 0;
-        plan = userProfile.plan || "free";
+        // Map plan_id to string, default to free
+        const planId = userProfile.plan_id || 0;
+        if (planId === 1) plan = "free";
+        else if (planId === 2) plan = "starter";
+        else if (planId === 3) plan = "pro";
+        else if (planId === 4) plan = "pro_plus";
+        else if (planId === 5) plan = "enterprise";
+        else plan = "free";
+
+        isAdmin = userProfile.is_admin || false;
+        console.log(
+          `✅ Credits API: User found by email ${email}. UserID: ${userProfile.id}, Admin: ${isAdmin}, Plan: ${plan}, Credits: ${credits}`
+        );
+
         subscriptionData = {
           plan: plan,
           status: plan !== "free" ? "active" : "inactive",
           startedAt: userProfile.created_at,
           updatedAt: userProfile.updated_at,
         };
+      } else {
+        console.log(`❌ Credits API: No user/profile found for ${email}`);
       }
     }
 
-    // 2. Get History
-    const { data: history, error: historyError } = await supabase
-      .from("credit_usage")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(50); // Limit to last 50 transactions
+    // 2. Get History - use the actual profile ID from the database, not the token userId
+    const profileId = profile?.id || null;
+    const { data: history, error: historyError } = profileId
+      ? await supabase
+          .from("credit_usage")
+          .select("*")
+          .eq("user_id", profileId) // Use profile ID from DB
+          .order("created_at", { ascending: false })
+          .limit(50)
+      : { data: null, error: null };
 
     if (historyError) {
       console.error("History fetch error:", historyError);
     }
 
     // Calculate "Used This Month"
-    // Filter history for current month where credits_used > 0
     const now = new Date();
     const startOfMonth = new Date(
       now.getFullYear(),
@@ -134,9 +185,10 @@ export default async function handler(
           current: credits,
           used: usedThisMonth,
           plan: plan,
+          isAdmin: isAdmin, // Return it here
           resetDate: new Date(now.getFullYear(), now.getMonth() + 1, 1)
             .toISOString()
-            .split("T")[0], // Next month 1st
+            .split("T")[0],
         },
         subscription: subscriptionData,
         history: history || [],

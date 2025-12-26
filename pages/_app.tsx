@@ -69,13 +69,14 @@ export default function App({ Component, pageProps }: AppProps) {
     "/reset-password",
   ];
   const isDashboard = router.pathname.startsWith("/dashboard");
+  const isAdminPage = router.pathname.startsWith("/admin");
   const isAuthPage =
     authPages.includes(router.pathname) || router.pathname.startsWith("/auth/");
   const isPortfolioView =
     router.pathname.startsWith("/portfolio/") ||
     router.pathname === "/[username]";
 
-  const isNoLayoutPage = isAuthPage || isPortfolioView;
+  const isNoLayoutPage = isAuthPage || isPortfolioView || isAdminPage;
 
   // Dashboard pages have their own layout
   if (isDashboard) {
@@ -96,7 +97,7 @@ export default function App({ Component, pageProps }: AppProps) {
     );
   }
 
-  // No-layout pages don't need navbar/footer
+  // No-layout pages don't need navbar/footer (includes admin pages)
   if (isNoLayoutPage) {
     return (
       <>

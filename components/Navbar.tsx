@@ -4,8 +4,9 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useAuth } from "../lib/authUtils";
 
-const navigationItems = [
+const defaultNavItems = [
   { name: "Resume Builder", href: "/resume" },
   { name: "Portfolio", href: "/portfolio" },
   { name: "ATS Checker", href: "/ats-checker" },
@@ -14,9 +15,16 @@ const navigationItems = [
 
 export default function Navbar() {
   const router = useRouter();
+  const { user } = useAuth(); // Import useAuth to check admin status
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAtTop, setIsAtTop] = useState(true);
+
+  // Dynamic Navigation Items
+  const navigationItems = [...defaultNavItems];
+  if (user?.is_admin) {
+    navigationItems.push({ name: "Administration", href: "/admin" });
+  }
 
   useEffect(() => {
     const handleScroll = () => {

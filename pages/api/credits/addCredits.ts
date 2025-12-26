@@ -44,7 +44,7 @@ export default async function handler(
   }
 
   try {
-    const { creditsToAdd, planId, paymentIntentId } = req.body;
+    const { creditsToAdd, planId, paymentIntentId, couponCode } = req.body;
 
     // Validate input
     if (!creditsToAdd || !planId) {
@@ -184,6 +184,44 @@ export default async function handler(
       });
     }
 
+    // Handle Coupon Usage (if provided)
+    let couponDescription = "";
+    if (couponCode) {
+      try {
+        const { data: coupon, error: couponError } = await supabaseAdmin
+          .from("coupons")
+          .select("*")
+          .eq("code", couponCode.toUpperCase())
+          .single();
+
+        if (coupon && !couponError && coupon.is_active) {
+          // Check limits again to be safe
+          if (!coupon.max_uses || coupon.current_uses < coupon.max_uses) {
+            // 1. Increment usage
+            await supabaseAdmin
+              .from("coupons")
+              .update({
+                current_uses: coupon.current_uses + 1,
+              })
+              .eq("id", coupon.id);
+
+            // 2. Log usage
+            await supabaseAdmin.from("coupon_logs").insert({
+              coupon_id: coupon.id,
+              user_id: userId,
+              plan_id: planId,
+              discount_applied: coupon.discount_value,
+            });
+
+            couponDescription = ` (Coupon: ${couponCode})`;
+          }
+        }
+      } catch (err) {
+        console.error("Error applying coupon in addCredits:", err);
+        // Don't fail the transaction, just log error
+      }
+    }
+
     // Add credits AND update plan
     const newCredits = (profile.credits || 0) + creditsToAdd;
     const { error: updateError } = await supabaseAdmin
@@ -209,7 +247,9 @@ export default async function handler(
         user_id: userId,
         action: `plan_upgrade_${planId}`,
         credits_used: -creditsToAdd, // Negative to indicate credits added
-        description: `Upgraded to ${getPlanName(planId as any)} Plan`,
+        description: `Upgraded to ${getPlanName(
+          planId as any
+        )} Plan${couponDescription}`,
         created_at: new Date().toISOString(),
       });
 

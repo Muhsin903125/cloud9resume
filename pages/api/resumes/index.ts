@@ -139,47 +139,40 @@ export default async function handler(
       }
 
       // Check resume limit based on plan
-      // Try user_profiles table first, then fallback to users table
-      let userPlan = null;
+      let userPlan = "free";
 
-      const { data: profileData, error: planError } = await supabase
-        .from("user_profiles")
-        .select("plan")
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("plan_id")
         .eq("id", userId)
         .single();
 
-      if (planError) {
-        console.log("ℹ️ user_profiles not found, checking users table...");
-
-        // Fallback: Check users table instead
-        const { data: userData, error: userError } = await supabase
+      if (profileData) {
+        const pid = profileData.plan_id;
+        if (pid === 2) userPlan = "starter";
+        else if (pid === 3) userPlan = "pro";
+        else if (pid === 4) userPlan = "pro_plus";
+        else if (pid === 5) userPlan = "enterprise";
+      } else {
+        // Fallback to 'users' table if profile fetch fails (legacy fallback)
+        const { data: userData } = await supabase
           .from("users")
           .select("plan")
           .eq("id", userId)
           .single();
-
-        if (userError) {
-          console.error("❌ Failed to fetch user plan:", userError);
-          throw new Error("Failed to fetch user plan");
-        }
-
-        userPlan = userData;
-        console.log("✅ Found user plan from users table:", userData?.plan);
-      } else {
-        userPlan = profileData;
-        console.log(
-          "✅ Found user plan from user_profiles table:",
-          profileData?.plan
-        );
+        if (userData && userData.plan) userPlan = userData.plan;
       }
+
+      console.log("✅ Determined user plan:", userPlan);
 
       const limits: Record<string, number> = {
         free: 1,
         starter: 3,
         pro: 10,
         pro_plus: 100,
+        enterprise: 1000,
       };
-      const limit = limits[userPlan?.plan || "free"] || 1;
+      const limit = limits[userPlan] || 1;
 
       const { data: allResumes, error: countError } = await supabase
         .from("resumes")
