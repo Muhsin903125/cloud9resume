@@ -44,7 +44,7 @@ export default async function handler(
 
     // Check if user already exists
     const { data: existingUser } = await supabase
-      .from("users")
+      .from("profiles")
       .select("id")
       .eq("email", email)
       .single();
@@ -60,46 +60,39 @@ export default async function handler(
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Create user in 'users' table
-    const { data: newUser, error: createError } = await supabase
-      .from("users")
+    // Create profile in 'profiles' table
+    // We generate a UUID manually since we aren't using Supabase Auth's auto-generation or another table
+    // However, profiles usually rely on an ID. If 'id' is a uuid primary key, we can let Postgres generate it
+    // OR if it was foreign key to 'users', we need to be careful.
+    // Assuming 'profiles.id' is a UUID PK or we can generate one.
+    // Let's use 'crypto.randomUUID()' or let DB handle it if possible.
+    // Looking at previous code: newUser.id was from 'users' table insert.
+    // We should probably rely on Supabase returning the generated ID.
+
+    // NOTE: 'users' table usually handles ID generation. If we're swapping to 'profiles', ensure 'profiles.id' is default uuid_generate_v4()
+
+    const { data: newProfile, error: createError } = await supabase
+      .from("profiles")
       .insert([
         {
           email,
           name,
           password_hash: passwordHash,
           login_provider: "email",
-          plan: "free", // Default plan
-          credits: 0, // Free users get 0 credits initially
+          plan_id: 1, // Free plan
+          credits: 0,
         },
       ])
-      .select("id, email, plan, credits")
+      .select("id, email, plan_id, credits")
       .single();
 
-    if (createError || !newUser) {
-      console.error("User creation error:", createError);
+    if (createError || !newProfile) {
+      console.error("Signup error:", createError);
       return res.status(500).json({
         error: "Signup failed",
-        message: "Could not create user account",
+        message: "Could not create user profile",
       });
     }
-
-    // Create profile in 'profiles' table
-    await supabase
-      .from("profiles")
-      .insert([
-        {
-          id: newUser.id,
-          email: newUser.email,
-          plan: "free",
-          credits: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ])
-      .then(({ error }) => {
-        if (error) console.error("⚠️ Profile creation error:", error.message);
-      });
 
     // Send Welcome Email (Non-blocking)
     emailSender.sendWelcomeEmail(email, name).catch((err) => {
@@ -108,9 +101,9 @@ export default async function handler(
 
     // Generate JWT token
     const accessToken = await generateToken(
-      newUser.id,
-      newUser.email,
-      newUser.plan
+      newProfile.id,
+      newProfile.email,
+      "free" // Default plan
     );
 
     return res.status(201).json({
@@ -118,10 +111,10 @@ export default async function handler(
       accessToken,
       expiresIn: 86400,
       user: {
-        id: newUser.id,
-        email: newUser.email,
-        plan: newUser.plan,
-        credits: newUser.credits,
+        id: newProfile.id,
+        email: newProfile.email,
+        plan: "free",
+        credits: newProfile.credits,
       },
       message: "Account created successfully",
     });

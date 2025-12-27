@@ -39,7 +39,17 @@ export default async function handler(
 
     // Apply Filter
     if (plan !== "all") {
-      query = query.eq("plan", plan);
+      const planMap: { [key: string]: number } = {
+        free: 1,
+        starter: 2,
+        pro: 3,
+        pro_plus: 4,
+        enterprise: 5,
+      };
+      const planId = planMap[plan as string];
+      if (planId) {
+        query = query.eq("plan_id", planId);
+      }
     }
 
     const { data: users, count, error } = await query;

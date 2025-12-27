@@ -54,10 +54,10 @@ export default async function handler(
     const email = payload.email;
     const name = payload.name || "User";
 
-    // Check if user exists
+    // Check if user exists in profiles
     const { data: existingUser, error: searchError } = await supabaseAdmin
-      .from("users")
-      .select("id, email, plan, credits")
+      .from("profiles")
+      .select("id, email, plan_id, credits")
       .eq("email", email)
       .single();
 
@@ -74,17 +74,19 @@ export default async function handler(
       console.log("📝 Creating new user for email:", email);
 
       const { data: newUser, error: createError } = await supabaseAdmin
-        .from("users")
+        .from("profiles")
         .insert([
           {
             email,
             name,
             login_provider: "google",
-            plan: "free",
+            plan_id: 1, // Free plan
             credits: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
         ])
-        .select("id, email, plan, credits")
+        .select("id, email, plan_id, credits")
         .single();
 
       if (createError || !newUser) {
@@ -98,7 +100,7 @@ export default async function handler(
       console.log("✅ New user created:", {
         id: newUser.id,
         email: newUser.email,
-        plan: newUser.plan,
+        plan_id: newUser.plan_id,
       });
 
       user = newUser;
@@ -106,28 +108,22 @@ export default async function handler(
       console.log("✅ Existing user found:", {
         id: user.id,
         email: user.email,
-        plan: user.plan,
+        plan_id: user.plan_id,
       });
     }
 
-    // Ensure profile exists in 'profiles' table
-    const { error: profileError } = await supabaseAdmin.from("profiles").upsert(
-      {
-        id: user.id,
-        email: user.email,
-        plan: user.plan || "free",
-        credits: user.credits || 0,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id", ignoreDuplicates: true }
-    ); // Only insert if missing
-
-    if (profileError) {
-      console.error("⚠️ Profile sync error:", profileError.message);
-    }
+    // Map plan_id to string
+    const planMap: { [key: number]: string } = {
+      1: "free",
+      2: "starter",
+      3: "pro",
+      4: "pro_plus",
+      5: "enterprise",
+    };
+    const userPlan = planMap[user.plan_id] || "free";
 
     // Generate JWT token
-    const accessToken = await generateToken(user.id, user.email, user.plan);
+    const accessToken = await generateToken(user.id, user.email, userPlan);
 
     console.log("✅ JWT token generated for user:", {
       userId: user.id,
@@ -142,7 +138,7 @@ export default async function handler(
       user: {
         id: user.id,
         email: user.email,
-        plan: user.plan,
+        plan: userPlan,
         credits: user.credits,
       },
     });

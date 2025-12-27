@@ -54,12 +54,7 @@ export default async function handler(
 
     // Experience Logic
     if (experienceLevel === "fresher") {
-      updates.plan = "starter";
-      // Add 5 credits for starter plan
-      // We need to fetch current credits first to add to them?
-      // Or just set them? Usually 'Starter' might imply a reset or addition.
-      // User said "add corresponding free credits".
-      // Let's add 5 credits.
+      updates.plan_id = 2; // Starter plan
 
       const { data: profile } = await supabaseAdmin
         .from("profiles")
@@ -70,9 +65,7 @@ export default async function handler(
       const currentCredits = profile?.credits || 0;
       updates.credits = currentCredits + 5;
     } else if (experienceLevel === "experienced") {
-      updates.plan = "free";
-      // No credit addition for free plan (or maybe reset? User didn't specify reset).
-      // We'll leave credits as is.
+      updates.plan_id = 1; // Free plan
     } else {
       return res.status(400).json({ error: "Invalid experience level" });
     }

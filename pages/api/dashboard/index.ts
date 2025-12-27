@@ -82,45 +82,40 @@ export default async function handler(
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
-    // 1. Fetch Credits & Plan - standardize on 'profiles'
+    // 1. Fetch Credits & Plan
     let credits = 0;
     let plan = "free";
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("plan, credits")
+      .select("plan_id, credits")
       .eq("id", userId)
-      .single(); // Use single() or maybeSingle()
+      .single();
 
     if (profile) {
       credits = profile.credits || 0;
-      plan = profile.plan || "free";
-      console.log("[Dashboard API] Profile loaded:", { plan, credits });
-    } else {
-      console.log(
-        "[Dashboard API] Profile missing in 'profiles', trying 'users'..."
-      );
-      // Fallback: Check 'users' table
-      const { data: userProfile, error: userError } = await supabase
-        .from("users")
-        .select("plan, credits")
-        .eq("id", userId)
-        .single();
 
-      if (userProfile) {
-        credits = userProfile.credits || 0;
-        plan = userProfile.plan || "free";
-        console.log("[Dashboard API] User profile loaded from 'users':", {
-          plan,
-          credits,
-        });
-      } else {
-        console.error(
-          "[Dashboard API] Profile fetch error (both tables):",
-          profileError?.message,
-          userError?.message
-        );
-      }
+      const planMap: { [key: number]: string } = {
+        1: "free",
+        2: "starter",
+        3: "pro",
+        4: "pro_plus",
+        5: "enterprise",
+      };
+      plan = planMap[profile.plan_id] || "free";
+
+      console.log("[Dashboard API] Profile loaded:", {
+        plan,
+        credits,
+        planId: profile.plan_id,
+      });
+    } else {
+      console.error(
+        "[Dashboard API] Profile fetch error:",
+        profileError?.message
+      );
+      // Don't fallback to users. If profile missing here, something is wrong with migration
+      // or user really doesn't exist.
     }
 
     // 2. Fetch Resumes

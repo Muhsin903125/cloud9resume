@@ -56,8 +56,8 @@ export default async function handler(
 
     // Check if user already exists
     const { data: existingUser, error: searchError } = await supabaseAdmin
-      .from("users")
-      .select("id, email, plan, credits")
+      .from("profiles")
+      .select("id, email, plan_id, credits")
       .eq("email", email)
       .single();
 
@@ -70,22 +70,24 @@ export default async function handler(
       });
     }
 
-    // Create user if doesn't exist
-    const { data: newUser, error: createError } = await supabaseAdmin
-      .from("users")
+    // Create profile in 'profiles' table
+    const { data: newProfile, error: createError } = await supabaseAdmin
+      .from("profiles")
       .insert([
         {
           email,
           name,
           login_provider: "google",
-          plan: "free",
+          plan_id: 1, // Free plan
           credits: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
       ])
-      .select("id, email, plan, credits")
+      .select("id, email, plan_id, credits")
       .single();
 
-    if (createError || !newUser) {
+    if (createError || !newProfile) {
       console.error("User creation error:", createError);
       return res.status(500).json({
         error: "Failed to create user",
@@ -93,28 +95,18 @@ export default async function handler(
       });
     }
 
-    // Create profile in 'profiles' table
-    await supabaseAdmin
-      .from("profiles")
-      .insert([
-        {
-          id: newUser.id,
-          email: newUser.email,
-          plan: "free",
-          credits: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ])
-      .then(({ error }) => {
-        if (error) console.error("⚠️ Profile creation error:", error.message);
-      });
+    // Send Welcome Email (Non-blocking)
+    // Need to import emailSender first
+    const { emailSender } = require("../../../lib/backend/utils/emailSender");
+    emailSender.sendWelcomeEmail(email, name).catch((err: any) => {
+      console.error("Failed to send welcome email:", err);
+    });
 
     // Generate JWT token
     const accessToken = await generateToken(
-      newUser.id,
-      newUser.email,
-      newUser.plan
+      newProfile.id,
+      newProfile.email,
+      "free" // Default plan
     );
 
     return res.status(201).json({
@@ -122,10 +114,10 @@ export default async function handler(
       accessToken,
       expiresIn: 86400,
       user: {
-        id: newUser.id,
-        email: newUser.email,
-        plan: newUser.plan,
-        credits: newUser.credits,
+        id: newProfile.id,
+        email: newProfile.email,
+        plan: "free",
+        credits: newProfile.credits,
       },
     });
   } catch (error) {

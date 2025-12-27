@@ -1,14 +1,15 @@
-import jwt from 'jsonwebtoken'
-import { supabase } from '../supabaseClient'
+import jwt from "jsonwebtoken";
+import { supabase } from "../supabaseClient";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export interface TokenPayload {
-  userId: string
-  email: string
-  plan: string
-  iat: number
-  exp: number
+  userId: string;
+  email: string;
+  plan: string;
+  iat: number;
+  exp: number;
 }
 
 /**
@@ -23,72 +24,74 @@ export const generateToken = async (
   email: string,
   plan: string
 ): Promise<string> => {
-  const expiresIn = 86400 // 24 hours
+  const expiresIn = 86400; // 24 hours
 
   try {
-    const payload: Omit<TokenPayload, 'iat' | 'exp'> = {
+    const payload: Omit<TokenPayload, "iat" | "exp"> = {
       userId,
       email,
       plan,
-    }
+    };
 
     const token = jwt.sign(payload, JWT_SECRET, {
       expiresIn,
-      algorithm: 'HS256',
-    })
+      algorithm: "HS256",
+    });
 
     // Store token in user_tokens table for tracking/revocation
-    const expiresAt = new Date(Date.now() + expiresIn * 1000)
-    const { error } = await supabase.from('user_tokens').insert([
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
+    const { error } = await supabase.from("user_tokens").insert([
       {
         user_id: userId,
         token,
         expires_at: expiresAt.toISOString(),
         is_active: true,
       },
-    ])
+    ]);
 
     if (error) {
-      console.error('Error storing token:', error)
+      console.error("Error storing token:", error);
       // Still return token even if storage fails
     }
 
-    return token
+    return token;
   } catch (error) {
-    console.error('Token generation error:', error)
-    throw new Error('Failed to generate access token')
+    console.error("Token generation error:", error);
+    throw new Error("Failed to generate access token");
   }
-}
+};
 
 /**
  * Verify JWT token and check if it's still active
  * @param token - JWT token to verify
  * @returns Decoded token payload or null if invalid
  */
-export const verifyToken = async (token: string): Promise<TokenPayload | null> => {
+export const verifyToken = async (
+  token: string
+): Promise<TokenPayload | null> => {
   try {
     // Decode and verify JWT
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload
+    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
 
     // Check if token is still active in database
     const { data, error } = await supabase
-      .from('user_tokens')
-      .select('id, is_active')
-      .eq('token', token)
-      .eq('is_active', true)
-      .single()
+      .from("user_tokens")
+      .select("id, is_active")
+      .eq("token", token)
+      .eq("is_active", true)
+      .single();
 
     if (error || !data) {
-      console.warn('Token not found or revoked:', error)
-      return null
+      console.warn("Token not found or revoked:", error);
+      return null;
     }
 
-    return decoded
+    return decoded;
   } catch (error) {
-    console.error('Token verification error:', error)
-    return null
+    console.error("Token verification error:", error);
+    return null;
   }
-}
+};
 
 /**
  * Revoke a token by marking it inactive
@@ -98,21 +101,21 @@ export const verifyToken = async (token: string): Promise<TokenPayload | null> =
 export const revokeToken = async (token: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('user_tokens')
+      .from("user_tokens")
       .update({ is_active: false })
-      .eq('token', token)
+      .eq("token", token);
 
     if (error) {
-      console.error('Error revoking token:', error)
-      return false
+      console.error("Error revoking token:", error);
+      return false;
     }
 
-    return true
+    return true;
   } catch (error) {
-    console.error('Token revocation error:', error)
-    return false
+    console.error("Token revocation error:", error);
+    return false;
   }
-}
+};
 
 /**
  * Revoke all tokens for a user (logout all devices)
@@ -122,21 +125,21 @@ export const revokeToken = async (token: string): Promise<boolean> => {
 export const revokeAllUserTokens = async (userId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('user_tokens')
+      .from("user_tokens")
       .update({ is_active: false })
-      .eq('user_id', userId)
+      .eq("user_id", userId);
 
     if (error) {
-      console.error('Error revoking user tokens:', error)
-      return false
+      console.error("Error revoking user tokens:", error);
+      return false;
     }
 
-    return true
+    return true;
   } catch (error) {
-    console.error('User token revocation error:', error)
-    return false
+    console.error("User token revocation error:", error);
+    return false;
   }
-}
+};
 
 /**
  * Get user data from database
@@ -145,23 +148,35 @@ export const revokeAllUserTokens = async (userId: string): Promise<boolean> => {
  */
 export const getUserById = async (userId: string) => {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, name, plan, credits, created_at')
-      .eq('id', userId)
-      .single()
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("id, email, name, plan_id, credits, created_at")
+      .eq("id", userId)
+      .single();
 
     if (error) {
-      console.error('Error fetching user:', error)
-      return null
+      console.error("Error fetching user profile:", error);
+      return null;
     }
 
-    return data
+    // Map plan_id to string plan
+    const planMap: { [key: number]: string } = {
+      1: "free",
+      2: "starter",
+      3: "pro",
+      4: "pro_plus",
+      5: "enterprise",
+    };
+
+    return {
+      ...profile,
+      plan: planMap[profile.plan_id] || "free",
+    };
   } catch (error) {
-    console.error('Error getting user:', error)
-    return null
+    console.error("Error getting user:", error);
+    return null;
   }
-}
+};
 
 /**
  * Update user plan
@@ -171,25 +186,36 @@ export const getUserById = async (userId: string) => {
  */
 export const updateUserPlan = async (
   userId: string,
-  plan: 'free' | 'starter' | 'pro' | 'pro+'
+  plan: "free" | "starter" | "pro" | "pro+"
 ): Promise<boolean> => {
   try {
+    const planIdMap: { [key: string]: number } = {
+      free: 1,
+      starter: 2,
+      pro: 3,
+      pro_plus: 4,
+      "pro+": 4,
+      enterprise: 5,
+    };
+
+    const planId = planIdMap[plan] || 1;
+
     const { error } = await supabase
-      .from('users')
-      .update({ plan })
-      .eq('id', userId)
+      .from("profiles")
+      .update({ plan_id: planId })
+      .eq("id", userId);
 
     if (error) {
-      console.error('Error updating user plan:', error)
-      return false
+      console.error("Error updating user plan:", error);
+      return false;
     }
 
-    return true
+    return true;
   } catch (error) {
-    console.error('Error updating plan:', error)
-    return false
+    console.error("Error updating plan:", error);
+    return false;
   }
-}
+};
 
 /**
  * Add credits to user
@@ -203,36 +229,36 @@ export const addUserCredits = async (
 ): Promise<number | null> => {
   try {
     // First get current credits
-    const { data: user, error: getError } = await supabase
-      .from('users')
-      .select('credits')
-      .eq('id', userId)
-      .single()
+    const { data: profile, error: getError } = await supabase
+      .from("profiles")
+      .select("credits")
+      .eq("id", userId)
+      .single();
 
     if (getError) {
-      console.error('Error fetching credits:', getError)
-      return null
+      console.error("Error fetching credits:", getError);
+      return null;
     }
 
-    const newCredits = (user?.credits || 0) + amount
+    const newCredits = (profile?.credits || 0) + amount;
 
     // Update with new amount
     const { error: updateError } = await supabase
-      .from('users')
+      .from("profiles")
       .update({ credits: newCredits })
-      .eq('id', userId)
+      .eq("id", userId);
 
     if (updateError) {
-      console.error('Error updating credits:', updateError)
-      return null
+      console.error("Error updating credits:", updateError);
+      return null;
     }
 
-    return newCredits
+    return newCredits;
   } catch (error) {
-    console.error('Error adding credits:', error)
-    return null
+    console.error("Error adding credits:", error);
+    return null;
   }
-}
+};
 
 /**
  * Deduct credits from user
@@ -246,38 +272,40 @@ export const deductUserCredits = async (
 ): Promise<number | null> => {
   try {
     // Fetch current credits
-    const { data: user, error: getError } = await supabase
-      .from('users')
-      .select('credits')
-      .eq('id', userId)
-      .single()
+    const { data: profile, error: getError } = await supabase
+      .from("profiles")
+      .select("credits")
+      .eq("id", userId)
+      .single();
 
-    if (getError || !user) {
-      console.error('Error fetching credits:', getError)
-      return null
+    if (getError || !profile) {
+      console.error("Error fetching credits:", getError);
+      return null;
     }
 
-    if (user.credits < amount) {
-      console.warn(`Insufficient credits: have ${user.credits}, need ${amount}`)
-      return null
+    if (profile.credits < amount) {
+      console.warn(
+        `Insufficient credits: have ${profile.credits}, need ${amount}`
+      );
+      return null;
     }
 
-    const newCredits = user.credits - amount
+    const newCredits = profile.credits - amount;
 
     // Update with new amount
     const { error: updateError } = await supabase
-      .from('users')
+      .from("profiles")
       .update({ credits: newCredits })
-      .eq('id', userId)
+      .eq("id", userId);
 
     if (updateError) {
-      console.error('Error updating credits:', updateError)
-      return null
+      console.error("Error updating credits:", updateError);
+      return null;
     }
 
-    return newCredits
+    return newCredits;
   } catch (error) {
-    console.error('Error deducting credits:', error)
-    return null
+    console.error("Error deducting credits:", error);
+    return null;
   }
-}
+};

@@ -78,23 +78,36 @@ export default async function handler(
       `Credits API: Looking up user by email: ${email} (token userId: ${userId})`
     );
 
-    // 1. Get Profile Stats - LOOKUP BY EMAIL not ID
+    // 1. Get Profile Stats - Try by ID first (more reliable)
     let credits = 0;
     let plan = "free";
     let subscriptionData: any = null;
-
     let userProfile: any = null;
+    let isAdmin = false;
 
-    // Try 'profiles' first BY EMAIL
-    const { data: profile, error: profileError } = await supabase
+    // Try 'profiles' first BY ID
+    let { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select(
         "id, email, credits, plan_id, created_at, updated_at, is_admin, onboarding_completed"
       )
-      .eq("email", email) // Use email instead of ID
+      .eq("id", userId)
       .single();
 
-    let isAdmin = false;
+    // Fallback to email if ID lookup failed (legacy support)
+    if (!profile) {
+      console.log(
+        `Credits API: Profile not found by ID ${userId}, trying email ${email}...`
+      );
+      const { data: profileByEmail } = await supabase
+        .from("profiles")
+        .select(
+          "id, email, credits, plan_id, created_at, updated_at, is_admin, onboarding_completed"
+        )
+        .eq("email", email)
+        .single();
+      profile = profileByEmail;
+    }
 
     if (profile) {
       credits = profile.credits || 0;
@@ -109,7 +122,7 @@ export default async function handler(
 
       isAdmin = profile.is_admin || false;
       console.log(
-        `✅ Credits API: Profile found by email ${email}. ProfileID: ${profile.id}, Admin: ${isAdmin}, Plan: ${plan}, Credits: ${credits}`
+        `✅ Credits API: Profile found. ID: ${profile.id}, Admin: ${isAdmin}, Plan: ${plan}, Credits: ${credits}, Onboarding: ${profile.onboarding_completed}`
       );
 
       subscriptionData = {
@@ -122,11 +135,11 @@ export default async function handler(
       console.log(
         `⚠️ Credits API: Profile not found for ${email}, checking users table...`
       );
-      // Fallback: Check 'users' table BY EMAIL
+      // Fallback: Check 'users' table BY EMAIL (Legacy)
       const { data: foundUser } = await supabase
         .from("users")
         .select("id, email, credits, plan_id, created_at, updated_at, is_admin")
-        .eq("email", email) // Use email instead of ID
+        .eq("email", email)
         .single();
 
       userProfile = foundUser;

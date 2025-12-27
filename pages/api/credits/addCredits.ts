@@ -114,8 +114,10 @@ export default async function handler(
         // Try to create in profiles
         const insertData: any = {
           id: userId,
-          plan: "free",
+          plan_id: 1, // Free plan
           credits: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
         if (userEmail) insertData.email = userEmail;
 
@@ -128,53 +130,16 @@ export default async function handler(
         if (!createError && newProfile) {
           profile = newProfile;
         } else {
-          console.warn(
-            "Profiles table insert failed, trying fallback...",
-            createError?.message
-          );
-          throw new Error("Profiles table unavailable");
+          console.error("Profiles table insert failed", createError?.message);
+          throw new Error("Could not create user profile");
         }
       }
     } catch (err) {
-      console.log("Falling back to 'users' table due to profiles error");
-      // Fallback: Check 'users' table
-      targetTable = "users";
-
-      const { data: userData, error: userError } = await supabaseAdmin
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (userData) {
-        profile = userData;
-      } else {
-        // Create in users
-        const insertData: any = {
-          id: userId, // Some users tables rely on auth trigger, but we can try insert
-          plan: "free",
-          credits: 0,
-          email: userEmail,
-        };
-        const { data: newUser, error: createUserError } = await supabaseAdmin
-          .from("users")
-          .insert(insertData)
-          .select()
-          .single();
-
-        if (createUserError || !newUser) {
-          console.error(
-            "Failed to create user in users table:",
-            createUserError
-          );
-          return res.status(500).json({
-            error: "Profile creation failed",
-            details: createUserError,
-            message: "Could not find or create user profile in any table",
-          });
-        }
-        profile = newUser;
-      }
+      console.error("Profile access error:", err);
+      return res.status(500).json({
+        error: "Profile error",
+        message: "Could not access user profile",
+      });
     }
 
     if (!profile) {
@@ -224,11 +189,36 @@ export default async function handler(
 
     // Add credits AND update plan
     const newCredits = (profile.credits || 0) + creditsToAdd;
+
+    // Map string planId to integer just in case, though API expects string usually?
+    // Wait, the API body receives 'planId'. Let's assume it's the plan STRING from frontend (e.g. 'starter').
+    // We need to map it to integer if it's a string.
+    // The previous code used it as `plan: planId`.
+    // And `plan_upgrade_${planId}`.
+    // Let's assume input 'planId' is a string like 'starter' or 'pro'.
+
+    const planMapReverse: { [key: string]: number } = {
+      free: 1,
+      starter: 2,
+      pro: 3,
+      pro_plus: 4,
+      "pro+": 4,
+      enterprise: 5,
+    };
+
+    // If planId is number coming in, keep it. If string, map it.
+    let numericPlanId = 1;
+    if (typeof planId === "number") {
+      numericPlanId = planId;
+    } else if (typeof planId === "string") {
+      numericPlanId = planMapReverse[planId] || 1;
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from(targetTable)
       .update({
         credits: newCredits,
-        plan: planId, // Update the plan field
+        plan_id: numericPlanId, // Update the plan_id field
       })
       .eq("id", userId);
 
