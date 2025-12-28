@@ -21,7 +21,7 @@ const PLANS: Record<string, Plan> = {
     displayName: "Free Plan",
     price: 0,
     billingPeriod: "monthly",
-    credits: 5,
+    credits: 10,
     description: "Perfect for getting started",
     features: ["1 Resume", "1 Portfolio", "5 AI Credits", "Standard Templates"],
     limitations: ["Max 1 Resume", "Max 1 Portfolio"],
@@ -32,7 +32,7 @@ const PLANS: Record<string, Plan> = {
     displayName: "Starter (Fresher)",
     price: 0,
     billingPeriod: "monthly",
-    credits: 5,
+    credits: 10,
     description: "Best for students & freshers",
     features: [
       "1 Resume",

@@ -133,57 +133,64 @@ export default async function handler(
       };
     } else {
       console.log(
-        `⚠️ Credits API: Profile not found for ${email}, checking users table...`
+        `❌ Credits API: No user/profile found for ${email} (Checked profiles table only migration complete)`
       );
-      // Fallback: Check 'users' table BY EMAIL (Legacy)
-      const { data: foundUser } = await supabase
-        .from("users")
-        .select("id, email, credits, plan_id, created_at, updated_at, is_admin")
-        .eq("email", email)
-        .single();
-
-      userProfile = foundUser;
-
-      if (userProfile) {
-        credits = userProfile.credits || 0;
-        // Map plan_id to string, default to free
-        const planId = userProfile.plan_id || 0;
-        if (planId === 1) plan = "free";
-        else if (planId === 2) plan = "starter";
-        else if (planId === 3) plan = "pro";
-        else if (planId === 4) plan = "pro_plus";
-        else if (planId === 5) plan = "enterprise";
-        else plan = "free";
-
-        isAdmin = userProfile.is_admin || false;
-        console.log(
-          `✅ Credits API: User found by email ${email}. UserID: ${userProfile.id}, Admin: ${isAdmin}, Plan: ${plan}, Credits: ${credits}`
-        );
-
-        subscriptionData = {
-          plan: plan,
-          status: plan !== "free" ? "active" : "inactive",
-          startedAt: userProfile.created_at,
-          updatedAt: userProfile.updated_at,
-        };
-      } else {
-        console.log(`❌ Credits API: No user/profile found for ${email}`);
-      }
     }
 
-    // 2. Get History - use the actual profile ID from the database, not the token userId
+    // 2. Get History from BOTH tables
     const profileId = profile?.id || null;
-    const { data: history, error: historyError } = profileId
-      ? await supabase
-          .from("credit_usage")
-          .select("*")
-          .eq("user_id", profileId) // Use profile ID from DB
-          .order("created_at", { ascending: false })
-          .limit(50)
-      : { data: null, error: null };
+    let history: any[] = [];
 
-    if (historyError) {
-      console.error("History fetch error:", historyError);
+    if (profileId) {
+      // Fetch Manual Credits / Upgrades
+      const { data: creditUsage, error: creditError } = await supabase
+        .from("credit_usage")
+        .select("credits_used, action, description, created_at, id")
+        .eq("user_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      // Fetch AI Usage Logs
+      const { data: aiLogs, error: aiError } = await supabase
+        .from("ai_usage_logs")
+        .select("credits_used, action_type, details, created_at, id")
+        .eq("user_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      console.log(`DEBUG: Credit Usage Rows: ${creditUsage?.length || 0}`);
+      console.log(`DEBUG: AI Logs Rows: ${aiLogs?.length || 0}`);
+
+      if (creditError || aiError) {
+        console.error("History fetch error:", creditError || aiError);
+      }
+
+      // Merge and Format
+      const formattedCreditUsage = (creditUsage || []).map((item: any) => ({
+        ...item,
+        type: "ledger",
+      }));
+
+      const formattedAiLogs = (aiLogs || []).map((item: any) => ({
+        id: item.id,
+        user_id: profileId,
+        credits_used: item.credits_used, // Positive = Deduction
+        action: item.action_type,
+        description: item.details?.filename
+          ? `Parsed ${item.details.filename}`
+          : item.action_type === "ats_analysis"
+          ? "ATS Job Analysis"
+          : item.action_type,
+        created_at: item.created_at,
+        type: "ai",
+      }));
+
+      history = [...formattedCreditUsage, ...formattedAiLogs]
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+        .slice(0, 50);
     }
 
     // Calculate "Used This Month"

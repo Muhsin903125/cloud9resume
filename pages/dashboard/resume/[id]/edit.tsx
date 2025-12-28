@@ -27,9 +27,13 @@ import {
 
 import { ResumeRenderer } from "../../../../components/ResumeRenderer";
 import { ResumePreviewModal } from "../../../../components/ResumePreviewModal";
+import { ATSChecker } from "@/components/ai/ATSChecker";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import { TEMPLATE_REGISTRY } from "@/lib/template-registry";
+import { POPULAR_DEGREES } from "@/lib/constants/degrees";
+import { POPULAR_SKILLS } from "@/lib/constants/skills";
+import { POPULAR_JOB_TITLES } from "@/lib/constants/jobTitles";
 
 const ResumeEditor = () => {
   const router = useRouter();
@@ -47,6 +51,7 @@ const ResumeEditor = () => {
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showGenerationModal, setShowGenerationModal] = useState(false);
+  const [showATSModal, setShowATSModal] = useState(false);
   const [resumeTitle, setResumeTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -56,6 +61,22 @@ const ResumeEditor = () => {
   const [template, setTemplate] = useState<any>("modern");
   const [themeColor, setThemeColor] = useState("#3b82f6");
   const [settings, setSettings] = useState<any>({});
+
+  // Skills autocomplete state
+  const [skillInput, setSkillInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Job Title autocomplete state
+  const [jobTitleInput, setJobTitleInput] = useState("");
+  const [showJobTitleSuggestions, setShowJobTitleSuggestions] = useState(false);
+
+  // Degree autocomplete state (for education section)
+  const [degreeInputs, setDegreeInputs] = useState<{ [key: number]: string }>(
+    {}
+  );
+  const [showDegreeSuggestions, setShowDegreeSuggestions] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   const baseSectionTypes = [
     { id: "personal_info", label: "Personal Info", Icon: UserIcon },
@@ -422,6 +443,13 @@ const ResumeEditor = () => {
         <title>{resume?.title || "Resume Editor"} - Cloud9</title>
       </Head>
 
+      <ATSChecker
+        isOpen={showATSModal}
+        onClose={() => setShowATSModal(false)}
+        resumeData={resume}
+        resumeId={id as string}
+      />
+
       {/* Main Editor UI - Hidden on Print */}
       <div className="flex-1 flex flex-col overflow-hidden no-print">
         {/* Top Navigation Bar */}
@@ -515,6 +543,14 @@ const ResumeEditor = () => {
                 "Saved"
               )}
               {isDirty && <span className="xs:hidden">Save</span>}
+            </button>
+
+            <button
+              onClick={() => setShowATSModal(true)}
+              className="px-3 sm:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-[10px] sm:text-sm font-bold hover:bg-gray-50 transition-all active:scale-95 flex items-center gap-2 mr-2"
+            >
+              <SparklesIcon className="w-4 h-4 text-blue-600" />
+              <span className="hidden sm:inline">ATS Score</span>
             </button>
 
             <button
@@ -670,7 +706,19 @@ const ResumeEditor = () => {
                       handleInputChange,
                       handleAddArrayItem,
                       handleRemoveArrayItem,
-                      handleArrayFieldChange
+                      handleArrayFieldChange,
+                      skillInput,
+                      setSkillInput,
+                      showSuggestions,
+                      setShowSuggestions,
+                      jobTitleInput,
+                      setJobTitleInput,
+                      showJobTitleSuggestions,
+                      setShowJobTitleSuggestions,
+                      degreeInputs,
+                      setDegreeInputs,
+                      showDegreeSuggestions,
+                      setShowDegreeSuggestions
                     )}
                   </motion.div>
                 </AnimatePresence>
@@ -829,6 +877,7 @@ const Input = ({
   onChange,
   required,
   helperText,
+  list,
 }: any) => (
   <div className="mb-3">
     <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
@@ -840,6 +889,7 @@ const Input = ({
       onChange={onChange ? onChange : undefined}
       name={name}
       placeholder={placeholder}
+      list={list}
       className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium"
       readOnly={!onChange}
     />
@@ -903,7 +953,19 @@ const renderSectionForm = (
   onChange: any,
   onAdd: any,
   onRemove: any,
-  onArrayChange: any
+  onArrayChange: any,
+  skillInput?: string,
+  setSkillInput?: any,
+  showSuggestions?: boolean,
+  setShowSuggestions?: any,
+  jobTitleInput?: string,
+  setJobTitleInput?: any,
+  showJobTitleSuggestions?: boolean,
+  setShowJobTitleSuggestions?: any,
+  degreeInputs?: { [key: number]: string },
+  setDegreeInputs?: any,
+  showDegreeSuggestions?: { [key: number]: boolean },
+  setShowDegreeSuggestions?: any
 ) => {
   const handleChange = (name: string, value: any) => {
     onChange(name, value);
@@ -921,13 +983,63 @@ const renderSectionForm = (
               onChange={(e: any) => handleChange("name", e.target.value)}
               placeholder="John Doe"
             />
-            <Input
-              label="Job Title"
-              value={data.jobTitle}
-              required
-              onChange={(e: any) => handleChange("jobTitle", e.target.value)}
-              placeholder="Software Engineer"
-            />
+            <div className="relative">
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
+                Job Title <span className="text-red-500 font-bold">*</span>
+              </label>
+              <input
+                type="text"
+                value={
+                  jobTitleInput !== undefined
+                    ? jobTitleInput
+                    : data.jobTitle || ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (setJobTitleInput) setJobTitleInput(val);
+                  onChange("jobTitle", val);
+                  if (setShowJobTitleSuggestions)
+                    setShowJobTitleSuggestions(val.length > 0);
+                }}
+                onFocus={() =>
+                  jobTitleInput &&
+                  setShowJobTitleSuggestions &&
+                  setShowJobTitleSuggestions(true)
+                }
+                onBlur={() =>
+                  setShowJobTitleSuggestions &&
+                  setTimeout(() => setShowJobTitleSuggestions(false), 200)
+                }
+                placeholder="Software Engineer"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium"
+              />
+              {showJobTitleSuggestions && jobTitleInput && (
+                <div className="absolute z-20 w-full mt-1 bg-white border-2 border-blue-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                  {POPULAR_JOB_TITLES.filter((title) =>
+                    title
+                      .toLowerCase()
+                      .includes((jobTitleInput || "").toLowerCase())
+                  )
+                    .slice(0, 10)
+                    .map((title) => (
+                      <button
+                        key={title}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          onChange("jobTitle", title);
+                          if (setJobTitleInput) setJobTitleInput(title);
+                          if (setShowJobTitleSuggestions)
+                            setShowJobTitleSuggestions(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors text-sm font-medium text-gray-700 hover:text-blue-600 border-b border-gray-100 last:border-b-0"
+                      >
+                        {title}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
@@ -1190,6 +1302,11 @@ const renderSectionForm = (
     case "education":
       return (
         <div className="space-y-4 animate-fade-in-up">
+          <datalist id="degree-suggestions">
+            {POPULAR_DEGREES.map((degree) => (
+              <option key={degree} value={degree} />
+            ))}
+          </datalist>
           {(data.items || []).map((item: any, idx: number) => (
             <div
               key={idx}
@@ -1223,6 +1340,7 @@ const renderSectionForm = (
                     onArrayChange(idx, "degree", e.target.value)
                   }
                   placeholder="e.g. BSc Computer Science"
+                  list="degree-suggestions"
                 />
                 <Input
                   label="Graduation Date"
@@ -1253,25 +1371,141 @@ const renderSectionForm = (
       );
 
     case "skills":
+      if (
+        !setSkillInput ||
+        !setShowSuggestions ||
+        skillInput === undefined ||
+        showSuggestions === undefined
+      )
+        return null;
+
+      const filteredSkills = POPULAR_SKILLS.filter(
+        (skill) =>
+          skill.toLowerCase().includes(skillInput.toLowerCase()) &&
+          !(data.items || []).some(
+            (s: any) =>
+              (typeof s === "string" ? s : s.name).toLowerCase() ===
+              skill.toLowerCase()
+          )
+      ).slice(0, 10);
+
+      const addSkill = (skillName: string) => {
+        const exists = (data.items || []).some(
+          (s: any) =>
+            (typeof s === "string" ? s : s.name).toLowerCase() ===
+            skillName.toLowerCase()
+        );
+        if (!exists && skillName.trim()) {
+          const newItems = [...(data.items || []), { name: skillName }];
+          onChange("items", newItems);
+        }
+        setSkillInput("");
+        setShowSuggestions(false);
+      };
+
       return (
-        <div className="space-y-4 animate-fade-in-up">
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <p className="text-[11px] text-gray-400 mb-4 font-medium italic">
-              Add skills to your profile. Press Enter to add.
-            </p>
-            <div className="flex flex-wrap gap-2 mb-6 min-h-[40px] p-3 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+        <div className="space-y-3 animate-fade-in-up">
+          {/* Compact Header */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+                <ZapIcon size={14} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">Your Skills</h3>
+                <p className="text-[10px] text-gray-500">
+                  Showcase your expertise
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Compact Input Section */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <label className="block text-xs font-bold text-gray-700 mb-2">
+              Add New Skill
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={skillInput}
+                onChange={(e) => {
+                  setSkillInput(e.target.value);
+                  setShowSuggestions(e.target.value.length > 0);
+                }}
+                onFocus={() =>
+                  skillInput.length > 0 && setShowSuggestions(true)
+                }
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder="Type a skill..."
+                className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none font-medium transition-all"
+                onKeyDown={(e: any) => {
+                  if (e.key === "Enter" && skillInput.trim()) {
+                    e.preventDefault();
+                    addSkill(skillInput);
+                  }
+                }}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <kbd className="px-1.5 py-0.5 bg-gray-200 text-gray-600 text-[10px] font-bold rounded">
+                  Enter
+                </kbd>
+              </div>
+
+              {/* Enhanced Suggestions Dropdown */}
+              {showSuggestions && filteredSkills.length > 0 && (
+                <div className="absolute z-20 w-full mt-3 bg-white border-2 border-blue-200 rounded-2xl shadow-2xl max-h-72 overflow-y-auto">
+                  <div className="p-2 bg-blue-50 border-b border-blue-100">
+                    <p className="text-xs font-bold text-blue-700 px-2">
+                      💡 Suggested Skills
+                    </p>
+                  </div>
+                  {filteredSkills.map((skill) => (
+                    <button
+                      key={skill}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        addSkill(skill);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-all text-sm font-medium text-gray-700 hover:text-blue-600 border-b border-gray-100 last:border-b-0 group"
+                    >
+                      <span className="flex items-center justify-between">
+                        <span>{skill}</span>
+                        <span className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          →
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Added Skills Display */}
+          <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-bold text-gray-900">
+                Added Skills
+                <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                  {(data.items || []).length}
+                </span>
+              </h4>
+            </div>
+            <div className="flex flex-wrap gap-2 min-h-[60px]">
               {(data.items || []).map((skill: any, idx: number) => {
                 const skillName =
                   typeof skill === "string" ? skill : skill.name;
                 return (
                   <span
                     key={idx}
-                    className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100"
+                    className="group inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all hover:scale-105"
                   >
-                    {skillName}
+                    <span>{skillName}</span>
                     <button
                       onClick={() => onRemove("items", idx)}
-                      className="ml-2 w-4 h-4 rounded-full hover:bg-blue-200 flex items-center justify-center text-blue-900"
+                      className="w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
                     >
                       ×
                     </button>
@@ -1279,75 +1513,93 @@ const renderSectionForm = (
                 );
               })}
               {(data.items || []).length === 0 && (
-                <span className="text-gray-300 text-xs italic">
-                  No skills added yet...
-                </span>
+                <div className="w-full text-center py-8">
+                  <div className="text-4xl mb-2">🎯</div>
+                  <p className="text-gray-400 text-sm font-medium">
+                    No skills added yet
+                  </p>
+                  <p className="text-gray-300 text-xs mt-1">
+                    Start typing to add your first skill
+                  </p>
+                </div>
               )}
             </div>
+          </div>
 
-            <div className="mb-6">
-              <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-                Suggested Skills
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  "React",
-                  "TypeScript",
-                  "Node.js",
-                  "Python",
-                  "AWS",
-                  "SQL",
-                  "Project Management",
-                  "UI/UX Design",
-                ].map((skill) => (
-                  <button
-                    key={skill}
-                    onClick={() => {
-                      const exists = (data.items || []).some(
-                        (s: any) =>
-                          (typeof s === "string" ? s : s.name).toLowerCase() ===
-                          skill.toLowerCase()
-                      );
-                      if (!exists) {
-                        const newItems = [
-                          ...(data.items || []),
-                          { name: skill },
-                        ];
-                        onChange("items", newItems);
-                      }
-                    }}
-                    className="px-2.5 py-1 rounded-md bg-gray-100 text-gray-600 text-[10px] font-bold hover:bg-blue-100 hover:text-blue-700 transition-colors border border-gray-200"
-                  >
-                    + {skill}
-                  </button>
-                ))}
+          {/* Categorized Popular Skills */}
+          <div className="bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-200 rounded-2xl p-6">
+            <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span>✨</span>
+              Popular Skills by Category
+            </h4>
+
+            <div className="space-y-4">
+              {/* Technical Skills */}
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  💻 Technical
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "React",
+                    "TypeScript",
+                    "Node.js",
+                    "Python",
+                    "AWS",
+                    "SQL",
+                  ].map((skill) => (
+                    <button
+                      key={skill}
+                      onClick={() => addSkill(skill)}
+                      className="px-3 py-1.5 rounded-lg bg-white text-gray-700 text-xs font-bold hover:bg-blue-500 hover:text-white transition-all border border-gray-200 hover:border-blue-500 hover:shadow-md"
+                    >
+                      + {skill}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Type a skill and press Enter (e.g. React, Python)"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-medium"
-                onKeyDown={(e: any) => {
-                  if (e.key === "Enter" && e.target.value.trim()) {
-                    e.preventDefault();
-                    // Check doubles
-                    const val = e.target.value.trim();
-                    const exists = (data.items || []).some(
-                      (s: any) =>
-                        (typeof s === "string" ? s : s.name).toLowerCase() ===
-                        val.toLowerCase()
-                    );
-                    if (!exists) {
-                      const newItems = [...(data.items || []), { name: val }];
-                      onChange("items", newItems);
-                    }
-                    e.target.value = "";
-                  }
-                }}
-              />
-              <div className="absolute right-4 top-3 text-gray-400">
-                <ZapIcon size={20} />
+
+              {/* Soft Skills */}
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  🤝 Soft Skills
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "Leadership",
+                    "Communication",
+                    "Project Management",
+                    "Problem Solving",
+                  ].map((skill) => (
+                    <button
+                      key={skill}
+                      onClick={() => addSkill(skill)}
+                      className="px-3 py-1.5 rounded-lg bg-white text-gray-700 text-xs font-bold hover:bg-purple-500 hover:text-white transition-all border border-gray-200 hover:border-purple-500 hover:shadow-md"
+                    >
+                      + {skill}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Design */}
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  🎨 Design
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["UI/UX Design", "Figma", "Adobe XD", "Graphic Design"].map(
+                    (skill) => (
+                      <button
+                        key={skill}
+                        onClick={() => addSkill(skill)}
+                        className="px-3 py-1.5 rounded-lg bg-white text-gray-700 text-xs font-bold hover:bg-pink-500 hover:text-white transition-all border border-gray-200 hover:border-pink-500 hover:shadow-md"
+                      >
+                        + {skill}
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
             </div>
           </div>

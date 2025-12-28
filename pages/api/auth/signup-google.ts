@@ -79,7 +79,7 @@ export default async function handler(
           name,
           login_provider: "google",
           plan_id: 1, // Free plan
-          credits: 0,
+          credits: 10, // Default Free Plan Credits
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -94,6 +94,14 @@ export default async function handler(
         message: "Could not create account",
       });
     }
+
+    // Log the initial credit allocation
+    await supabaseAdmin.from("credit_usage").insert({
+      user_id: newProfile.id,
+      credits_used: -10, // Negative for addition
+      action: "welcome_bonus",
+      description: "Welcome Bonus Credits",
+    });
 
     // Send Welcome Email (Non-blocking)
     // Need to import emailSender first

@@ -79,7 +79,7 @@ const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 pb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-2">
           {plans.map((plan) => {
             const isCurrent = currentPlanId === plan.id;
             const isProcessing = processingId === plan.id;

@@ -17,6 +17,7 @@ import {
   GripVerticalIcon,
 } from "./Icons";
 import { toast } from "react-hot-toast";
+import PlanSelectionModal from "./PlanSelectionModal";
 
 interface ResumePreviewModalProps {
   isOpen: boolean;
@@ -156,6 +157,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
   const [mobileTab, setMobileTab] = useState<"controls" | "preview">("preview");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Reset initialization when modal closes
   useEffect(() => {
@@ -273,11 +275,21 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${
+            localStorage.getItem("x_user_auth_token") || ""
+          }`,
         },
         body: JSON.stringify(exportParams),
       });
 
-      if (!response.ok) throw new Error("Failed to generate PDF");
+      if (!response.ok) {
+        if (response.status === 403) {
+          setShowUpgradeModal(true);
+          toast.error("Download limit reached. Please upgrade to continue.");
+          return;
+        }
+        throw new Error("Failed to generate PDF");
+      }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -295,7 +307,10 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
       toast.success("PDF downloaded successfully");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to generate PDF. Please try again.");
+      if (!String(error).includes("limit reached")) {
+        // Avoid double toast
+        toast.error("Failed to generate PDF. Please try again.");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -774,6 +789,18 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
           </div>
         </div>
       )}
+
+      <PlanSelectionModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onSuccess={() => {
+          toast.success(
+            "Upgrade successful! You can now download unlimited resumes."
+          );
+          // Optionally retry download or just close
+          setShowUpgradeModal(false);
+        }}
+      />
     </SharedModal>
   );
 };

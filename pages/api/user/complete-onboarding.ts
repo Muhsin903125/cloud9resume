@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const CREDIT_ADDITION_AMOUNT = 5;
 
 export default async function handler(
   req: NextApiRequest,
@@ -63,7 +64,7 @@ export default async function handler(
         .single();
 
       const currentCredits = profile?.credits || 0;
-      updates.credits = currentCredits + 5;
+      updates.credits = currentCredits + CREDIT_ADDITION_AMOUNT;
     } else if (experienceLevel === "experienced") {
       updates.plan_id = 1; // Free plan
     } else {
@@ -83,6 +84,14 @@ export default async function handler(
     }
 
     // Log this action if needed (optional)
+    if (experienceLevel === "fresher") {
+      await supabaseAdmin.from("credit_usage").insert({
+        user_id: userId,
+        credits_used: -CREDIT_ADDITION_AMOUNT, // Negative for addition
+        action: "onboarding_bonus",
+        description: "Fresher Plan Bonus",
+      });
+    }
 
     return res.status(200).json({ success: true, data });
   } catch (error: any) {

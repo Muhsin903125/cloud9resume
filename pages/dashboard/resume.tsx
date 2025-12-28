@@ -3,7 +3,9 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import { Resume } from "../../lib/types";
 import { PlusIcon, SearchIcon, DocumentIcon } from "../../components/Icons";
+import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
 import SharedModal from "../../components/SharedModal";
+import { ResumeUploader } from "../../components/ai/ResumeUploader";
 import { ResumeCard } from "../../components/ResumeCard";
 import { ResumePreviewModal } from "../../components/ResumePreviewModal";
 import FormField from "../../components/FormField";
@@ -25,6 +27,7 @@ const ResumeDashboard = () => {
   const [showNewModal, setShowNewModal] = useState(false);
   const [newResumeTitle, setNewResumeTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Delete confirmation state
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
@@ -89,7 +92,7 @@ const ResumeDashboard = () => {
         setShowNewModal(false);
         setNewResumeTitle("");
         toast.success("Resume created successfully");
-        router.push(`/dashboard/resume/${response.data.id}/edit`);
+        router.push(`/dashboard/resume/${response.data.id}/templates`);
       } else {
         toast.error(response.error || "Failed to create resume");
       }
@@ -246,6 +249,17 @@ const ResumeDashboard = () => {
                     {user?.profile?.credits || 0}
                   </p>
                 </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowImportModal(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  <CloudArrowUpIcon className="w-5 h-5 text-gray-500" />
+                  <span className="hidden sm:inline">Import</span>
+                </motion.button>
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -317,15 +331,26 @@ const ResumeDashboard = () => {
                   : "Create your first resume to get started building your career."}
               </p>
               {!searchQuery && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowNewModal(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-all shadow-xl shadow-gray-200"
-                >
-                  <PlusIcon size={20} color="white" />
-                  Create First Resume
-                </motion.button>
+                <div className="flex gap-4 justify-center">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowImportModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
+                  >
+                    <CloudArrowUpIcon className="w-5 h-5 text-gray-500" />
+                    Import Resume
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowNewModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-all shadow-xl shadow-gray-200"
+                  >
+                    <PlusIcon size={20} color="white" />
+                    Create First Resume
+                  </motion.button>
+                </div>
               )}
             </motion.div>
           ) : (
@@ -432,6 +457,23 @@ const ResumeDashboard = () => {
           </div>
         )}
       </div>
+      <SharedModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        title="Import Existing Resume"
+      >
+        <ResumeUploader
+          onUploadSuccess={(data, resumeId) => {
+            setShowImportModal(false);
+            // In a real app, you'd navigate to the edit page with the new resume ID.
+            // Since our API currently returns data but might not auto-create the DB entry (depending on how we wired it),
+            // we should handle that. Phase 1 plan said API returns resumeId.
+            // If parse-resume creates the DB entry, we just push.
+            router.push(`/dashboard/resume/${resumeId}/templates`);
+          }}
+          onCancel={() => setShowImportModal(false)}
+        />
+      </SharedModal>
     </>
   );
 };

@@ -8,6 +8,7 @@ import "../styles/globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ConfirmationModal from "../components/ConfirmationModal";
+import PlanSelectionModal from "../components/PlanSelectionModal";
 import { useAuth } from "../lib/authUtils";
 import {
   DocumentIcon,
@@ -86,6 +87,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <DashboardLayout
           userName={userName}
           userPicture={userPicture}
+          userCredits={user?.profile?.credits || 0}
           onLogout={logout}
           isResumeEditor={router.pathname.includes(
             "/dashboard/resume/[id]/edit"
@@ -125,16 +127,19 @@ function DashboardLayout({
   children,
   userName,
   userPicture,
+  userCredits = 0,
   onLogout,
 }: {
   children: React.ReactNode;
   userName: string;
   userPicture: string | null;
+  userCredits?: number;
   onLogout: () => Promise<void>;
   isResumeEditor?: boolean;
 }) {
   const router = useRouter();
   const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -222,6 +227,7 @@ function DashboardLayout({
 
       {/* Sidebar - Desktop & Mobile */}
       {!router.pathname.includes("/dashboard/resume/[id]/edit") &&
+        !router.pathname.includes("/dashboard/resume/[id]/templates") &&
         !router.pathname.includes("/dashboard/portfolio/[id]") && (
           <>
             {/* Mobile Toggle Button (Floating) */}
@@ -309,6 +315,17 @@ function DashboardLayout({
                         <p className="text-sm font-semibold text-gray-900 truncate">
                           {userName || "Account"}
                         </p>
+                        <div className="flex items-center mt-0.5 gap-2">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                            ⚡ {userCredits} Credits
+                          </span>
+                          <button
+                            onClick={() => setShowPlanModal(true)}
+                            className="text-[10px] text-blue-600 font-bold hover:underline"
+                          >
+                            Get More
+                          </button>
+                        </div>
                         <Link
                           href="/dashboard/profile"
                           onClick={() => setIsMenuOpen(false)}
@@ -361,6 +378,16 @@ function DashboardLayout({
         isLoading={isSigningOut}
         onConfirm={handleConfirmSignOut}
         onClose={handleCancelSignOut}
+      />
+
+      {/* Plan Selection Modal */}
+      <PlanSelectionModal
+        isOpen={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
+        onSuccess={() => {
+          // Optional: Reload page to refresh credits
+          window.location.reload();
+        }}
       />
     </div>
   );

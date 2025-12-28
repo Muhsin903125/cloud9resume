@@ -1,19 +1,27 @@
 import React, { useState } from "react";
 import { Dialog } from "@headlessui/react";
-import { CheckIcon } from "@heroicons/react/24/outline";
 import { apiClient } from "../lib/apiClient";
 import { useRouter } from "next/router";
 import { useAuth } from "../lib/authUtils";
+import { ResumeUploader } from "./ai/ResumeUploader";
+import {
+  CloudArrowUpIcon,
+  DocumentPlusIcon,
+  ArrowLeftIcon,
+} from "@heroicons/react/24/outline";
 
 interface OnboardingModalProps {
   isOpen: boolean;
   onComplete: () => void;
 }
 
+type Step = "level" | "method" | "import";
+
 export default function OnboardingModal({
   isOpen,
   onComplete,
 }: OnboardingModalProps) {
+  const [step, setStep] = useState<Step>("level");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
@@ -31,13 +39,23 @@ export default function OnboardingModal({
       if (res.error) {
         alert("Something went wrong. Please try again.");
       } else {
-        onComplete();
+        // Move to next step instead of completing immediately
+        setStep("method");
       }
     } catch (error) {
       console.error("Onboarding error:", error);
       alert("An error occurred.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMethodSelection = (method: "import" | "scratch") => {
+    if (method === "import") {
+      setStep("import");
+    } else {
+      // Create from scratch -> Close modal (Dashboard handles the rest)
+      onComplete();
     }
   };
 
@@ -53,54 +71,126 @@ export default function OnboardingModal({
       />
 
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl border border-gray-100">
-          <div className="text-center mb-8">
+        <Dialog.Panel className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-xl border border-gray-100 relative overflow-hidden">
+          {/* Header */}
+          <div className="text-center mb-8 relative z-10">
+            {step !== "level" && (
+              <button
+                onClick={() => setStep(step === "import" ? "method" : "level")}
+                className="absolute left-0 top-1 text-gray-400 hover:text-gray-600"
+              >
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+            )}
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Welcome to Cloud9Profile! 👋
+              {step === "level" && "Welcome to Cloud9Profile! 👋"}
+              {step === "method" && "How would you like to start?"}
+              {step === "import" && "Import your Resume"}
             </h2>
             <p className="text-gray-500">
-              Help us personalize your experience by answering a quick question.
+              {step === "level" &&
+                "Help us personalize your experience by answering a quick question."}
+              {step === "method" &&
+                "Choose the best way to build your professional profile."}
+              {step === "import" &&
+                "Upload your existing resume to auto-fill your profile."}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Experienced Option */}
-            <button
-              onClick={() => handleSelection("experienced")}
-              disabled={loading}
-              className="group relative p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <div className="mb-3 w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                <ApproverIcon className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-700">
-                Experienced
-              </h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                I have work experience and want to optimize my professional
-                resume.
-              </p>
-            </button>
+          <div className="relative z-10 transition-all duration-300">
+            {/* Step 1: Experience Level */}
+            {step === "level" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleSelection("experienced")}
+                  disabled={loading}
+                  className="group relative p-6 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <div className="mb-3 w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <ApproverIcon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-700">
+                    Experienced
+                  </h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    I have work experience and want to optimize my professional
+                    resume.
+                  </p>
+                </button>
 
-            {/* Fresher Option */}
-            <button
-              onClick={() => handleSelection("fresher")}
-              disabled={loading}
-              className="group relative p-6 rounded-xl border border-gray-200 hover:border-green-500 hover:bg-green-50/50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <div className="mb-3 w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                <AcademicCapIcon className="w-6 h-6" />
+                <button
+                  onClick={() => handleSelection("fresher")}
+                  disabled={loading}
+                  className="group relative p-6 rounded-xl border border-gray-200 hover:border-green-500 hover:bg-green-50/50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <div className="mb-3 w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                    <AcademicCapIcon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-1 group-hover:text-green-700">
+                    Fresher / Student
+                  </h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    I am a student or recent graduate looking for my first job.
+                  </p>
+                  <span className="absolute top-3 right-3 text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                    GET FREE CREDITS
+                  </span>
+                </button>
               </div>
-              <h3 className="font-bold text-gray-900 mb-1 group-hover:text-green-700">
-                Fresher / Student
-              </h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                I am a student or recent graduate looking for my first job.
-              </p>
-              <span className="absolute top-3 right-3 text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                GET FREE CREDITS
-              </span>
-            </button>
+            )}
+
+            {/* Step 2: Method Selection */}
+            {step === "method" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleMethodSelection("import")}
+                  className="group relative p-6 rounded-xl border border-gray-200 hover:border-purple-500 hover:bg-purple-50/50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <div className="mb-3 w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                    <CloudArrowUpIcon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-1 group-hover:text-purple-700">
+                    Import Resume
+                  </h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Upload your existing PDF or DOCX. user AI to extract data
+                    automatically.
+                  </p>
+                  <span className="absolute top-3 right-3 text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                    RECOMMENDED
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => handleMethodSelection("scratch")}
+                  className="group relative p-6 rounded-xl border border-gray-200 hover:border-gray-500 hover:bg-gray-50/50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  <div className="mb-3 w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
+                    <DocumentPlusIcon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-1 group-hover:text-gray-700">
+                    Start from Scratch
+                  </h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Build your resume step-by-step using our professional
+                    templates.
+                  </p>
+                </button>
+              </div>
+            )}
+
+            {/* Step 3: Import */}
+            {step === "import" && (
+              <div className="max-w-xl mx-auto">
+                <ResumeUploader
+                  onUploadSuccess={(data, resumeId) => {
+                    // Navigate to template selection
+                    router.push(`/dashboard/resume/${resumeId}/templates`);
+                  }}
+                  onCancel={() => setStep("method")}
+                />
+              </div>
+            )}
           </div>
 
           {loading && (

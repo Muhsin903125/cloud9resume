@@ -64,8 +64,8 @@ export async function addCredits(
 // Get credit cost for operation
 export const CREDIT_COSTS = {
   resume_generation: 2,
-  resume_optimization: 1,
-  ats_scan: 1,
+  resume_parsing: 5,
+  ats_scan: 5,
   portfolio_creation: 3,
   interview_prep: 2,
   cover_letter: 1,

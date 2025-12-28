@@ -80,7 +80,7 @@ export default async function handler(
           password_hash: passwordHash,
           login_provider: "email",
           plan_id: 1, // Free plan
-          credits: 0,
+          credits: 10, // Default Free Plan Credits
         },
       ])
       .select("id, email, plan_id, credits")
@@ -93,6 +93,14 @@ export default async function handler(
         message: "Could not create user profile",
       });
     }
+
+    // Log the initial credit allocation
+    await supabase.from("credit_usage").insert({
+      user_id: newProfile.id,
+      credits_used: -10, // Negative for addition
+      action: "welcome_bonus",
+      description: "Welcome Bonus Credits",
+    });
 
     // Send Welcome Email (Non-blocking)
     emailSender.sendWelcomeEmail(email, name).catch((err) => {

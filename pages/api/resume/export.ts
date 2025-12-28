@@ -3,6 +3,12 @@ import puppeteer from "puppeteer";
 import ReactDOMServer from "react-dom/server";
 import React from "react";
 import { ResumeRenderer } from "../../../components/ResumeRenderer";
+import jwt from "jsonwebtoken";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Simple Tailwind CSS injection for the PDF
 // In production, you might want to read this from a file or use a styled-components approach
@@ -17,11 +23,6 @@ const TAILWIND_CDN =
 // Ideally, fetch from DB for security.
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -31,6 +32,46 @@ export default async function handler(
   }
 
   const { resumeId, format = "pdf", template = "ats", resumeData } = req.body;
+
+  // 1. Enforce Download Limits
+  const token = req.headers.authorization?.split(" ")[1];
+  if (token) {
+    try {
+      const decoded = jwt.decode(token) as any;
+      const userId = decoded?.sub || decoded?.userId;
+
+      if (userId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("downloads_used, downloads_limit")
+          .eq("id", userId)
+          .single();
+
+        if (profile) {
+          // Check limit (if not unlimited i.e. -1)
+          if (
+            profile.downloads_limit !== -1 &&
+            profile.downloads_used >= profile.downloads_limit
+          ) {
+            return res
+              .status(403)
+              .json({
+                error:
+                  "Monthly download limit reached. Upgrade to Pro for unlimited downloads.",
+              });
+          }
+
+          // Increment usage
+          await supabase
+            .from("profiles")
+            .update({ downloads_used: (profile.downloads_used || 0) + 1 })
+            .eq("id", userId);
+        }
+      }
+    } catch (e) {
+      console.error("Auth check failed in export", e);
+    }
+  }
 
   try {
     let resume = resumeData;
