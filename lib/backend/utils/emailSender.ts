@@ -30,9 +30,11 @@ class EmailSender {
         process.env.FROM_EMAIL ||
         "Cloud9Profile <reply@cloud9profile.com>";
 
-      console.log(`[EmailSender] Sending email from: ${from}`);
+      console.log(
+        `[EmailSender] Sending email from: ${from} to: ${options.to}`
+      );
 
-      const { error } = await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from,
         to: options.to,
         subject: options.subject,
@@ -40,9 +42,11 @@ class EmailSender {
         text: options.text,
       });
 
-      if (error) {
-        console.error("Resend error:", error);
-        throw new Error(error.message);
+      console.log("[EmailSender] Resend Response:", response);
+
+      if (response.error) {
+        console.error("Resend error:", response.error);
+        throw new Error(response.error.message);
       }
     } catch (error) {
       console.error("Email sending failed:", error);
@@ -61,12 +65,13 @@ class EmailSender {
   async sendRegistrationEmail(
     email: string,
     name: string,
-    planId: string = "free"
+    planId: string = "free",
+    customCredits?: number
   ): Promise<void> {
     await this.sendEmail({
       to: email,
       subject: "Welcome to Cloud9Profile - Registration Successful",
-      html: registrationSuccessTemplate(name, email, planId),
+      html: registrationSuccessTemplate(name, email, planId, customCredits),
     });
   }
 

@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// Admin client for password updates
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(
@@ -33,50 +32,47 @@ export default async function handler(
       });
     }
 
-    // Create a client for auth operations
-    const anonClient = createClient(
-      supabaseUrl,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-    );
-    let session = null;
-    let authError = null;
+    let userToUpdate = null;
 
-    // SCENARIO 1: We have an email, try verifying as an OTP (Recovery Token)
-    // This is the new custom flow
     if (email) {
-      const { data, error } = await anonClient.auth.verifyOtp({
-        token,
-        type: "recovery",
-        email,
-      });
+      // Verify via custom reset_token in profiles
+      const { data: profiles, error } = await supabaseAdmin
+        .from("profiles")
+        .select("id, reset_token, reset_token_expires")
+        .eq("email", email)
+        .limit(1); // Ensure we get list
 
-      if (error) {
-        console.log(
-          "OTP verification failed, trying setSession fallback...",
-          error.message
-        );
-      } else if (data.session) {
-        session = data.session;
-      }
-    }
+      const user = profiles?.[0];
 
-    // SCENARIO 2: No email or OTP failed, try using token as access_token (Legacy/Hash flow)
-    if (!session) {
-      const { data, error } = await anonClient.auth.setSession({
-        access_token: token,
-        refresh_token: "", // Not needed for setSession usually if we just want to use the access_token?
-        // Actually setSession requires both or just access_token?
-        // Supabase docs: setSession({ access_token, refresh_token })
-      });
-
-      if (error) {
-        authError = error;
+      if (error || !user) {
+        console.error("[UpdatePassword] User not found or error:", error);
+        console.log(`[UpdatePassword] Searched for email: '${email}'`);
+        // Fallback or error
       } else {
-        session = data.session;
+        // Evaluate token
+        const expiresAt = new Date(user.reset_token_expires).getTime();
+        const now = Date.now();
+
+        console.log("[UpdatePassword] Debug:", {
+          incomingToken: token,
+          storedToken: user.reset_token,
+          match: user.reset_token === token,
+          now,
+          expiresAt,
+          isExpired: now >= expiresAt,
+        });
+
+        if (user.reset_token === token && now < expiresAt) {
+          userToUpdate = user;
+        } else {
+          console.warn("[UpdatePassword] Token mismatch or expired.");
+        }
       }
     }
 
-    if (!session) {
+    if (!userToUpdate) {
+      // Try legacy Supabase OTP verification if email provided?
+      // Or just fail. Given we moved to custom auth, fail.
       return res.status(400).json({
         error: "Invalid or expired token",
         message:
@@ -84,14 +80,24 @@ export default async function handler(
       });
     }
 
-    // Now update the password with the recovered session
-    const { error: updateError } = await anonClient.auth.updateUser({
-      password,
-    });
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Update password and clear token
+    const { error: updateError } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        password_hash: passwordHash,
+        reset_token: null,
+        reset_token_expires: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userToUpdate.id);
 
     if (updateError) {
       console.error("Password update error:", updateError);
-      return res.status(400).json({
+      return res.status(500).json({
         error: "Password update failed",
         message: "Failed to update password. Please try again.",
       });

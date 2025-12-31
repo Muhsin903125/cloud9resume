@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
+import { emailSender } from "../../../lib/backend/utils/emailSender";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -90,28 +91,50 @@ export default async function handler(
     // We used .select() above, usually it returns the updated rows.
     const updatedProfile = data && data[0];
     if (updatedProfile) {
+      console.log(
+        "[Onboarding] Profile updated, attempting to send welcome email to:",
+        updatedProfile.email
+      );
       // Send Welcome Email (Non-blocking)
       try {
-        const {
-          emailSender,
-        } = require("../../../lib/backend/utils/emailSender");
-        // We need email and name. If select() didn't return them, fetch them.
-        // Let's ensure select() returns them or we fetch them.
-        // 'data' from update should contain them if we didn't specify restricted columns or RLS permitted it.
-        // But the query above just said .select(). Supabase returns all columns by default.
-        // Let's be safe and fetch if missing, or trust .select().
-
         const email = updatedProfile.email;
         const name = updatedProfile.name;
+        // Determine plan name based on ID or experience level
+        const planId = updatedProfile.plan_id;
+        let planName = "free";
+        if (planId === 2) planName = "starter";
+
+        const credits = updatedProfile.credits;
+
+        console.log("[Onboarding] Email details:", {
+          email,
+          name,
+          planName,
+          credits,
+        });
 
         if (email && name) {
-          emailSender.sendWelcomeEmail(email, name).catch((err: any) => {
-            console.error("Failed to send welcome email:", err);
-          });
+          // Use sendRegistrationEmail to include plan details and credits
+          emailSender
+            .sendRegistrationEmail(email, name, planName, credits)
+            .then(() =>
+              console.log("[Onboarding] Registration email sent successfully")
+            )
+            .catch((err: any) => {
+              console.error("Failed to send registration email:", err);
+            });
+        } else {
+          console.warn(
+            "[Onboarding] Missing email or name, cannot send welcome email"
+          );
         }
       } catch (e) {
-        console.error("Failed to send welcome email (module load):", e);
+        console.error("Failed to send welcome email (execution error):", e);
       }
+    } else {
+      console.warn(
+        "[Onboarding] No updated profile data returned, skipping welcome email"
+      );
     }
 
     return res.status(200).json({ success: true, data });

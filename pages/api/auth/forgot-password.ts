@@ -1,6 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
 import { emailSender } from "../../../lib/backend/utils/emailSender";
+import crypto from "crypto";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(
   req: NextApiRequest,
@@ -30,48 +35,61 @@ export default async function handler(
       });
     }
 
-    // Send password reset email
-    // Use production URL for production, localhost for development
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:3000`;
+    // Check if user exists first
+    const { data: user, error: userError } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .single();
 
-    // Generate a reset token/link (using Supabase's built-in reset link generation)
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email: email,
-      options: { redirectTo: `${appUrl}/reset-password` },
-    });
-
-    if (error) {
-      console.error("Password reset link generation error:", error);
-      // Still return 200 for security
+    if (userError || !user) {
+      // Return 200 for security (don't reveal if email exists)
+      console.warn("[ForgotPassword] Email not found:", email);
       return res.status(200).json({
         message:
           "If an account exists with this email, you will receive a password reset link shortly.",
       });
     }
 
-    // CUSTOM FLOW: Construct a direct link using the OTP token
-    // This bypasses Supabase's email template but we still use their token
-    // We will assume the token in action_link is the OTP
-    // action_link format: https://.../verify?token=...&type=recovery&redirect_to=...
-    // We want: https://myapp.com/reset-password?token=...&type=recovery
+    // Generate specific reset token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 3600000).toISOString(); // 1 hour
 
-    // Extract token from action_link
-    const actionLinkUrl = new URL(data.properties.action_link);
-    const recoveryToken = actionLinkUrl.searchParams.get("token");
+    // Save token to profile
+    const { error: updateError } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        reset_token: token,
+        reset_token_expires: expiresAt,
+      })
+      .eq("id", user.id);
 
-    if (recoveryToken) {
-      // Construct our DIRECT link
-      const directLink = `${appUrl}/reset-password?token=${recoveryToken}&type=recovery&email=${encodeURIComponent(
-        email
-      )}`;
-
-      await emailSender
-        .sendForgotPasswordEmail(email, directLink)
-        .catch((err) => {
-          console.error("Failed to send forgot password email:", err);
-        });
+    if (updateError) {
+      console.error(
+        "[ForgotPassword] Failed to save reset token:",
+        updateError
+      );
+      // DEBUG: Return actual error to user to verify if DB migration ran
+      return res.status(500).json({
+        error: "Database Error",
+        message:
+          "Failed to save reset token. Did you run the migration? " +
+          updateError.message,
+      });
     }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:3000`;
+    const directLink = `${appUrl}/reset-password?token=${token}&type=recovery&email=${encodeURIComponent(
+      email
+    )}`;
+
+    console.log("[ForgotPassword] Sending link to:", email);
+
+    await emailSender
+      .sendForgotPasswordEmail(email, directLink)
+      .catch((err) => {
+        console.error("Failed to send forgot password email:", err);
+      });
 
     return res.status(200).json({
       message:

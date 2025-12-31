@@ -5,6 +5,7 @@ import Head from "next/head";
 import { storeAuthData, getReturnUrl } from "../lib/auth-utils";
 import { USER_AUTH_TOKEN_KEY, USER_ID_KEY } from "../lib/token-keys";
 import { colors } from "../lib/constants";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 /**
  * Login page with token generation
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -220,21 +222,46 @@ export default function LoginPage() {
               >
                 Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                }}
-                placeholder="Enter your password"
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    paddingRight: "40px",
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                  }}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: colors.secondary.mediumGray,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon style={{ width: "20px", height: "20px" }} />
+                  ) : (
+                    <EyeIcon style={{ width: "20px", height: "20px" }} />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button

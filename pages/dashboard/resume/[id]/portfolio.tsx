@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 const PortfolioIntegration = () => {
   const router = useRouter();
@@ -10,6 +11,7 @@ const PortfolioIntegration = () => {
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [showPublishForm, setShowPublishForm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [newPortfolio, setNewPortfolio] = useState({
     slug: "",
     password: "",
@@ -240,7 +242,6 @@ const PortfolioIntegration = () => {
                   </p>
                 </div>
 
-                {/* Password Input */}
                 <div>
                   <label
                     style={{
@@ -253,25 +254,52 @@ const PortfolioIntegration = () => {
                   >
                     Password Protection (optional)
                   </label>
-                  <input
-                    type="password"
-                    value={newPortfolio.password}
-                    onChange={(e) =>
-                      setNewPortfolio({
-                        ...newPortfolio,
-                        password: e.target.value,
-                      })
-                    }
-                    placeholder="Leave empty for public access"
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      boxSizing: "border-box",
-                    }}
-                  />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={newPortfolio.password}
+                      onChange={(e) =>
+                        setNewPortfolio({
+                          ...newPortfolio,
+                          password: e.target.value,
+                        })
+                      }
+                      placeholder="Leave empty for public access"
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        paddingRight: "40px",
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: colors.secondary,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {showPassword ? (
+                        <EyeSlashIcon
+                          style={{ width: "20px", height: "20px" }}
+                        />
+                      ) : (
+                        <EyeIcon style={{ width: "20px", height: "20px" }} />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Primary Checkbox */}

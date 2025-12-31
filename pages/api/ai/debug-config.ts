@@ -27,7 +27,9 @@ export default async function handler(
         "gemini-2.0-flash-exp",
       ],
     });
-  } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+  } catch (error: any) {
+    return res
+      .status(500)
+      .json({ success: false, error: error.message || String(error) });
   }
 }

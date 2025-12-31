@@ -71,9 +71,12 @@ const PLAN_DETAILS: Record<string, PlanDetails> = {
 export function registrationSuccessTemplate(
   name: string,
   email: string,
-  planId: string = "free"
+  planId: string = "free",
+  customCredits?: number
 ) {
   const plan = PLAN_DETAILS[planId] || PLAN_DETAILS.free;
+  const creditsToShow =
+    customCredits !== undefined ? customCredits : plan.credits;
 
   return `
     <!DOCTYPE html>
@@ -92,24 +95,28 @@ export function registrationSuccessTemplate(
             
             <h2>Your Account Details</h2>
             <div class="info-box">
-              <div class="info-row">
-                <span class="info-label">Email</span>
-                <span class="info-value">${email}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Plan</span>
-                <span class="info-value">${plan.name}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Credits</span>
-                <span class="info-value">${plan.credits} credits</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Resume Limit</span>
-                <span class="info-value">${plan.resumeLimit} ${
-    plan.resumeLimit === 1 ? "resume" : "resumes"
-  }</span>
-              </div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">Email</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">${email}</td>
+                </tr>
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">Plan</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">${
+                    plan.name
+                  }</td>
+                </tr>
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">Credits</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">${creditsToShow} credits</td>
+                </tr>
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: none;">Resume Limit</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: none; text-align: right;">${
+                    plan.resumeLimit
+                  } ${plan.resumeLimit === 1 ? "resume" : "resumes"}</td>
+                </tr>
+              </table>
             </div>
 
             <h2>What You Can Do</h2>
@@ -119,22 +126,24 @@ export function registrationSuccessTemplate(
 
             <h2>Credit Usage Guide</h2>
             <div class="info-box">
-              <div class="info-row">
-                <span class="info-label">AI Resume Import</span>
-                <span class="info-value">5 credits</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">PDF Export</span>
-                <span class="info-value">1 credit</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">DOCX Export</span>
-                <span class="info-value">2 credits</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">ATS Analysis</span>
-                <span class="info-value">3 credits</span>
-              </div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">AI Resume Import</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">5 credits</td>
+                </tr>
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">PDF Export</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">1 credit</td>
+                </tr>
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">DOCX Export</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">2 credits</td>
+                </tr>
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: none;">ATS Analysis</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: none; text-align: right;">3 credits</td>
+                </tr>
+              </table>
             </div>
 
             <div style="margin-top: 32px; text-align: center;">
@@ -209,14 +218,16 @@ export function planUpgradeTemplate(
             <p>Your account has been upgraded to the <span class="highlight">${planName}</span> plan.</p>
             
             <div class="info-box">
-              <div class="info-row">
-                <span class="info-label">New Plan</span>
-                <span class="info-value">${planName}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Credits Added</span>
-                <span class="info-value">${credits} credits</span>
-              </div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">New Plan</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">${planName}</td>
+                </tr>
+                <tr>
+                  <td class="info-label" style="padding: 8px 0; border-bottom: none;">Credits Added</td>
+                  <td class="info-value" style="padding: 8px 0; border-bottom: none; text-align: right;">${credits} credits</td>
+                </tr>
+              </table>
             </div>
             
             <p>You can now use these credits to download resumes, run ATS analysis, and more.</p>

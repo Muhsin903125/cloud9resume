@@ -12,11 +12,11 @@ import {
 } from "../../../lib/backend/utils/loginHistory";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Client for database access
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Client for database access (Admin)
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(
   req: NextApiRequest,
@@ -48,16 +48,23 @@ export default async function handler(
     const { data: user, error: userError } = await supabase
       .from("profiles")
       .select("id, email, password_hash, plan_id, credits")
-      .eq("email", email)
-      .eq("login_provider", "email")
+      .ilike("email", email) // Case-insensitive match
       .single();
 
+    console.log(`[Signin] Attempting login for: ${email}`);
+
     if (userError || !user) {
+      console.warn(
+        "[Signin] User not found in profiles (or not email provider):",
+        userError
+      );
       return res.status(401).json({
         error: "Authentication failed",
-        message: "Invalid email or password",
+        message: "Invalid email or password (User lookup failed)",
       });
     }
+
+    console.log(`[Signin] User found: ${user.id}`);
 
     // Verify password hash
     if (!user.password_hash) {
@@ -109,11 +116,11 @@ export default async function handler(
       },
       message: "Login successful",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Signin error:", error);
     return res.status(500).json({
       error: "Internal server error",
-      message: "Login failed",
+      message: "Login failed: " + (error.message || String(error)),
     });
   }
 }

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import Button from "../components/Button";
 import { getAssetUrl } from "../lib/common-functions";
 import { updatePasswordWithToken } from "../lib/authUtils";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 const ResetPasswordPage: NextPage = () => {
   const router = useRouter();
@@ -14,6 +15,8 @@ const ResetPasswordPage: NextPage = () => {
   const [token, setToken] = useState<string>("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -288,16 +291,32 @@ const ResetPasswordPage: NextPage = () => {
                     >
                       New Password
                     </label>
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      placeholder="••••••••"
-                    />
+                    <div className="relative">
+                      <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-10"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                      >
+                        {showPassword ? (
+                          <EyeSlashIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <EyeIcon className="h-5 w-5" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
                     <p className="mt-1.5 text-xs text-gray-500">
                       At least 8 characters
                     </p>
@@ -311,16 +330,34 @@ const ResetPasswordPage: NextPage = () => {
                     >
                       Confirm Password
                     </label>
-                    <input
-                      id="confirm-password"
-                      name="confirm-password"
-                      type="password"
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      placeholder="••••••••"
-                    />
+                    <div className="relative">
+                      <input
+                        id="confirm-password"
+                        name="confirm-password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-10"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeSlashIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <EyeIcon className="h-5 w-5" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <Button
