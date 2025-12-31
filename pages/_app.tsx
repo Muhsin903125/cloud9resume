@@ -241,123 +241,151 @@ function DashboardLayout({
               <Bars3Icon className="w-6 h-6" />
             </button>
 
+            {/* Modern Dark Sidebar */}
             <div
-              className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 md:h-screen md:shadow-sm md:w-64 md:border-r md:border-gray-200 ${
+              className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#111827] text-white shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 md:h-screen md:w-72 border-r border-[#1F2937] ${
                 isMenuOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              <div className="flex flex-col h-full bg-white">
-                <div className="flex items-center justify-between flex-shrink-0 px-4 py-3 border-b border-gray-200">
-                  <Link href="/" className="flex items-center  ">
-                    <img
-                      src={getAssetUrl("/logo.png")}
-                      alt="Cloud9Profile Logo"
-                      className="h-8 w-auto object-contain"
-                    />
+              <div className="flex flex-col h-full">
+                {/* Logo Area */}
+                <div className="flex items-center justify-between flex-shrink-0 px-6 py-6 border-b border-[#1F2937] bg-[#111827]">
+                  <Link href="/" className="flex items-center gap-3 group">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-blue-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                      <img
+                        src={getAssetUrl("/logo.png")}
+                        alt="Cloud9"
+                        className="h-8 w-8 relative object-contain"
+                      />
+                    </div>
+                    <span className="text-xl font-bold tracking-tight text-white">
+                      Cloud9
+                    </span>
                   </Link>
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="md:hidden p-2 text-gray-500 hover:text-gray-900 rounded-lg hover:bg-gray-100"
+                    className="md:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     <XMarkIcon className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="flex-grow flex flex-col py-6 px-4 gap-1 overflow-y-auto">
-                  <nav className="space-y-1">
-                    {navigationItems.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        onClick={() => setIsMenuOpen(false)}
-                        className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                          router.pathname === item.href
-                            ? "bg-gray-900 text-white shadow-md shadow-gray-900/10"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                        }`}
-                      >
-                        <span
-                          style={{
-                            marginRight: "0.75rem",
-                            display: "flex",
-                            alignItems: "center",
-                          }}
+                {/* Navigation */}
+                <div className="flex-grow flex flex-col py-8 px-4 gap-2 overflow-y-auto">
+                  <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Menu
+                  </p>
+                  <nav className="space-y-2">
+                    {navigationItems.map((item) => {
+                      const isActive = router.pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={`group relative flex items-center px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 overflow-hidden ${
+                            isActive
+                              ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
+                              : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          }`}
                         >
-                          <item.Icon
-                            size={20}
-                            className={
-                              router.pathname === item.href
-                                ? "text-white"
-                                : "text-gray-400 group-hover:text-gray-600"
-                            }
-                          />
-                        </span>
-                        {item.name}
-                      </Link>
-                    ))}
+                          {/* Active Indicator */}
+                          {isActive && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-400"></div>
+                          )}
+
+                          <span className="flex items-center mr-3 relative z-10">
+                            <item.Icon
+                              size={20}
+                              className={`transition-colors ${
+                                isActive
+                                  ? "text-white"
+                                  : "text-gray-500 group-hover:text-gray-300"
+                              }`}
+                            />
+                          </span>
+                          <span className="relative z-10 leading-none pt-0.5">
+                            {item.name}
+                          </span>
+
+                          {/* Hover Glow */}
+                          {!isActive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
+                          )}
+                        </Link>
+                      );
+                    })}
                   </nav>
                 </div>
 
-                <div className="flex-shrink-0 border-t border-gray-200 px-4 py-4 m-4 mt-auto rounded-xl bg-gray-50/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                {/* User Profile Section (Bottom) */}
+                <div className="flex-shrink-0 border-t border-[#1F2937] p-4 bg-[#0F1523]">
+                  <div className="rounded-xl bg-[#1F2937]/50 p-3 border border-[#374151]/50">
+                    <div className="flex items-center gap-3 mb-3">
                       <div className="flex-shrink-0">
                         {userPicture ? (
                           <img
                             src={userPicture}
                             alt={userName}
-                            className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm"
+                            className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-700"
                           />
                         ) : (
-                          <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-white shadow-sm">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-inner">
                             {userName.charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
+                        <p className="text-sm font-semibold text-white truncate">
                           {userName || "Account"}
                         </p>
-                        <div className="flex items-center mt-0.5 gap-2">
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
-                            ⚡ {userCredits} Credits
-                          </span>
-                          <button
-                            onClick={() => setShowPlanModal(true)}
-                            className="text-[10px] text-blue-600 font-bold hover:underline"
-                          >
-                            Get More
-                          </button>
-                        </div>
                         <Link
                           href="/dashboard/profile"
                           onClick={() => setIsMenuOpen(false)}
-                          className="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                          className="text-xs text-gray-400 hover:text-blue-400 transition-colors"
                         >
                           View Profile
                         </Link>
                       </div>
                     </div>
 
-                    <button
-                      onClick={handleSignOutClick}
-                      title="Sign out"
-                      className="flex-shrink-0 ml-2 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    {/* Credits & Sign Out */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center px-2 py-1 rounded-lg bg-[#111827] border border-[#374151] flex-1">
+                        <span className="text-[10px] text-yellow-500 mr-1">
+                          ⚡
+                        </span>
+                        <span className="text-xs font-medium text-gray-300">
+                          {userCredits}
+                        </span>
+                        <button
+                          onClick={() => setShowPlanModal(true)}
+                          className="ml-auto text-[10px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-wide"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      <button
+                        onClick={handleSignOutClick}
+                        title="Sign out"
+                        className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
-                      </svg>
-                    </button>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -80,56 +80,77 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   return (
     <div className="min-h-screen bg-gray-50 text-sm font-sans">
       {/* Sidebar */}
+      {/* Modern Sidebar */}
       <aside
         className={`${
-          sidebarCollapsed ? "w-16" : "w-56"
-        } bg-slate-900 text-white flex flex-col fixed h-full z-50 transition-all duration-300 shadow-xl border-r border-slate-800`}
+          sidebarCollapsed ? "w-20" : "w-72"
+        } bg-[#111827] text-white flex flex-col fixed h-full z-50 transition-all duration-300 ease-in-out border-r border-[#1F2937] shadow-xl`}
       >
         {/* Logo Section */}
-        <div className="h-14 flex items-center justify-between px-4 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
+        <div className="h-20 flex items-center justify-center border-b border-[#1F2937] px-6">
           <Link href="/admin">
-            <div className="flex items-center gap-2 cursor-pointer">
-              <img
-                src="/logo.png"
-                alt="Cloud9Profile"
-                className="h-6 w-6 rounded object-contain"
-              />
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition-opacity"></div>
+                <img
+                  src="/logo.png"
+                  alt="Cloud9"
+                  className="h-10 w-10 relative rounded-lg object-contain"
+                />
+              </div>
               {!sidebarCollapsed && (
-                <span className="text-sm font-bold tracking-wide text-white">
-                  Cloud9<span className="text-blue-400">Admin</span>
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold tracking-tight text-white leading-none">
+                    Cloud9
+                  </span>
+                  <span className="text-[10px] font-medium text-blue-400 uppercase tracking-widest mt-1">
+                    Admin Panel
+                  </span>
+                </div>
               )}
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = router.pathname === item.href;
             return (
               <Link key={item.name} href={item.href}>
                 <div
                   className={`flex items-center ${
-                    sidebarCollapsed ? "justify-center" : "gap-3"
-                  } px-3 py-2 rounded-md transition-all duration-200 cursor-pointer group ${
+                    sidebarCollapsed ? "justify-center" : "gap-4"
+                  } px-4 py-3.5 rounded-xl transition-all duration-200 cursor-pointer group relative overflow-hidden ${
                     isActive
-                      ? "bg-blue-600/90 text-white shadow-sm ring-1 ring-blue-500"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
+                      : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                   }`}
                   title={sidebarCollapsed ? item.name : undefined}
                 >
+                  {/* Active Indicator Line (Left) */}
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-400 rounded-r-full"></div>
+                  )}
+
                   <item.icon
-                    className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                    className={`flex-shrink-0 transition-colors ${
+                      sidebarCollapsed ? "w-6 h-6" : "w-5 h-5"
+                    } ${
                       isActive
                         ? "text-white"
-                        : "text-slate-500 group-hover:text-white"
+                        : "text-gray-500 group-hover:text-gray-300"
                     }`}
                   />
                   {!sidebarCollapsed && (
-                    <span className="font-medium text-xs tracking-wide">
+                    <span className="font-medium text-sm tracking-wide">
                       {item.name}
                     </span>
+                  )}
+
+                  {/* Subtle Glow Effect on Hover */}
+                  {!isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
                   )}
                 </div>
               </Link>
@@ -137,41 +158,48 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
           })}
         </nav>
 
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="mx-3 mb-2 px-2 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 rounded transition-colors text-xs text-slate-400 flex items-center justify-center gap-2 border border-slate-800"
-        >
-          <svg
-            className={`w-3 h-3 transition-transform ${
-              sidebarCollapsed ? "rotate-180" : ""
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* Bottom Section */}
+        <div className="p-4 border-t border-[#1F2937] bg-[#0F1523]">
+          {/* Collapse Toggle */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={`w-full flex items-center ${
+              sidebarCollapsed ? "justify-center" : "justify-between"
+            } px-4 py-3 mb-4 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-            />
-          </svg>
-          {!sidebarCollapsed && <span>Collapse Menu</span>}
-        </button>
+            {!sidebarCollapsed && (
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                Collapse
+              </span>
+            )}
+            <svg
+              className={`w-5 h-5 transition-transform duration-300 ${
+                sidebarCollapsed ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
 
-        {/* Sign Out */}
-        <div className="p-3 border-t border-slate-800 bg-slate-900/50">
+          {/* Sign Out Button */}
           <button
             onClick={() => logout()}
             className={`flex items-center ${
               sidebarCollapsed ? "justify-center" : "gap-3"
-            } px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-md w-full transition-colors`}
+            } w-full px-4 py-3 text-red-400 bg-red-500/10 hover:bg-red-500/20 hover:text-red-300 rounded-xl transition-all duration-200 group border border-red-500/10 hover:border-red-500/30`}
             title={sidebarCollapsed ? "Sign Out" : undefined}
           >
-            <ArrowRightOnRectangleIcon className="w-4 h-4 flex-shrink-0" />
+            <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0 transition-transform group-hover:translate-x-1" />
             {!sidebarCollapsed && (
-              <span className="font-medium text-xs">Sign Out</span>
+              <span className="font-semibold text-sm">Sign Out</span>
             )}
           </button>
         </div>
@@ -180,7 +208,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
       {/* Main Content */}
       <div
         style={{
-          marginLeft: sidebarCollapsed ? "64px" : "224px", // 16px (w-16) vs 224px (w-56)
+          marginLeft: sidebarCollapsed ? "80px" : "288px",
           minHeight: "100vh",
           transition: "margin-left 300ms",
         }}
