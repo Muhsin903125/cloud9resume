@@ -1,4 +1,4 @@
-import { geminiFlashModel } from "./client";
+import { geminiFlashModel, geminiClient } from "./client";
 
 export interface ATSAnalysisResult {
   score: number;
@@ -54,14 +54,33 @@ export class ATSOptimizerService {
       ${jobDescription.substring(0, 5000)}
     `;
 
-    try {
-      const result = await geminiFlashModel.generateContent(prompt);
-      const response = result.response.text();
-      return this.cleanAndParseJSON(response);
-    } catch (error) {
-      console.error("ATS Analysis AI Error:", error);
-      throw new Error("Failed to analyze resume.");
+    // Strategy: Try cheaper models first, then fallback
+    const modelsToTry = [
+      "gemini-1.5-flash-8b", // Cheapest, fastest
+      "gemini-1.5-flash", // Fallback
+      "gemini-2.0-flash-exp", // Experimental
+    ];
+    let lastError: any = null;
+
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`[ATS Analysis] Attempting with ${modelName}...`);
+        const model = geminiClient.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const response = result.response.text();
+        return this.cleanAndParseJSON(response);
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`[ATS Analysis] Failed with ${modelName}:`, error.message);
+        continue;
+      }
     }
+
+    throw new Error(
+      `ATS Analysis failed after trying all models. Final error: ${
+        lastError?.message || "Unknown error"
+      }`
+    );
   }
 
   private cleanAndParseJSON(text: string): ATSAnalysisResult {

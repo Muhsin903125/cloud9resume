@@ -20,6 +20,7 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Loader from "../components/Loader";
 
 import * as gtag from "../lib/gtag";
+import CookieBanner from "../components/common/CookieBanner";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -95,6 +96,7 @@ export default function App({ Component, pageProps }: AppProps) {
         >
           <Component {...pageProps} />
         </DashboardLayout>
+        <CookieBanner />
       </div>
     );
   }
@@ -114,6 +116,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <div className="min-h-screen flex flex-col">
       {isLoading && <Loader />}
       <Toaster position="bottom-right" />
+      <CookieBanner />
       <Navbar />
       <main className="flex-1">
         <Component {...pageProps} />

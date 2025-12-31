@@ -39,11 +39,6 @@ async function extractUserInfo(
     }
     if (!token) return null;
 
-    const { data, error } = await supabase.auth.getUser(token);
-    if (!error && data.user) {
-      return { userId: data.user.id, email: data.user.email || "" };
-    }
-
     const decoded = jwt.decode(token) as any;
     const userId = decoded?.sub || decoded?.userId || null;
     const email = decoded?.email || "";

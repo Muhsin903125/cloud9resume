@@ -5,6 +5,11 @@ import {
   getUserById,
 } from "../../../lib/backend/utils/tokenService";
 import bcrypt from "bcryptjs";
+import {
+  logUserLogin,
+  getClientIP,
+  getUserAgent,
+} from "../../../lib/backend/utils/loginHistory";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -82,6 +87,15 @@ export default async function handler(
 
     // Generate JWT token with user plan info
     const accessToken = await generateToken(user.id, user.email, userPlan);
+
+    // Log successful login
+    logUserLogin({
+      userId: user.id,
+      loginMethod: "email",
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req),
+      success: true,
+    });
 
     return res.status(200).json({
       success: true,

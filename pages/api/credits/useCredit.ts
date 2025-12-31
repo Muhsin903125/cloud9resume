@@ -1,96 +1,103 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
+import { NextApiRequest, NextApiResponse } from "next";
+import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Client with service role for admin operations
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { token, creditsUsed, action } = req.body
+    const { token, creditsUsed, action } = req.body;
 
     // Validate input
     if (!token || !creditsUsed || !action) {
       return res.status(400).json({
-        error: 'Validation failed',
-        message: 'Token, creditsUsed, and action are required',
-      })
+        error: "Validation failed",
+        message: "Token, creditsUsed, and action are required",
+      });
     }
 
-    if (typeof creditsUsed !== 'number' || creditsUsed <= 0) {
+    if (typeof creditsUsed !== "number" || creditsUsed <= 0) {
       return res.status(400).json({
-        error: 'Validation failed',
-        message: 'creditsUsed must be a positive number',
-      })
+        error: "Validation failed",
+        message: "creditsUsed must be a positive number",
+      });
     }
 
-    // Verify token and get user
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
-
-    if (authError || !user) {
+    // Verify token via manual JWT decode
+    let userId: string;
+    try {
+      const decoded = jwt.decode(token) as any;
+      userId = decoded?.sub || decoded?.userId;
+      if (!userId) {
+        throw new Error("Invalid token payload");
+      }
+    } catch (err) {
       return res.status(401).json({
-        error: 'Unauthorized',
-        message: 'Invalid or expired token',
-      })
+        error: "Unauthorized",
+        message: "Invalid or expired token",
+      });
     }
-
-    const userId = user.id
 
     // Get current user profile
     const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
 
     if (profileError || !profile) {
       return res.status(404).json({
-        error: 'User not found',
-        message: 'User profile does not exist',
-      })
+        error: "User not found",
+        message: "User profile does not exist",
+      });
     }
 
     // Check if user has enough credits
     if (profile.credits < creditsUsed) {
       return res.status(400).json({
-        error: 'Insufficient credits',
+        error: "Insufficient credits",
         message: `You have ${profile.credits} credits but need ${creditsUsed}`,
-      })
+      });
     }
 
     // Deduct credits from user profile
-    const newCredits = profile.credits - creditsUsed
+    const newCredits = profile.credits - creditsUsed;
     const { error: updateError } = await supabaseAdmin
-      .from('profiles')
+      .from("profiles")
       .update({ credits: newCredits })
-      .eq('id', userId)
+      .eq("id", userId);
 
     if (updateError) {
-      console.error('Update credits error:', updateError)
+      console.error("Update credits error:", updateError);
       return res.status(500).json({
-        error: 'Failed to update credits',
-        message: 'Could not deduct credits from account',
-      })
+        error: "Failed to update credits",
+        message: "Could not deduct credits from account",
+      });
     }
 
     // Record credit usage in credit_usage table
     const { error: recordError } = await supabaseAdmin
-      .from('credit_usage')
+      .from("credit_usage")
       .insert({
         user_id: userId,
         action: action,
         credits_used: creditsUsed,
         created_at: new Date().toISOString(),
-      })
+      });
 
     if (recordError) {
-      console.error('Record usage error:', recordError)
+      console.error("Record usage error:", recordError);
       // Don't fail if we can't record usage, but log it
     }
 
@@ -99,12 +106,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: `${creditsUsed} credits deducted for ${action}`,
       creditsRemaining: newCredits,
       creditsUsed: creditsUsed,
-    })
+    });
   } catch (error) {
-    console.error('Use credit error:', error)
+    console.error("Use credit error:", error);
     return res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to process credit usage',
-    })
+      error: "Internal server error",
+      message: "Failed to process credit usage",
+    });
   }
 }

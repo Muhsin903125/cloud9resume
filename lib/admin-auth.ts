@@ -29,21 +29,10 @@ export async function verifyAdmin(
   console.log("Token preview:", token.substring(0, 20) + "...");
 
   try {
-    // 1. Extract user ID from token
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(token);
-
-    let userId = user?.id;
-    let email = user?.email;
-
-    if (!userId) {
-      console.log("⚠️ Supabase auth failed, trying JWT decode");
-      const decoded: any = jwt.decode(token);
-      userId = decoded?.sub || decoded?.userId;
-      email = decoded?.email;
-    }
+    // 1. Extract user ID from token via manual JWT decode (custom tokens)
+    const decoded: any = jwt.decode(token);
+    const userId = decoded?.sub || decoded?.userId;
+    const email = decoded?.email;
 
     console.log(`👤 User extracted: ${userId} (${email})`);
 
@@ -69,27 +58,6 @@ export async function verifyAdmin(
     });
 
     let isAdmin = profile?.is_admin === true;
-
-    // 3. If not admin in profiles, check users table (fallback)
-    if (!isAdmin) {
-      console.log("⚠️ Not admin in profiles, checking users table...");
-      const { data: userProfile, error: userError } = await supabaseAdmin
-        .from("users")
-        .select("id, email, is_admin")
-        .eq("email", email) // Use email instead of ID
-        .single();
-
-      console.log(`📊 Users table (by email):`, {
-        found: !!userProfile,
-        isAdmin: userProfile?.is_admin,
-        userId: userProfile?.id,
-        error: userError?.message,
-      });
-
-      if (userProfile?.is_admin === true) {
-        isAdmin = true;
-      }
-    }
 
     if (!isAdmin) {
       console.log(`❌ Access DENIED - User ${email} is not an admin`);

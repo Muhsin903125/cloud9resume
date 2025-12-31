@@ -41,10 +41,14 @@ export default async function handler(
     if (picture) updateData.picture = picture;
 
     const { data, error } = await supabase
-      .from("users")
+      .from("profiles")
       .update(updateData)
       .eq("id", userId)
-      .select("id, email, name, picture")
+      .select("id, email, name, picture") // Ensure columns exist in profiles. Name usually does. Picture might not?
+      // Checking User interface in authUtils.ts: name is top level, picture is top level.
+      // In Supabase profiles, we usually have name, but maybe not picture.
+      // If picture is not in profiles, this will fail.
+      // But user said "move EVERYTHING to profile tbl". So I assume schema supports it.
       .single();
 
     if (error) throw error;

@@ -41,23 +41,21 @@ async function extractUserIdFromToken(
       return null;
     }
 
-    // Attempt Supabase verification first
-    const { data, error } = await supabase.auth.getUser(token);
-    if (!error && data.user) {
-      console.log("[Dashboard API] User verified via Supabase:", data.user.id);
-      return data.user.id;
-    }
+    // Exclusively use manual JWT decode for our custom tokens
+    try {
+      const decoded = jwt.decode(token) as any;
+      if (!decoded) {
+        console.log("[Dashboard API] Failed to decode token manually");
+        return null;
+      }
 
-    // Manual fallback
-    const decoded = jwt.decode(token) as any;
-    if (!decoded) {
-      console.log("[Dashboard API] Failed to decode token manually");
+      const userId = decoded.sub || decoded.userId;
+      console.log("[Dashboard API] Extracted UserID from decode:", userId);
+      return userId;
+    } catch (err) {
+      console.error("[Dashboard API] Decode error:", err);
       return null;
     }
-
-    const userId = decoded.sub || decoded.userId;
-    console.log("[Dashboard API] Extracted UserID from decode:", userId);
-    return userId;
   } catch (error) {
     console.error("[Dashboard API] Token extraction error:", error);
     return null;

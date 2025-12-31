@@ -68,10 +68,10 @@ export default async function handler(
       });
     }
 
-    // Verify user exists in database
+    // Verify user exists in database (using profiles table)
     const { data: userCheck, error: userCheckError } = await supabase
-      .from("users")
-      .select("id, email, plan")
+      .from("profiles")
+      .select("id, email, plan_id")
       .eq("id", userId)
       .single();
 
@@ -95,7 +95,7 @@ export default async function handler(
     console.log("✅ User verified in database:", {
       userId: userCheck.id,
       email: userCheck.email,
-      plan: userCheck.plan,
+      plan_id: userCheck.plan_id,
     });
 
     if (req.method === "GET") {
@@ -153,14 +153,6 @@ export default async function handler(
         else if (pid === 3) userPlan = "pro";
         else if (pid === 4) userPlan = "pro_plus";
         else if (pid === 5) userPlan = "enterprise";
-      } else {
-        // Fallback to 'users' table if profile fetch fails (legacy fallback)
-        const { data: userData } = await supabase
-          .from("users")
-          .select("plan")
-          .eq("id", userId)
-          .single();
-        if (userData && userData.plan) userPlan = userData.plan;
       }
 
       console.log("✅ Determined user plan:", userPlan);

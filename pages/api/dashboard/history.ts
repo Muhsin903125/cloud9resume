@@ -21,9 +21,6 @@ async function extractUserIdFromToken(
 
     if (!token) return null;
 
-    const { data, error } = await supabase.auth.getUser(token);
-    if (!error && data.user) return data.user.id;
-
     const decoded = jwt.decode(token) as any;
     if (!decoded) return null;
 

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -14,36 +15,28 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // 1. Authenticate user
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
+  // 1. Authenticate user via custom JWT
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabaseAdmin.auth.getUser(token);
-  if (authError || !user) {
-    // Fallback: try to verify if it's our custom JWT or just trust if we have userId provided?
-    // For now, let's rely on body userId or Assume token is valid Supabase token.
-    // If using custom JWT, we might need verifyAdmin logic or just decode.
-    // Let's assume the frontend sends a valid supabase token or we use the userId from body if we trust the client (we shouldn't).
-    // Better: use the user_id from the request body IF we can't validate token easily,
-    // BUT we should validate.
-    // Given the complexity of authUtils.ts using 'x_user_auth_token', let's assume we decode it or use a helper.
-    // For this MVP, let's trust the token validation or check if we can get user by ID.
-    // Let's try to get profile by ID passed in body, but verify with token if possible.
+  const token = authHeader.substring(7);
+  let userId: string;
+
+  try {
+    const decoded = jwt.decode(token) as any;
+    userId = decoded?.sub || decoded?.userId;
+    if (!userId) {
+      throw new Error("Invalid token payload");
+    }
+  } catch (err) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
-  // SIMPLIFICATION: Trust the userId passed in body if we can't decode token on server easily without shared secret.
-  // Ideally we use a shared verify middleware.
-  // We'll stick to updating the profile based on the ID provided in the request body, assuming the frontend is authenticated.
-  // In production, use proper middleware.
+  const { experienceLevel } = req.body;
 
-  const { userId, experienceLevel } = req.body;
-
-  if (!userId || !experienceLevel) {
+  if (!experienceLevel) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -91,6 +84,34 @@ export default async function handler(
         action: "onboarding_bonus",
         description: "Fresher Plan Bonus",
       });
+    }
+
+    // Fetch user details for email (since standard update might not return all fields depending on version/mock)
+    // We used .select() above, usually it returns the updated rows.
+    const updatedProfile = data && data[0];
+    if (updatedProfile) {
+      // Send Welcome Email (Non-blocking)
+      try {
+        const {
+          emailSender,
+        } = require("../../../lib/backend/utils/emailSender");
+        // We need email and name. If select() didn't return them, fetch them.
+        // Let's ensure select() returns them or we fetch them.
+        // 'data' from update should contain them if we didn't specify restricted columns or RLS permitted it.
+        // But the query above just said .select(). Supabase returns all columns by default.
+        // Let's be safe and fetch if missing, or trust .select().
+
+        const email = updatedProfile.email;
+        const name = updatedProfile.name;
+
+        if (email && name) {
+          emailSender.sendWelcomeEmail(email, name).catch((err: any) => {
+            console.error("Failed to send welcome email:", err);
+          });
+        }
+      } catch (e) {
+        console.error("Failed to send welcome email (module load):", e);
+      }
     }
 
     return res.status(200).json({ success: true, data });

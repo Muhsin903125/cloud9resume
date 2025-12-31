@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import {
   welcomeTemplate,
+  registrationSuccessTemplate,
   forgotPasswordTemplate,
   planUpgradeTemplate,
   atsReportTemplate,
@@ -52,8 +53,20 @@ class EmailSender {
   async sendWelcomeEmail(email: string, name: string): Promise<void> {
     await this.sendEmail({
       to: email,
-      subject: "Welcome to Cloud9Profile! 🚀",
+      subject: "Welcome to Cloud9Profile",
       html: welcomeTemplate(name),
+    });
+  }
+
+  async sendRegistrationEmail(
+    email: string,
+    name: string,
+    planId: string = "free"
+  ): Promise<void> {
+    await this.sendEmail({
+      to: email,
+      subject: "Welcome to Cloud9Profile - Registration Successful",
+      html: registrationSuccessTemplate(name, email, planId),
     });
   }
 
@@ -76,7 +89,7 @@ class EmailSender {
   ): Promise<void> {
     await this.sendEmail({
       to: email,
-      subject: "Plan Upgraded Successfully! 🎉",
+      subject: "Plan Upgraded Successfully",
       html: planUpgradeTemplate(name, planName, credits),
     });
   }
@@ -135,6 +148,34 @@ class EmailSender {
       to: supportEmail,
       replyTo: email, // Allow replying directly to the user
       subject: `[Contact Form] ${subject}`,
+      html,
+    });
+  }
+  async sendOTPEmail(email: string, otp: string): Promise<void> {
+    const subject = "Verify your email address - Cloud9Profile";
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #333;">Verify your email address</h2>
+        <p style="color: #666; font-size: 16px;">
+          Use the code below to verify your email address. This code will expire in 10 minutes.
+        </p>
+        <div style="background-color: #f4f4f5; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
+          <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #111;">
+            ${otp}
+          </span>
+        </div>
+        <p style="color: #999; font-size: 14px;">
+          If you didn't request this code, you can ignore this email.
+        </p>
+      </div>
+    `;
+
+    await this.resend.emails.send({
+      from: this.resend.apiKeys
+        ? "Cloud9Profile Security <security@cloud9profile.com>"
+        : "onboarding@resend.dev",
+      to: email,
+      subject,
       html,
     });
   }

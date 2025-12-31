@@ -36,37 +36,20 @@ export default async function handler(
     const token = authHeader.substring(7);
     console.log("Token extracted:", token.substring(0, 20) + "...");
 
-    // 1. Try Supabase auth first
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(token);
+    // 1. Authenticate via manual JWT decode (custom tokens)
+    const decoded: any = jwt.decode(token);
+    let userId = decoded?.sub || decoded?.userId;
+    let email = decoded?.email;
 
-    let userId = user?.id;
-    let email = user?.email;
-
-    console.log("Supabase auth result:", {
-      userId,
-      email,
-      error: authError?.message,
-    });
-
-    // 2. Fallback to JWT decode
-    if (!userId) {
-      console.log("Trying manual JWT decode...");
-      const decoded: any = jwt.decode(token);
-      userId = decoded?.sub || decoded?.userId;
-      email = decoded?.email;
-      console.log("JWT decoded:", { userId, email });
-    }
+    console.log("JWT decoded:", { userId, email });
 
     if (!userId) {
       return res.status(401).json({
         error: "Unauthorized",
         message: "Could not extract user ID from token",
         diagnostic: {
-          supabaseAuthError: authError?.message,
-          tokenDecoded: false,
+          supabaseAuthError: "none (manual decode used)",
+          tokenDecoded: !!userId,
         },
       });
     }
@@ -86,45 +69,22 @@ export default async function handler(
       error: profileError?.message,
     });
 
-    // 4. Check users table
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from("users")
-      .select("id, email, is_admin")
-      .eq("id", userId)
-      .single();
-
-    console.log("Users table query result:", {
-      found: !!userData,
-      data: userData,
-      error: userError?.message,
-    });
-
-    // 5. Also check by email in both tables
+    // 4. Also check by email
     const { data: profileByEmail } = await supabaseAdmin
       .from("profiles")
       .select("id, email, is_admin")
       .eq("email", email)
       .limit(5);
 
-    const { data: usersByEmail } = await supabaseAdmin
-      .from("users")
-      .select("id, email, is_admin")
-      .eq("email", email)
-      .limit(5);
-
-    console.log("Email-based lookups:", {
+    console.log("Email-based lookup:", {
       profilesByEmail: profileByEmail,
-      usersByEmail: usersByEmail,
     });
 
     // Determine admin status
-    const isAdminInProfiles = profileData?.is_admin === true;
-    const isAdminInUsers = userData?.is_admin === true;
-    const isAdmin = isAdminInProfiles || isAdminInUsers;
+    const isAdmin = profileData?.is_admin === true;
 
     console.log("Final admin determination:", {
-      isAdminInProfiles,
-      isAdminInUsers,
+      isAdminInProfiles: isAdmin,
       finalIsAdmin: isAdmin,
     });
 
@@ -140,19 +100,12 @@ export default async function handler(
       diagnostic: {
         profilesTable: {
           found: !!profileData,
-          isAdmin: isAdminInProfiles,
+          isAdmin: isAdmin,
           data: profileData,
-        },
-        usersTable: {
-          found: !!userData,
-          isAdmin: isAdminInUsers,
-          data: userData,
         },
         emailLookup: {
           profilesCount: profileByEmail?.length || 0,
-          usersCount: usersByEmail?.length || 0,
           profiles: profileByEmail,
-          users: usersByEmail,
         },
       },
     });

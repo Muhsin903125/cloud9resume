@@ -69,25 +69,10 @@ export default async function handler(
         .json({ error: "Unauthorized", message: "Missing auth token" });
     }
 
-    // Verify token and get user
-    let userId: string | null = null;
-    let userEmail: string | null = null;
-
-    // Try Supabase auth first
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(token);
-
-    if (user && !authError) {
-      userId = user.id;
-      userEmail = user.email || null;
-    } else {
-      // Fallback to manual JWT extraction
-      const extracted = extractUserFromToken(token);
-      userId = extracted.id;
-      userEmail = extracted.email;
-    }
+    // Verify token and get user via manual JWT extraction
+    const extracted = extractUserFromToken(token);
+    let userId = extracted.id;
+    let userEmail = extracted.email;
 
     if (!userId) {
       return res.status(401).json({

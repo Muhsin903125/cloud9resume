@@ -80,6 +80,8 @@ export default async function handler(
           login_provider: "google",
           plan_id: 1, // Free plan
           credits: 10, // Default Free Plan Credits
+          onboarding_completed: false,
+          email_verified: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -92,6 +94,7 @@ export default async function handler(
       return res.status(500).json({
         error: "Failed to create user",
         message: "Could not create account",
+        details: createError,
       });
     }
 
@@ -101,13 +104,6 @@ export default async function handler(
       credits_used: -10, // Negative for addition
       action: "welcome_bonus",
       description: "Welcome Bonus Credits",
-    });
-
-    // Send Welcome Email (Non-blocking)
-    // Need to import emailSender first
-    const { emailSender } = require("../../../lib/backend/utils/emailSender");
-    emailSender.sendWelcomeEmail(email, name).catch((err: any) => {
-      console.error("Failed to send welcome email:", err);
     });
 
     // Generate JWT token

@@ -80,7 +80,8 @@ const PortfolioDashboardPage: NextPage = () => {
       router.push("/plans");
       return;
     }
-    setView("select-resume");
+    // Go directly to unified editor in new mode
+    router.push("/dashboard/portfolio/new/edit");
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
@@ -264,7 +265,7 @@ const PortfolioDashboardPage: NextPage = () => {
                       <div className="flex gap-2 mt-4">
                         <button
                           onClick={() =>
-                            router.push(`/dashboard/portfolio/${p.id}`)
+                            router.push(`/dashboard/portfolio/${p.id}/edit`)
                           }
                           className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs transition"
                         >

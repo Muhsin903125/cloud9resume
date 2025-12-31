@@ -1,4 +1,4 @@
-import { geminiFlashModel } from "./client";
+import { geminiFlashModel, geminiClient } from "./client";
 import pdf from "pdf-parse";
 import mammoth from "mammoth";
 
@@ -64,6 +64,7 @@ export interface ParsedResumeData {
 }
 
 export class ResumeParserService {
+  private supabase: any;
   /**
    * Main entry point to parse a resume file
    */
@@ -161,9 +162,11 @@ export class ResumeParserService {
 
       const response = result.response.text();
       return this.cleanAndParseJSON(response);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error parsing image with Gemini:", error);
-      throw new Error("Failed to parse resume image");
+      throw new Error(
+        `Failed to parse resume image: ${error.message || error.toString()}`
+      );
     }
   }
 
@@ -198,14 +201,76 @@ export class ResumeParserService {
       4. Output ONLY valid JSON, no markdown.
     `;
 
-    try {
-      const result = await geminiFlashModel.generateContent(prompt);
-      const response = result.response.text();
-      return this.cleanAndParseJSON(response);
-    } catch (error) {
-      console.error("Error parsing text with Gemini:", error);
-      throw new Error("Failed to parse resume text");
+    // Models ordered by free tier availability and stability
+    const modelsToTry = [
+      "gemini-1.5-flash", // Most stable, good free tier
+      "gemini-1.5-flash-8b", // Cheapest
+      "gemini-1.5-pro", // Higher quality fallback
+      "gemini-pro", // Legacy but stable
+    ];
+
+    let lastError: any = null;
+    const tried: string[] = [];
+    const maxRetries = 2;
+
+    for (const modelName of modelsToTry) {
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(
+            `[AI Parser] Trying ${modelName} (attempt ${attempt + 1}/${
+              maxRetries + 1
+            })...`
+          );
+          const model = geminiClient.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent(prompt);
+          const response = result.response.text();
+          console.log(`[AI Parser] Success with ${modelName}`);
+          return this.cleanAndParseJSON(response);
+        } catch (error: any) {
+          lastError = error;
+          const isRateLimit =
+            error.message?.includes("429") || error.message?.includes("quota");
+          const isNotFound =
+            error.message?.includes("404") ||
+            error.message?.includes("not found");
+
+          console.error(`[AI Parser] Error with ${modelName}:`, {
+            message: error.message?.substring(0, 200),
+            isRateLimit,
+            isNotFound,
+            attempt: attempt + 1,
+          });
+
+          // If 404 (model not found), skip to next model immediately
+          if (isNotFound) {
+            tried.push(modelName);
+            break;
+          }
+
+          // If rate limited and we have retries left, wait and retry same model
+          if (isRateLimit && attempt < maxRetries) {
+            const delayMs = (attempt + 1) * 5000; // 5s, 10s
+            console.log(
+              `[AI Parser] Rate limited. Waiting ${
+                delayMs / 1000
+              }s before retry...`
+            );
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            continue;
+          }
+
+          // Move to next model
+          tried.push(modelName);
+          break;
+        }
+      }
     }
+
+    throw new Error(
+      `AI Parsing failed after trying models: ${tried.join(
+        ", "
+      )}. Final error: ${lastError?.message || "Unknown"}`
+    );
   }
 
   private cleanAndParseJSON(jsonString: string): ParsedResumeData {

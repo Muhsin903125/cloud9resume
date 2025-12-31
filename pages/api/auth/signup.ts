@@ -5,9 +5,9 @@ import bcrypt from "bcryptjs";
 import { emailSender } from "../../../lib/backend/utils/emailSender";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(
   req: NextApiRequest,
@@ -43,7 +43,7 @@ export default async function handler(
     }
 
     // Check if user already exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await supabaseAdmin
       .from("profiles")
       .select("id")
       .eq("email", email)
@@ -61,17 +61,7 @@ export default async function handler(
     const passwordHash = await bcrypt.hash(password, salt);
 
     // Create profile in 'profiles' table
-    // We generate a UUID manually since we aren't using Supabase Auth's auto-generation or another table
-    // However, profiles usually rely on an ID. If 'id' is a uuid primary key, we can let Postgres generate it
-    // OR if it was foreign key to 'users', we need to be careful.
-    // Assuming 'profiles.id' is a UUID PK or we can generate one.
-    // Let's use 'crypto.randomUUID()' or let DB handle it if possible.
-    // Looking at previous code: newUser.id was from 'users' table insert.
-    // We should probably rely on Supabase returning the generated ID.
-
-    // NOTE: 'users' table usually handles ID generation. If we're swapping to 'profiles', ensure 'profiles.id' is default uuid_generate_v4()
-
-    const { data: newProfile, error: createError } = await supabase
+    const { data: newProfile, error: createError } = await supabaseAdmin
       .from("profiles")
       .insert([
         {
@@ -81,6 +71,7 @@ export default async function handler(
           login_provider: "email",
           plan_id: 1, // Free plan
           credits: 10, // Default Free Plan Credits
+          onboarding_completed: false,
         },
       ])
       .select("id, email, plan_id, credits")
@@ -95,16 +86,11 @@ export default async function handler(
     }
 
     // Log the initial credit allocation
-    await supabase.from("credit_usage").insert({
+    await supabaseAdmin.from("credit_usage").insert({
       user_id: newProfile.id,
       credits_used: -10, // Negative for addition
       action: "welcome_bonus",
       description: "Welcome Bonus Credits",
-    });
-
-    // Send Welcome Email (Non-blocking)
-    emailSender.sendWelcomeEmail(email, name).catch((err) => {
-      console.error("Failed to send welcome email:", err);
     });
 
     // Generate JWT token

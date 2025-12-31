@@ -41,19 +41,17 @@ export default async function handler(
   const { resumeData, jobDescription, resumeId } = req.body;
 
   if (!resumeData || !jobDescription) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        error: "Missing resume data or job description",
-      });
+    return res.status(400).json({
+      success: false,
+      error: "Missing resume data or job description",
+    });
   }
 
   try {
     // 1. Check User & Credits
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("credits, plan")
+      .select("credits, plan_id")
       .eq("id", userId)
       .single();
 
@@ -117,11 +115,9 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("ATS API Error:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        error: error.message || "Internal server error",
-      });
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Internal server error",
+    });
   }
 }

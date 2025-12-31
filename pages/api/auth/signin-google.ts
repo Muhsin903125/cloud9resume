@@ -2,6 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { google } from "googleapis";
 import { generateToken } from "../../../lib/backend/utils/tokenService";
+import {
+  logUserLogin,
+  getClientIP,
+  getUserAgent,
+} from "../../../lib/backend/utils/loginHistory";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -81,7 +86,8 @@ export default async function handler(
             name,
             login_provider: "google",
             plan_id: 1, // Free plan
-            credits: 0,
+            credits: 10,
+            onboarding_completed: false,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
@@ -90,14 +96,35 @@ export default async function handler(
         .single();
 
       if (createError || !newUser) {
-        console.error("❌ User creation error:", createError);
+        console.error("❌ User creation error (profiles):", createError);
         return res.status(500).json({
-          error: "Failed to create user",
-          message: "Could not create account",
+          error: "Failed to create user profile",
+          message: "Could not create account profile",
+          details: createError,
         });
       }
 
-      console.log("✅ New user created:", {
+      // Log the initial credit allocation
+      await supabaseAdmin.from("credit_usage").insert({
+        user_id: newUser.id,
+        credits_used: -10, // Negative for addition
+        action: "welcome_bonus",
+        description: "Welcome Bonus Credits",
+      });
+
+      // Send Welcome Email (Non-blocking)
+      try {
+        const {
+          emailSender,
+        } = require("../../../lib/backend/utils/emailSender");
+        emailSender.sendWelcomeEmail(email, name).catch((err: any) => {
+          console.error("Failed to send welcome email:", err);
+        });
+      } catch (e) {
+        console.error("Failed to load emailSender:", e);
+      }
+
+      console.log("✅ New user created in profiles:", {
         id: newUser.id,
         email: newUser.email,
         plan_id: newUser.plan_id,
@@ -129,6 +156,15 @@ export default async function handler(
       userId: user.id,
       email: user.email,
       tokenLength: accessToken.length,
+    });
+
+    // Log successful login
+    logUserLogin({
+      userId: user.id,
+      loginMethod: "google",
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req),
+      success: true,
     });
 
     return res.status(200).json({

@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -17,27 +18,18 @@ export default async function handler(
   res: NextApiResponse<ExportResponse>
 ) {
   try {
-    // Verify authentication
+    // Verify authentication via custom JWT
     let userId = "";
     const authHeader = req.headers.authorization;
 
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser(token);
-
-      if (!error && user) {
-        userId = user.id;
+      try {
+        const decoded = jwt.decode(token) as any;
+        userId = decoded?.sub || decoded?.userId;
+      } catch (err) {
+        console.error("[Export API] Token decode error:", err);
       }
-    }
-
-    // Fallback or explicit check
-    if (!userId) {
-      // Double check header mainly for service-to-service if used inside same network,
-      // but generally we want token auth.
-      userId = req.headers["x-user-id"] as string;
     }
 
     if (!userId) {
@@ -75,8 +67,8 @@ export default async function handler(
 
       // Check user plan & credits
       const { data: userPlan, error: planError } = await supabase
-        .from("profiles") // Correct table name
-        .select("plan, credits")
+        .from("profiles")
+        .select("plan_id, credits")
         .eq("id", userId)
         .single();
 

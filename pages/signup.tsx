@@ -9,6 +9,7 @@ import Button from "../components/Button";
 import Card from "../components/Card";
 import OAuthButton from "../components/OAuthButton";
 import { api } from "../lib/api";
+import { apiClient } from "../lib/apiClient";
 import {
   validateEmail,
   isValidEmail,
@@ -16,6 +17,7 @@ import {
   getLinkedInOAuthUrl,
   getGitHubOAuthUrl,
 } from "../lib/authUtils";
+import { USER_AUTH_TOKEN_KEY } from "../lib/token-keys";
 
 const SignupPage: NextPage = () => {
   const router = useRouter();
@@ -33,6 +35,12 @@ const SignupPage: NextPage = () => {
   const [emailError, setEmailError] = useState("");
   const [emailValidating, setEmailValidating] = useState(false);
   const [emailValid, setEmailValid] = useState<boolean | null>(null);
+
+  // OTP State
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [tempToken, setTempToken] = useState("");
 
   // Check for errors from OAuth callback
   useEffect(() => {
@@ -151,15 +159,45 @@ const SignupPage: NextPage = () => {
         return;
       }
 
-      // Show success message and redirect to login or dashboard
-      alert(
-        "Account created successfully! Please check your email to verify your account."
-      );
-      router.push("/login");
+      // Don't redirect yet. Start OTP flow.
+      // API client returns { success: true, data: { accessToken: ... } }
+      const responseData = response.data as any;
+      if (responseData && responseData.accessToken) {
+        // Store token so apiClient can use it
+        localStorage.setItem(USER_AUTH_TOKEN_KEY, responseData.accessToken);
+
+        // Trigger send-otp
+        await apiClient.post("/auth/send-otp", {});
+        setShowOtpModal(true);
+      } else {
+        console.error("Signup response missing token:", response);
+        setError("Account created but failed to start verification.");
+      }
     } catch (err) {
       setError("Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otpCode || otpCode.length !== 6) return;
+    setVerifyingOtp(true);
+    try {
+      const res = await apiClient.post("/auth/verify-otp", { otp: otpCode });
+
+      if (res.data && res.data.success) {
+        alert("Verification successful! Please sign in.");
+        router.push("/login");
+      } else {
+        const errorMsg =
+          res.error || (res.data && res.data.error) || "Invalid code";
+        setError(errorMsg);
+      }
+    } catch (error) {
+      setError("Verification failed");
+    } finally {
+      setVerifyingOtp(false);
     }
   };
 
@@ -438,6 +476,52 @@ const SignupPage: NextPage = () => {
               Privacy
             </Link>
           </p>
+
+          {/* OTP Modal Overlay - Placed inside the card for style or global? Global is better. */}
+          {showOtpModal && (
+            <div className="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center p-8 text-center rounded-3xl">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Verify your email
+              </h3>
+              <p className="text-gray-500 mb-8">
+                We sent a code to <strong>{formData.email}</strong>
+              </p>
+
+              <input
+                type="text"
+                value={otpCode}
+                onChange={(e) =>
+                  setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                className="w-full text-center text-4xl tracking-[0.5em] font-bold py-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none mb-8 font-mono"
+                placeholder="000000"
+                autoFocus
+              />
+
+              <button
+                onClick={verifyOtp}
+                disabled={verifyingOtp || otpCode.length !== 6}
+                className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {verifyingOtp ? "Verifying..." : "Verify & Complete"}
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     </>
