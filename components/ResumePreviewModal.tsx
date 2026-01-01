@@ -4,6 +4,7 @@ import SharedModal from "./SharedModal";
 import { ResumeRenderer } from "./ResumeRenderer";
 import { TEMPLATE_REGISTRY, getAtsTemplates } from "../lib/template-registry";
 import { useAPIAuth } from "@/hooks/useAPIAuth";
+import { useAuth } from "@/lib/authUtils";
 import {
   DownloadIcon,
   CheckIcon,
@@ -15,6 +16,9 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   GripVerticalIcon,
+  DocumentIcon,
+  LockIcon,
+  ChevronDownIcon,
 } from "./Icons";
 import { toast } from "react-hot-toast";
 import PlanSelectionModal from "./PlanSelectionModal";
@@ -143,6 +147,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
   onSave,
 }) => {
   const { get: getAuth } = useAPIAuth();
+  const { user } = useAuth();
   const isInitialized = useRef(false);
 
   // Local states
@@ -158,6 +163,10 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+
+  // Check if user has a paid plan
+  const isPaidPlan = user?.plan && !["free", "starter"].includes(user.plan);
 
   // Reset initialization when modal closes
   useEffect(() => {
@@ -255,15 +264,26 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
     setActiveTab(tab);
   };
 
-  const handlePrint = async (type: "visual" | "standard" = "visual") => {
+  const handleDownload = async (format: "pdf" | "docx" = "pdf") => {
     if (!onSave) return;
+
+    // Close the download menu
+    setShowDownloadMenu(false);
+
+    // Check if DOCX is allowed for this plan
+    if (format === "docx" && !isPaidPlan) {
+      setShowUpgradeModal(true);
+      toast.error("DOCX export is available for Pro and Enterprise plans.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await handleSave();
 
       const exportParams = {
         resumeId: resume.id,
-        format: "pdf",
+        format: format,
         template: template,
         themeColor: themeColor,
         font: font,
@@ -288,7 +308,11 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
           toast.error("Download limit reached. Please upgrade to continue.");
           return;
         }
-        throw new Error("Failed to generate PDF");
+        if (response.status === 501) {
+          toast.error("DOCX export is coming soon!");
+          return;
+        }
+        throw new Error(`Failed to generate ${format.toUpperCase()}`);
       }
 
       const blob = await response.blob();
@@ -298,18 +322,19 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
       a.download = `${(resume.title || "resume").replace(
         /[^a-z0-9]/gi,
         "_"
-      )}.pdf`;
+      )}.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.success("PDF downloaded successfully");
+      toast.success(`${format.toUpperCase()} downloaded successfully`);
     } catch (error) {
       console.error(error);
       if (!String(error).includes("limit reached")) {
-        // Avoid double toast
-        toast.error("Failed to generate PDF. Please try again.");
+        toast.error(
+          `Failed to generate ${format.toUpperCase()}. Please try again.`
+        );
       }
     } finally {
       setIsSaving(false);
@@ -750,7 +775,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
               </div>
 
               <button
-                onClick={() => handlePrint("visual")}
+                onClick={() => handleDownload("pdf")}
                 disabled={isSaving}
                 className="px-6 py-2 bg-gray-900 hover:bg-black text-white rounded-lg font-bold shadow-lg shadow-gray-900/10 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
               >

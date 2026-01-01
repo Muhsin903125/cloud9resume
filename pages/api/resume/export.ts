@@ -4,6 +4,19 @@ import ReactDOMServer from "react-dom/server";
 import React from "react";
 import { ResumeRenderer } from "../../../components/ResumeRenderer";
 import jwt from "jsonwebtoken";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+  BorderStyle,
+  TableRow,
+  Table,
+  TableCell,
+  WidthType,
+} from "docx";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,12 +66,10 @@ export default async function handler(
             profile.downloads_limit !== -1 &&
             profile.downloads_used >= profile.downloads_limit
           ) {
-            return res
-              .status(403)
-              .json({
-                error:
-                  "Monthly download limit reached. Upgrade to Pro for unlimited downloads.",
-              });
+            return res.status(403).json({
+              error:
+                "Monthly download limit reached. Upgrade to Pro for unlimited downloads.",
+            });
           }
 
           // Increment usage
@@ -141,9 +152,28 @@ export default async function handler(
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
-            body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
-            section { page-break-inside: avoid; }
-            .avoid-break { page-break-inside: avoid; }
+            * { 
+              box-sizing: border-box; 
+            }
+            html, body { 
+              width: 100%;
+              margin: 0;
+              padding: 0;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            /* Remove template fixed heights so content flows naturally across pages */
+            #root > div {
+              padding: 0 !important;
+              margin: 0 !important;
+              width: 100% !important;
+              min-height: unset !important;
+              height: auto !important;
+            }
+            /* Ensure sections don't break awkwardly */
+            section, .break-inside-avoid {
+              page-break-inside: avoid;
+            }
           </style>
         </head>
         <body>
@@ -154,7 +184,7 @@ export default async function handler(
 
     if (format === "pdf") {
       const browser = await puppeteer.launch({
-        headless: true, // Use standard headless
+        headless: true,
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
@@ -163,18 +193,16 @@ export default async function handler(
       });
       const page = await browser.newPage();
 
-      // extensive waiting to ensure Tailwind loads
-      // networkidle2 is often safer than networkidle0 for slow CDNs
       await page.setContent(fullHtml, { waitUntil: "networkidle2" });
 
       const pdfBuffer = await page.pdf({
         format: "A4",
         printBackground: true,
         margin: {
-          top: "10mm",
-          bottom: "10mm",
-          left: "10mm",
-          right: "10mm",
+          top: "20mm",
+          bottom: "20mm",
+          left: "15mm",
+          right: "15mm",
         },
       });
 
@@ -187,9 +215,384 @@ export default async function handler(
       return;
     }
 
-    // Stub for DOCX
+    // DOCX Export Implementation
     if (format === "docx") {
-      return res.status(501).json({ error: "DOCX export not implemented yet" });
+      try {
+        const docChildren: any[] = [];
+
+        // Get personal info section
+        const personalInfo =
+          sections.find((s: any) => s.section_type === "personal_info")
+            ?.section_data ||
+          resume.personal_info ||
+          {};
+
+        // Header with name
+        if (personalInfo.name || personalInfo.first_name) {
+          const fullName =
+            personalInfo.name ||
+            `${personalInfo.first_name || ""} ${
+              personalInfo.last_name || ""
+            }`.trim();
+          docChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: fullName,
+                  bold: true,
+                  size: 48, // 24pt
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 100 },
+            })
+          );
+        }
+
+        // Job title
+        if (personalInfo.job_title || personalInfo.title) {
+          docChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: personalInfo.job_title || personalInfo.title,
+                  size: 24, // 12pt
+                  color: "666666",
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 100 },
+            })
+          );
+        }
+
+        // Contact info
+        const contactParts = [];
+        if (personalInfo.email) contactParts.push(personalInfo.email);
+        if (personalInfo.phone) contactParts.push(personalInfo.phone);
+        if (personalInfo.location) contactParts.push(personalInfo.location);
+        if (personalInfo.linkedin) contactParts.push(personalInfo.linkedin);
+
+        if (contactParts.length > 0) {
+          docChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: contactParts.join(" | "),
+                  size: 20, // 10pt
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 200 },
+            })
+          );
+        }
+
+        // Divider
+        docChildren.push(
+          new Paragraph({
+            border: {
+              bottom: { color: "CCCCCC", size: 1, style: BorderStyle.SINGLE },
+            },
+            spacing: { after: 200 },
+          })
+        );
+
+        // Process each section
+        for (const section of sections) {
+          if (section.section_type === "personal_info") continue; // Already handled
+
+          const sectionData = section.section_data || {};
+          const sectionTitle =
+            section.title ||
+            section.section_type.replace(/_/g, " ").toUpperCase();
+
+          // Section header
+          docChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: sectionTitle,
+                  bold: true,
+                  size: 26, // 13pt
+                  color: themeColorToUse.replace("#", ""),
+                }),
+              ],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 300, after: 100 },
+              border: {
+                bottom: {
+                  color: themeColorToUse.replace("#", ""),
+                  size: 1,
+                  style: BorderStyle.SINGLE,
+                },
+              },
+            })
+          );
+
+          // Handle different section types
+          if (
+            section.section_type === "summary" ||
+            section.section_type === "objective"
+          ) {
+            const summaryText =
+              sectionData.text ||
+              sectionData.summary ||
+              sectionData.content ||
+              "";
+            if (summaryText) {
+              docChildren.push(
+                new Paragraph({
+                  children: [new TextRun({ text: summaryText, size: 22 })],
+                  spacing: { after: 150 },
+                })
+              );
+            }
+          } else if (
+            section.section_type === "experience" ||
+            section.section_type === "work_experience"
+          ) {
+            const experiences =
+              sectionData.items || sectionData.experiences || sectionData || [];
+            for (const exp of Array.isArray(experiences) ? experiences : []) {
+              docChildren.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: exp.title || exp.position || "",
+                      bold: true,
+                      size: 24,
+                    }),
+                    new TextRun({
+                      text: exp.company ? ` at ${exp.company}` : "",
+                      size: 24,
+                    }),
+                  ],
+                  spacing: { before: 150 },
+                })
+              );
+              if (exp.date || exp.start_date || exp.duration) {
+                const dateStr =
+                  exp.date ||
+                  `${exp.start_date || ""} - ${exp.end_date || "Present"}`;
+                docChildren.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: dateStr,
+                        size: 20,
+                        italics: true,
+                        color: "666666",
+                      }),
+                    ],
+                  })
+                );
+              }
+              if (exp.description) {
+                docChildren.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: exp.description, size: 22 }),
+                    ],
+                    spacing: { after: 100 },
+                  })
+                );
+              }
+              // Handle bullet points
+              const bullets =
+                exp.bullets || exp.responsibilities || exp.achievements || [];
+              for (const bullet of Array.isArray(bullets) ? bullets : []) {
+                docChildren.push(
+                  new Paragraph({
+                    children: [new TextRun({ text: `• ${bullet}`, size: 22 })],
+                    indent: { left: 360 },
+                  })
+                );
+              }
+            }
+          } else if (section.section_type === "education") {
+            const educations =
+              sectionData.items || sectionData.education || sectionData || [];
+            for (const edu of Array.isArray(educations) ? educations : []) {
+              docChildren.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: edu.degree || "",
+                      bold: true,
+                      size: 24,
+                    }),
+                    new TextRun({
+                      text: edu.field ? ` in ${edu.field}` : "",
+                      size: 24,
+                    }),
+                  ],
+                  spacing: { before: 150 },
+                })
+              );
+              if (edu.institution || edu.school) {
+                docChildren.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: edu.institution || edu.school,
+                        size: 22,
+                      }),
+                    ],
+                  })
+                );
+              }
+              if (edu.date || edu.graduation_date || edu.year) {
+                docChildren.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: edu.date || edu.graduation_date || edu.year,
+                        size: 20,
+                        italics: true,
+                        color: "666666",
+                      }),
+                    ],
+                    spacing: { after: 100 },
+                  })
+                );
+              }
+            }
+          } else if (section.section_type === "skills") {
+            const skills =
+              sectionData.items || sectionData.skills || sectionData || [];
+            const skillNames = (Array.isArray(skills) ? skills : [])
+              .map((s: any) => (typeof s === "string" ? s : s.name || s.skill))
+              .filter(Boolean);
+            if (skillNames.length > 0) {
+              docChildren.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: skillNames.join(" • "), size: 22 }),
+                  ],
+                  spacing: { after: 150 },
+                })
+              );
+            }
+          } else if (section.section_type === "projects") {
+            const projects =
+              sectionData.items || sectionData.projects || sectionData || [];
+            for (const proj of Array.isArray(projects) ? projects : []) {
+              docChildren.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: proj.name || proj.title || "",
+                      bold: true,
+                      size: 24,
+                    }),
+                  ],
+                  spacing: { before: 150 },
+                })
+              );
+              if (proj.description) {
+                docChildren.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: proj.description, size: 22 }),
+                    ],
+                    spacing: { after: 100 },
+                  })
+                );
+              }
+              if (proj.technologies || proj.tech_stack) {
+                const techs = Array.isArray(proj.technologies)
+                  ? proj.technologies.join(", ")
+                  : proj.technologies || proj.tech_stack;
+                docChildren.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: "Technologies: ",
+                        bold: true,
+                        size: 20,
+                      }),
+                      new TextRun({ text: techs, size: 20, italics: true }),
+                    ],
+                  })
+                );
+              }
+            }
+          } else if (section.section_type === "languages") {
+            const languages =
+              sectionData.items || sectionData.languages || sectionData || [];
+            const langStrs = (Array.isArray(languages) ? languages : [])
+              .map((l: any) => {
+                if (typeof l === "string") return l;
+                return l.proficiency
+                  ? `${l.name || l.language} (${l.proficiency})`
+                  : l.name || l.language;
+              })
+              .filter(Boolean);
+            if (langStrs.length > 0) {
+              docChildren.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: langStrs.join(" • "), size: 22 }),
+                  ],
+                  spacing: { after: 150 },
+                })
+              );
+            }
+          } else {
+            // Generic handler for other sections
+            const text =
+              sectionData.text ||
+              sectionData.content ||
+              sectionData.description ||
+              "";
+            if (text) {
+              docChildren.push(
+                new Paragraph({
+                  children: [new TextRun({ text, size: 22 })],
+                  spacing: { after: 150 },
+                })
+              );
+            }
+          }
+        }
+
+        // Create the document
+        const doc = new Document({
+          sections: [
+            {
+              properties: {
+                page: {
+                  margin: { top: 720, bottom: 720, left: 720, right: 720 }, // 0.5 inch margins
+                },
+              },
+              children: docChildren,
+            },
+          ],
+        });
+
+        const buffer = await Packer.toBuffer(doc);
+
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+        res.setHeader("Content-Length", buffer.length);
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=${(resume.title || "resume").replace(
+            /[^a-z0-9]/gi,
+            "_"
+          )}.docx`
+        );
+        res.send(Buffer.from(buffer));
+        return;
+      } catch (docxError: any) {
+        console.error("DOCX generation error:", docxError);
+        return res
+          .status(500)
+          .json({ error: "Failed to generate DOCX: " + docxError.message });
+      }
     }
 
     return res.status(400).json({ error: "Invalid format" });
