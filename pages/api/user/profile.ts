@@ -9,13 +9,11 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 function extractUserIdFromToken(req: NextApiRequest): string | null {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return null;
-    }
+    if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
     const token = authHeader.substring(7);
     const decoded = jwt.decode(token) as any;
     return decoded?.sub || decoded?.userId || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -24,7 +22,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "PATCH") {
+  if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -34,35 +32,44 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { name, picture, gender, dob } = req.body;
-
-    const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
-    if (picture !== undefined) updateData.picture = picture;
-    if (gender !== undefined) updateData.gender = gender;
-    if (dob !== undefined) updateData.dob = dob;
-
-    // Only update if there's something to update
-    if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({ error: "No fields to update" });
-    }
-
     const { data, error } = await supabase
       .from("profiles")
-      .update(updateData)
+      .select(
+        "id, email, name, picture, gender, dob, credits, plan_id, created_at"
+      )
       .eq("id", userId)
-      .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Profile fetch Supabase error:", error);
+      return res.status(500).json({
+        error: "Failed to fetch profile",
+        details: error.message,
+      });
+    }
+
+    // Map plan_id to plan name (same as dashboard API)
+    const planMap: { [key: number]: string } = {
+      1: "free",
+      2: "starter",
+      3: "pro",
+      4: "pro_plus",
+      5: "enterprise",
+    };
+    const plan = planMap[data?.plan_id] || "free";
 
     return res.status(200).json({
       success: true,
-      user: data,
-      message: "Profile updated successfully",
+      profile: {
+        ...data,
+        plan,
+      },
     });
   } catch (error: any) {
-    console.error("Profile update error:", error);
-    return res.status(500).json({ error: "Failed to update profile" });
+    console.error("Profile fetch error:", error);
+    return res.status(500).json({
+      error: "Failed to fetch profile",
+      details: error?.message || "Unknown error",
+    });
   }
 }

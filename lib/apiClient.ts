@@ -160,6 +160,45 @@ class ApiClient {
       };
     }
   }
+
+  async postForm<T = any>(
+    endpoint: string,
+    formData: FormData
+  ): Promise<ApiResponse<T>> {
+    try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(USER_AUTH_TOKEN_KEY)
+          : null;
+
+      const headers: HeadersInit = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return {
+          error: result.message || result.error || "Request failed",
+          message: result.message || result.error,
+        };
+      }
+
+      return { data: result };
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  }
 }
 
 // Export singleton instance

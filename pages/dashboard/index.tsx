@@ -312,7 +312,7 @@ const DashboardPage: NextPage = () => {
             </div>
           </motion.div>
 
-          {/* Stats Grid */}
+          {/* Stats Grid - Clickable Cards */}
           <motion.div
             initial="hidden"
             animate="visible"
@@ -332,16 +332,22 @@ const DashboardPage: NextPage = () => {
                 label: "Resumes",
                 value: stats.resumesCreated,
                 icon: DocumentIcon,
+                href: "/dashboard/resume",
+                color: "blue",
               },
               {
                 label: "Portfolios",
                 value: stats.portfoliosCreated,
                 icon: PortfolioIcon,
+                href: "/dashboard/portfolio",
+                color: "purple",
               },
               {
                 label: "ATS Scans",
                 value: stats.atsScores,
                 icon: AnalyticsIcon,
+                href: "/dashboard/ats",
+                color: "green",
               },
               {
                 label: "Total Views",
@@ -367,31 +373,66 @@ const DashboardPage: NextPage = () => {
                     />
                   </svg>
                 ),
+                href: "/dashboard/history",
+                color: "orange",
               },
             ].map((stat, idx) => (
-              <motion.div
-                key={idx}
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 },
-                }}
-                whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">
-                      {stat.label}
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {isDataLoading ? "..." : stat.value}
-                    </p>
+              <Link key={idx} href={stat.href} passHref>
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0 },
+                  }}
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                  className={`group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all cursor-pointer relative overflow-hidden`}
+                >
+                  {/* Subtle Background Gradient on Hover */}
+                  <div
+                    className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                      stat.color === "blue"
+                        ? "bg-gradient-to-br from-blue-50 to-white"
+                        : stat.color === "purple"
+                        ? "bg-gradient-to-br from-purple-50 to-white"
+                        : stat.color === "green"
+                        ? "bg-gradient-to-br from-green-50 to-white"
+                        : "bg-gradient-to-br from-orange-50 to-white"
+                    }`}
+                  ></div>
+
+                  <div className="flex items-start justify-between relative z-10">
+                    <div>
+                      <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide">
+                        {stat.label}
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900 mt-1">
+                        {isDataLoading ? "..." : stat.value}
+                      </p>
+                    </div>
+                    <div
+                      className={`p-2.5 rounded-xl transition-all group-hover:scale-110 ${
+                        stat.color === "blue"
+                          ? "bg-blue-100 text-blue-600"
+                          : stat.color === "purple"
+                          ? "bg-purple-100 text-purple-600"
+                          : stat.color === "green"
+                          ? "bg-green-100 text-green-600"
+                          : "bg-orange-100 text-orange-600"
+                      }`}
+                    >
+                      <stat.icon size={22} />
+                    </div>
                   </div>
-                  <div className="p-2 bg-gray-50 rounded-lg">
-                    <stat.icon size={20} className="text-gray-400" />
+
+                  {/* View Link */}
+                  <div className="mt-3 flex items-center text-xs font-medium text-gray-400 group-hover:text-blue-600 transition-colors relative z-10">
+                    <span>View all</span>
+                    <ArrowRightIcon
+                      size={12}
+                      className="ml-1 group-hover:translate-x-1 transition-transform"
+                    />
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </Link>
             ))}
           </motion.div>
 

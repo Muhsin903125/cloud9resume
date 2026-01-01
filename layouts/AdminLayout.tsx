@@ -89,25 +89,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
         {/* Logo Section */}
         <div className="h-20 flex items-center justify-center border-b border-[#1F2937] px-6">
           <Link href="/admin">
-            <div className="flex items-center gap-3 cursor-pointer group">
+            <div className="flex items-center justify-center cursor-pointer group">
               <div className="relative">
                 <div className="absolute inset-0 bg-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition-opacity"></div>
                 <img
                   src="/logo.png"
                   alt="Cloud9"
-                  className="h-10 w-10 relative rounded-lg object-contain"
+                  className="h-12 w-auto relative rounded-lg object-contain"
                 />
               </div>
-              {!sidebarCollapsed && (
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold tracking-tight text-white leading-none">
-                    Cloud9
-                  </span>
-                  <span className="text-[10px] font-medium text-blue-400 uppercase tracking-widest mt-1">
-                    Admin Panel
-                  </span>
-                </div>
-              )}
             </div>
           </Link>
         </div>

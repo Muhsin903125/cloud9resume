@@ -1,321 +1,231 @@
 import { NextPage } from "next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import Button from "../components/Button";
-import Card from "../components/Card";
+import { useAuth } from "../lib/authUtils";
+import { apiClient } from "../lib/apiClient";
+import { toast } from "react-hot-toast";
 
 const ProfilePage: NextPage = () => {
-  const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    title: "Senior Software Engineer",
-    bio: "Passionate full-stack developer with 5+ years of experience building scalable web applications.",
-    company: "Tech Corp",
-    linkedin: "https://linkedin.com/in/johndoe",
-    github: "https://github.com/johndoe",
-    website: "https://johndoe.dev",
+  const { user, logout } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    picture: "",
   });
 
-  const [accountSettings, setAccountSettings] = useState({
-    emailNotifications: true,
-    marketingEmails: false,
-    weeklyDigest: true,
-    publicProfile: true,
-  });
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        picture: user.picture || "",
+      });
+    }
+  }, [user]);
 
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Update profile via API
-    console.log("Updating profile:", profileData);
-    setIsEditing(false);
+    setLoading(true);
+    try {
+      const res = await apiClient.patch("/auth/update-profile", {
+        name: formData.name,
+        picture: formData.picture,
+      });
+      if (res.data?.success) {
+        toast.success("Saved");
+        localStorage.setItem("user_name", formData.name);
+        if (formData.picture)
+          localStorage.setItem("user_picture", formData.picture);
+        window.location.reload();
+      } else {
+        toast.error("Failed");
+      }
+    } catch {
+      toast.error("Failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setProfileData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (deleteText !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const res = await apiClient.delete("/user/delete");
+      if (res.data?.success) {
+        logout();
+        window.location.href = "/";
+      }
+    } catch {
+      toast.error("Failed");
+    }
+    setDeleting(false);
   };
 
-  const handleSettingChange = (setting: keyof typeof accountSettings) => {
-    setAccountSettings((prev) => ({
-      ...prev,
-      [setting]: !prev[setting],
-    }));
-  };
+  const initials = formData.name ? formData.name.charAt(0).toUpperCase() : "?";
 
   return (
     <>
       <Head>
-        <title>Profile Settings - Cloud9Profile</title>
-        <meta
-          name="description"
-          content="Manage your profile and account settings"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Profile - Cloud9</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <nav className="flex space-x-2 text-sm text-gray-600 mb-2">
-                <Link href="/dashboard" className="hover:text-gray-900">
-                  Dashboard
-                </Link>
-                <span>/</span>
-                <span className="text-gray-900">Profile</span>
-              </nav>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Profile Settings
-              </h1>
-              <p className="text-gray-600">
-                Manage your personal information and account preferences
-              </p>
+      <div className="min-h-screen bg-gray-50/80">
+        <div className="max-w-md mx-auto px-4 py-8">
+          {/* Back Link */}
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 mb-4"
+          >
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back
+          </Link>
+
+          {/* Profile Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* Avatar Section */}
+            <div className="flex justify-center pt-6 pb-4">
+              <div className="relative group">
+                {formData.picture ? (
+                  <img
+                    src={formData.picture}
+                    alt=""
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+                    {initials}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleUpdate} className="px-5 pb-5 space-y-3">
+              <div>
+                <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  disabled
+                  className="w-full mt-1 px-3 py-2 text-sm bg-gray-50 text-gray-400 border border-gray-100 rounded-lg cursor-not-allowed"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    user?.plan === "pro_plus"
+                      ? "bg-purple-100 text-purple-600"
+                      : user?.plan === "pro"
+                      ? "bg-blue-100 text-blue-600"
+                      : user?.plan === "starter"
+                      ? "bg-orange-100 text-orange-600"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {user?.plan === "pro_plus"
+                    ? "PRO+"
+                    : user?.plan?.toUpperCase() || "FREE"}
+                </span>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50"
+                >
+                  {loading ? "..." : "Save"}
+                </button>
+              </div>
+            </form>
+
+            {/* Divider */}
+            <div className="border-t border-gray-100" />
+
+            {/* Actions */}
+            <div className="px-5 py-4 flex items-center justify-between">
+              <button
+                onClick={logout}
+                className="text-xs font-medium text-gray-500 hover:text-gray-700"
+              >
+                Sign Out
+              </button>
+              <button
+                onClick={() => setShowDelete(true)}
+                className="text-xs font-medium text-red-500 hover:text-red-600"
+              >
+                Delete Account
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="space-y-8">
-            {/* Profile Information */}
-            <Card className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Personal Information
-                </h2>
-                <Button
-                  onClick={() => setIsEditing(!isEditing)}
-                  variant="secondary"
-                >
-                  {isEditing ? "Cancel" : "Edit Profile"}
-                </Button>
-              </div>
-
-              {isEditing ? (
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        First Name
-                      </label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        value={profileData.firstName}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name
-                      </label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        value={profileData.lastName}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={profileData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={profileData.phone}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Location
-                      </label>
-                      <input
-                        type="text"
-                        name="location"
-                        value={profileData.location}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Professional Title
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={profileData.title}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Bio
-                    </label>
-                    <textarea
-                      name="bio"
-                      rows={4}
-                      value={profileData.bio}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="flex justify-end space-x-4">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => setIsEditing(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" variant="primary">
-                      Save Changes
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                      {profileData.firstName[0]}
-                      {profileData.lastName[0]}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        {profileData.firstName} {profileData.lastName}
-                      </h3>
-                      <p className="text-gray-600">{profileData.title}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">
-                        Contact Information
-                      </h4>
-                      <p className="text-gray-600">{profileData.email}</p>
-                      <p className="text-gray-600">{profileData.phone}</p>
-                      <p className="text-gray-600">{profileData.location}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">
-                        Professional Info
-                      </h4>
-                      <p className="text-gray-600">{profileData.company}</p>
-                      <p className="text-gray-600">{profileData.bio}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Card>
-
-            {/* Account Settings */}
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Account Settings
-              </h2>
-              <div className="space-y-4">
-                {Object.entries(accountSettings).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-gray-900">
-                        {key
-                          .replace(/([A-Z])/g, " $1")
-                          .replace(/^./, (str) => str.toUpperCase())}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {key === "emailNotifications" &&
-                          "Receive notifications about your account activity"}
-                        {key === "marketingEmails" &&
-                          "Get updates about new features and offers"}
-                        {key === "weeklyDigest" &&
-                          "Weekly summary of your activities"}
-                        {key === "publicProfile" &&
-                          "Make your profile visible to other users"}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() =>
-                        handleSettingChange(key as keyof typeof accountSettings)
-                      }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        value ? "bg-blue-600" : "bg-gray-200"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          value ? "translate-x-6" : "translate-x-1"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Danger Zone */}
-            <Card className="p-6 border-red-200">
-              <h2 className="text-xl font-semibold text-red-600 mb-4">
-                Danger Zone
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-2">
-                    Delete Account
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Once you delete your account, there is no going back. Please
-                    be certain.
-                  </p>
-                  <Button
-                    variant="secondary"
-                    className="border-red-300 text-red-600 hover:bg-red-50"
-                  >
-                    Delete Account
-                  </Button>
-                </div>
-              </div>
-            </Card>
+      {/* Delete Modal */}
+      {showDelete && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-xs p-4">
+            <p className="text-sm font-semibold text-gray-900 mb-1">
+              Delete Account
+            </p>
+            <p className="text-xs text-gray-500 mb-3">Type DELETE to confirm</p>
+            <input
+              type="text"
+              value={deleteText}
+              onChange={(e) => setDeleteText(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg mb-3 font-mono"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDelete(false)}
+                className="flex-1 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteText !== "DELETE" || deleting}
+                className="flex-1 py-1.5 text-xs font-medium text-white bg-red-600 rounded-lg disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

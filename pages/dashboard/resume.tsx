@@ -11,7 +11,6 @@ import { ResumePreviewModal } from "../../components/ResumePreviewModal";
 import FormField from "../../components/FormField";
 import { useAPIAuth } from "../../hooks/useAPIAuth";
 import { toast } from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useAuth } from "../../lib/authUtils";
 import { canCreateResource, PlanType } from "../../lib/subscription";
@@ -19,6 +18,7 @@ import { canCreateResource, PlanType } from "../../lib/subscription";
 const ResumeDashboard = () => {
   const router = useRouter();
   const { get, post, patch, delete: deleteRequest } = useAPIAuth();
+  const { user } = useAuth();
 
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,15 +28,12 @@ const ResumeDashboard = () => {
   const [newResumeTitle, setNewResumeTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-
-  // Delete confirmation state
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
-
-  // Preview State
   const [previewResume, setPreviewResume] = useState<any>(null);
   const [previewSections, setPreviewSections] = useState<any[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [fetchingPreview, setFetchingPreview] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     fetchResumes();
@@ -47,7 +44,6 @@ const ResumeDashboard = () => {
       setLoading(true);
       setError("");
       const response = await get<Resume[]>("/api/resumes");
-
       if (response.success) {
         setResumes(response.data || []);
       } else {
@@ -60,9 +56,7 @@ const ResumeDashboard = () => {
     }
   };
 
-  const { user } = useAuth();
   const handleCreateResume = async () => {
-    // Check limits
     if (
       user &&
       !canCreateResource(
@@ -71,65 +65,52 @@ const ResumeDashboard = () => {
         "resumes"
       )
     ) {
-      toast.error(
-        `You've reached the limit of resumes for the ${user.plan} plan. Please upgrade.`
-      );
-      router.push("/plans");
+      toast.error(`Resume limit reached. Please upgrade your plan.`);
       return;
     }
-
     if (!newResumeTitle.trim()) return;
 
     try {
       setIsCreating(true);
-      setError("");
-
       const response = await post<Resume>("/api/resumes", {
         title: newResumeTitle,
       });
-
       if (response.success && response.data) {
         setShowNewModal(false);
         setNewResumeTitle("");
-        toast.success("Resume created successfully");
+        toast.success("Resume created");
         router.push(`/dashboard/resume/${response.data.id}/templates`);
       } else {
-        toast.error(response.error || "Failed to create resume");
+        toast.error(response.error || "Failed to create");
       }
     } catch (err) {
-      toast.error("Failed to create resume");
+      toast.error("Failed to create");
     } finally {
       setIsCreating(false);
     }
   };
 
   const handleDeleteResume = async (id: string) => {
-    // Confirmation handled by modal
-
     try {
       const response = await deleteRequest(`/api/resumes/${id}`);
-
       if (response.success) {
         setResumes(resumes.filter((r) => r.id !== id));
-        toast.success("Resume deleted");
+        toast.success("Deleted");
       } else {
-        toast.error(response.error || "Failed to delete resume");
+        toast.error("Failed to delete");
       }
     } catch (err) {
-      toast.error("Failed to delete resume");
+      toast.error("Failed to delete");
     }
   };
 
   const handleDuplicateResume = async (id: string) => {
-    // Placeholder for duplication logic
-    toast("Duplication feature coming soon!", { icon: "🚧" });
+    toast("Coming soon!", { icon: "🚧" });
   };
 
   const handlePreviewResume = async (resume: any) => {
     try {
       setFetchingPreview(true);
-      // Fetch full details including sections
-      // If the list API already returns sections, we might skip this, but safer to fetch
       const response = await get<any>(`/api/resumes/${resume.id}`);
       if (response.success && response.data) {
         setPreviewResume(response.data);
@@ -138,10 +119,10 @@ const ResumeDashboard = () => {
         );
         setShowPreview(true);
       } else {
-        toast.error("Failed to load resume details");
+        toast.error("Failed to load");
       }
     } catch (err) {
-      toast.error("Failed to load preview");
+      toast.error("Failed to load");
     } finally {
       setFetchingPreview(false);
     }
@@ -153,7 +134,6 @@ const ResumeDashboard = () => {
     settings: any
   ) => {
     if (!previewResume?.id) return false;
-
     try {
       const userId = localStorage.getItem("x_user_id");
       await patch(
@@ -170,27 +150,18 @@ const ResumeDashboard = () => {
         ...prev,
         template_id: template,
         theme_color: color,
-        settings: settings,
-        resume_sections: settings, // Meta alias
       }));
-      // Also update the list so we don't have stale data
       setResumes((prev) =>
         prev.map((r) =>
           r.id === previewResume.id
-            ? {
-                ...r,
-                template_id: template,
-                theme_color: color,
-                settings: settings,
-              }
+            ? { ...r, template_id: template, theme_color: color }
             : r
         )
       );
-
-      toast.success("Preferences saved");
+      toast.success("Saved");
       return true;
     } catch (e) {
-      toast.error("Failed to save");
+      toast.error("Failed");
       return false;
     }
   };
@@ -205,172 +176,111 @@ const ResumeDashboard = () => {
   return (
     <>
       <Head>
-        <title>My Resumes - Cloud9Profile</title>
+        <title>Resumes - Cloud9Profile</title>
       </Head>
 
-      <div className="bg-gray-50 min-h-screen">
+      <div className="min-h-screen bg-gray-50/80">
         {/* Header */}
-        {/* Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="bg-white border-b border-gray-200 sticky top-0 z-30"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-20">
-              <div className="flex items-center gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                    My Resumes
-                  </h1>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Manage and organize your professional credentials
-                  </p>
-                </div>
-                {user?.plan && (
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
-                      (user?.plan as string) === "free"
-                        ? "bg-gray-50 text-gray-600 border-gray-200"
-                        : "bg-blue-50 text-blue-600 border-blue-100"
-                    }`}
-                  >
-                    {(user?.plan as string).replace("_", " ")}
-                  </span>
-                )}
+        <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
+          <div className="max-w-6xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              {/* Left: Title */}
+              <div className="flex-shrink-0">
+                <h1 className="text-lg font-bold text-gray-900">My Resumes</h1>
+                <p className="text-[10px] text-gray-400">
+                  {resumes.length} resume{resumes.length !== 1 ? "s" : ""}
+                </p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="hidden sm:block text-right">
-                  <p className="text-xs text-gray-400 font-medium uppercase">
-                    Credits
-                  </p>
-                  <p className="text-sm font-bold text-gray-900">
-                    {user?.profile?.credits || 0}
-                  </p>
+              {/* Center/Right: Search + Actions */}
+              <div className="flex items-center gap-2">
+                {/* Search */}
+                <div className="relative hidden sm:block">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <SearchIcon size={14} color="#9CA3AF" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-48 pl-8 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
                 </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setShowImportModal(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
-                  <CloudArrowUpIcon className="w-5 h-5 text-gray-500" />
+                  <CloudArrowUpIcon className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Import</span>
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                </button>
+                <button
                   onClick={() => setShowNewModal(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-colors shadow-lg shadow-gray-200"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
-                  <PlusIcon size={20} color="white" />
-                  <span className="hidden sm:inline">New Resume</span>
-                </motion.button>
+                  <PlusIcon size={12} color="white" />
+                  <span className="hidden sm:inline">New</span>
+                </button>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Stats / Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex flex-col sm:flex-row gap-4 mb-8"
-          >
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon size={18} color="#9CA3AF" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search resumes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 bg-white border-none rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 shadow-sm transition-shadow text-gray-700"
-              />
-            </div>
-
-            {/* Simple Stats Pucks */}
-            <div className="flex gap-3">
-              <div className="bg-white px-5 py-2 rounded-xl text-sm font-medium text-gray-500 shadow-sm flex items-center gap-2">
-                Total
-                <span className="bg-gray-100 text-gray-900 font-bold px-2 py-0.5 rounded-md text-xs">
-                  {resumes.length}
-                </span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Loading State */}
+        {/* Content */}
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          {/* Loading */}
           {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-900 border-t-transparent"></div>
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-3" />
+              <p className="text-xs text-gray-400">Loading resumes...</p>
             </div>
           ) : filteredResumes.length === 0 ? (
             /* Empty State */
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-24 bg-white rounded-2xl border border-gray-100 shadow-sm"
-            >
-              <div className="mx-auto h-20 w-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                <DocumentIcon size={32} color="#9CA3AF" />
+            <div className="bg-white rounded-xl border border-gray-100 p-12 text-center max-w-md mx-auto">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
+                <DocumentIcon size={24} color="#9CA3AF" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {searchQuery ? "No resumes found" : "No resumes yet"}
+              <h3 className="text-base font-semibold text-gray-900 mb-1">
+                {searchQuery ? "No results found" : "No resumes yet"}
               </h3>
-              <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+              <p className="text-xs text-gray-500 mb-6">
                 {searchQuery
-                  ? "Try adjusting your search terms"
-                  : "Create your first resume to get started building your career."}
+                  ? "Try different search terms"
+                  : "Create your first resume to get started"}
               </p>
               {!searchQuery && (
-                <div className="flex gap-4 justify-center">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                <div className="flex gap-2 justify-center">
+                  <button
                     onClick={() => setShowImportModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
                   >
-                    <CloudArrowUpIcon className="w-5 h-5 text-gray-500" />
-                    Import Resume
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    <CloudArrowUpIcon className="w-4 h-4" />
+                    Import
+                  </button>
+                  <button
                     onClick={() => setShowNewModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-all shadow-xl shadow-gray-200"
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                   >
-                    <PlusIcon size={20} color="white" />
-                    Create First Resume
-                  </motion.button>
+                    <PlusIcon size={14} color="white" />
+                    Create New
+                  </button>
                 </div>
               )}
-            </motion.div>
+            </div>
           ) : (
-            /* Layout Group for smooth reordering */
-            <motion.div
-              layout
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            >
-              <AnimatePresence>
-                {filteredResumes.map((resume) => (
-                  <ResumeCard
-                    key={resume.id}
-                    resume={resume}
-                    onDelete={(id) => setResumeToDelete(id)}
-                    onDuplicate={handleDuplicateResume}
-                    onPreview={handlePreviewResume}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
+            /* Grid */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredResumes.map((resume) => (
+                <ResumeCard
+                  key={resume.id}
+                  resume={resume}
+                  onDelete={(id) => setResumeToDelete(id)}
+                  onDuplicate={handleDuplicateResume}
+                  onPreview={handlePreviewResume}
+                />
+              ))}
+            </div>
           )}
         </div>
 
@@ -381,41 +291,51 @@ const ResumeDashboard = () => {
             setShowNewModal(false);
             setNewResumeTitle("");
           }}
-          title="Create New Resume"
-          size="md"
+          title="New Resume"
+          size="sm"
         >
           <div className="space-y-4">
             <FormField
-              label="Resume Title"
+              label="Title"
               name="resumeTitle"
               value={newResumeTitle}
               onChange={(e: any) =>
                 setNewResumeTitle(e.target ? e.target.value : e)
               }
-              placeholder="e.g., Senior Full Stack Developer"
+              placeholder="e.g., Software Engineer Resume"
               required
-              helpText="Give your resume a recognizable name."
             />
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2">
               <button
                 onClick={() => setShowNewModal(false)}
-                className="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                className="flex-1 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateResume}
                 disabled={!newResumeTitle.trim() || isCreating}
-                className={`flex-1 px-4 py-3 rounded-xl font-semibold text-white transition-all ${
-                  !newResumeTitle.trim() || isCreating
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-gray-900 hover:bg-black shadow-lg"
-                }`}
+                className="flex-1 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
-                {isCreating ? "Creating..." : "Create Resume"}
+                {isCreating ? "Creating..." : "Create"}
               </button>
             </div>
           </div>
+        </SharedModal>
+
+        {/* Import Modal */}
+        <SharedModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          title="Import Resume"
+        >
+          <ResumeUploader
+            onUploadSuccess={(data, resumeId) => {
+              setShowImportModal(false);
+              router.push(`/dashboard/resume/${resumeId}/templates`);
+            }}
+            onCancel={() => setShowImportModal(false)}
+          />
         </SharedModal>
 
         {/* Preview Modal */}
@@ -429,7 +349,7 @@ const ResumeDashboard = () => {
           onSave={handlePreferencesSave}
         />
 
-        {/* Confirmation Modal for Delete */}
+        {/* Delete Confirmation */}
         <ConfirmationModal
           isOpen={!!resumeToDelete}
           onClose={() => setResumeToDelete(null)}
@@ -440,44 +360,23 @@ const ResumeDashboard = () => {
             }
           }}
           title="Delete Resume"
-          message="Are you sure you want to delete this resume? This action cannot be undone."
-          confirmText="Delete Resume"
+          message="Are you sure? This cannot be undone."
+          confirmText="Delete"
           isDestructive={true}
         />
 
-        {/* Loading Overlay for Preview Fetch */}
+        {/* Preview Loading Overlay */}
         {fetchingPreview && (
-          <div className="fixed inset-0 bg-white/50 z-50 flex items-center justify-center backdrop-blur-sm">
-            <div className="bg-white p-4 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-900 border-t-transparent"></div>
-              <span className="font-medium text-gray-900">
-                Loading preview...
-              </span>
+          <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="bg-white px-4 py-3 rounded-xl shadow-lg border border-gray-100 flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-gray-600">Loading...</span>
             </div>
           </div>
         )}
       </div>
-      <SharedModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        title="Import Existing Resume"
-      >
-        <ResumeUploader
-          onUploadSuccess={(data, resumeId) => {
-            setShowImportModal(false);
-            // In a real app, you'd navigate to the edit page with the new resume ID.
-            // Since our API currently returns data but might not auto-create the DB entry (depending on how we wired it),
-            // we should handle that. Phase 1 plan said API returns resumeId.
-            // If parse-resume creates the DB entry, we just push.
-            router.push(`/dashboard/resume/${resumeId}/templates`);
-          }}
-          onCancel={() => setShowImportModal(false)}
-        />
-      </SharedModal>
     </>
   );
 };
-
-// End of file
 
 export default ResumeDashboard;

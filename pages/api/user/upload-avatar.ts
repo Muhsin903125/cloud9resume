@@ -120,11 +120,11 @@ export default async function handler(
 
     const avatarUrl = urlData.publicUrl;
 
-    // Update user profile with avatar URL
+    // Update user profile with picture URL
     const { error: updateError } = await supabaseAdmin
       .from("profiles")
       .update({
-        avatar_url: avatarUrl,
+        picture: avatarUrl,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
@@ -139,9 +139,7 @@ export default async function handler(
 
     return res.status(200).json({
       success: true,
-      data: {
-        avatar_url: avatarUrl,
-      },
+      url: avatarUrl,
       message: "Avatar uploaded successfully",
     });
   } catch (error: any) {
