@@ -7,6 +7,7 @@ export const VibrantCreativeTemplate = ({
   themeColor,
   hexToRgba,
   font,
+  settings,
 }: any) => {
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -53,19 +54,21 @@ export const VibrantCreativeTemplate = ({
         <div className="lg:w-[32%] w-full bg-slate-50 border-r border-slate-100 p-8 flex flex-col gap-8">
           {/* Photo & Name Card */}
           <div className="text-center lg:text-left">
-            <div className="w-24 h-24 mx-auto lg:mx-0 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-slate-100 mb-6 overflow-hidden relative rotate-3">
-              {personalInfo.photoUrl ? (
-                <img
-                  src={personalInfo.photoUrl}
-                  alt={personalInfo.name}
-                  className="w-full h-full object-cover -rotate-3"
-                />
-              ) : (
-                <span className="text-3xl font-black text-slate-200 -rotate-3">
-                  {personalInfo.name?.[0] || "U"}
-                </span>
-              )}
-            </div>
+            {personalInfo.showPhoto !== false && (
+              <div className="w-24 h-24 mx-auto lg:mx-0 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-slate-100 mb-6 overflow-hidden relative rotate-3">
+                {personalInfo.photoUrl ? (
+                  <img
+                    src={personalInfo.photoUrl}
+                    alt={personalInfo.name}
+                    className="w-full h-full object-cover -rotate-3"
+                  />
+                ) : (
+                  <span className="text-3xl font-black text-slate-200 -rotate-3">
+                    {personalInfo.name?.[0] || "U"}
+                  </span>
+                )}
+              </div>
+            )}
             <h1 className="text-2xl font-black text-slate-900 leading-tight mb-2 tracking-tight">
               {personalInfo.name || "YOUR NAME"}
             </h1>

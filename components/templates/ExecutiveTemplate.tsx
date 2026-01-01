@@ -6,6 +6,7 @@ export const ExecutiveTemplate = ({
   themeColor,
   hexToRgba,
   font,
+  settings,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -31,7 +32,7 @@ export const ExecutiveTemplate = ({
       ></div>
 
       <header className="text-center mb-10">
-        {personalInfo.photoUrl && (
+        {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
           <img
             src={personalInfo.photoUrl}
             alt={personalInfo.name}
@@ -146,27 +147,6 @@ export const ExecutiveTemplate = ({
       })}
 
       {/* Explicit Declaration at Bottom */}
-      {sections.find((s: any) => s.section_type === "declaration") &&
-        sections.find((s: any) => s.section_type === "declaration").section_data
-          ?.text && (
-          <div className="break-inside-avoid">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="flex-1 h-px bg-gray-300"></div>
-              <h3 className="font-bold text-sm uppercase tracking-widest text-gray-800 text-center min-w-[120px]">
-                Declaration
-              </h3>
-              <div className="flex-1 h-px bg-gray-300"></div>
-            </div>
-            <p className="text-sm leading-7 text-center text-gray-700 italic max-w-2xl mx-auto">
-              "
-              {
-                sections.find((s: any) => s.section_type === "declaration")
-                  .section_data.text
-              }
-              "
-            </p>
-          </div>
-        )}
     </div>
   );
 };

@@ -6,6 +6,7 @@ export const ProfessionalTemplate = ({
   themeColor,
   hexToRgba,
   font,
+  settings,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -33,7 +34,7 @@ export const ProfessionalTemplate = ({
       >
         <div className="flex justify-between items-start">
           <div className="flex gap-6 items-center">
-            {personalInfo.photoUrl && (
+            {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
               <img
                 src={personalInfo.photoUrl}
                 alt={personalInfo.name}

@@ -23,7 +23,12 @@ import {
   TemplateIcon,
   ChevronDownIcon,
   CheckIcon,
+  UploadIcon,
+  DeleteIcon,
+  EyeOffIcon,
 } from "@/components/Icons";
+
+import { apiClient } from "@/lib/apiClient";
 
 import { ResumeRenderer } from "../../../../components/ResumeRenderer";
 import { ResumePreviewModal } from "../../../../components/ResumePreviewModal";
@@ -52,9 +57,12 @@ const ResumeEditor = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [showGenerationModal, setShowGenerationModal] = useState(false);
   const [showATSModal, setShowATSModal] = useState(false);
+  const [aiWriterOpen, setAiWriterOpen] = useState(false);
   const [resumeTitle, setResumeTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // UI State
   const [activeTab, setActiveTab] = useState("personal_info");
@@ -79,7 +87,7 @@ const ResumeEditor = () => {
   }>({});
 
   const baseSectionTypes = [
-    { id: "personal_info", label: "Personal Info", Icon: UserIcon },
+    { id: "personal_info", label: "Contact", Icon: UserIcon },
     { id: "summary", label: "Summary", Icon: DocumentIcon },
     { id: "experience", label: "Experience", Icon: BriefcaseIcon },
     { id: "education", label: "Education", Icon: GraduationCapIcon },
@@ -88,6 +96,10 @@ const ResumeEditor = () => {
     { id: "certifications", label: "Certifications", Icon: AwardIcon },
     { id: "achievements", label: "Achievements", Icon: AwardIcon },
     { id: "languages", label: "Languages", Icon: GlobeIcon },
+    { id: "volunteering", label: "Volunteering", Icon: UserIcon },
+    { id: "publications", label: "Publications", Icon: DocumentIcon },
+    { id: "hobbies", label: "Interests", Icon: ZapIcon },
+    { id: "references", label: "References", Icon: UserIcon },
     { id: "declaration", label: "Declaration", Icon: DocumentIcon },
   ];
 
@@ -372,6 +384,35 @@ const ResumeEditor = () => {
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image");
+      return;
+    }
+    setUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      const res = await apiClient.postForm(
+        "/user/upload-avatar",
+        formDataUpload
+      );
+      if (res.data?.success && res.data?.url) {
+        handleInputChange("photoUrl", res.data.url);
+        toast.success("Photo uploaded");
+      } else {
+        toast.error(res.data?.error || res.error || "Upload failed");
+      }
+    } catch (err: any) {
+      console.error("[Photo Upload] Error:", err);
+      toast.error(err?.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleStepChange = async (newId: string) => {
     if (activeTab === newId) return;
     if (isDirty) {
@@ -432,8 +473,9 @@ const ResumeEditor = () => {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-600 border-t-transparent"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs text-gray-400">Loading editor...</p>
       </div>
     );
 
@@ -450,18 +492,18 @@ const ResumeEditor = () => {
         resumeId={id as string}
       />
 
-      {/* Main Editor UI - Hidden on Print */}
+      {/* Main Editor UI */}
       <div className="flex-1 flex flex-col overflow-hidden no-print">
-        {/* Top Navigation Bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm relative">
-          <div className="flex items-center gap-4">
+        {/* Header */}
+        <header className="h-12 bg-white border-b border-gray-100 flex items-center justify-between px-4 shrink-0 z-30 relative">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => router.push("/dashboard/resume")}
-              className="text-gray-500 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full"
+              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <ChevronLeftIcon size={20} />
+              <ChevronLeftIcon size={18} />
             </button>
-            <div className="h-6 w-px bg-gray-200 hidden md:block"></div>
+            <div className="h-4 w-px bg-gray-200" />
 
             {isEditingTitle ? (
               <input
@@ -470,65 +512,25 @@ const ResumeEditor = () => {
                 onChange={(e) => setResumeTitle(e.target.value)}
                 onBlur={handleTitleUpdate}
                 onKeyDown={(e) => e.key === "Enter" && handleTitleUpdate()}
-                className="font-bold text-lg text-gray-900 border-b-2 border-blue-500 focus:outline-none bg-transparent min-w-[200px]"
+                className="font-semibold text-sm text-gray-900 border-none focus:outline-none bg-transparent min-w-[150px]"
                 autoFocus
               />
             ) : (
               <h1
                 onClick={() => setIsEditingTitle(true)}
-                className="font-bold text-lg text-gray-900 truncate max-w-[200px] hidden md:block cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-                title="Click to rename"
+                className="font-semibold text-sm text-gray-900 truncate max-w-[200px] cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded transition-colors"
               >
-                {resumeTitle || resume?.title || "Untitled Resume"}
+                {resumeTitle || "Untitled Resume"}
               </h1>
             )}
           </div>
 
-          {/* Stepper (Desktop) */}
-          <div className="flex-1 max-w-2xl mx-8 hidden lg:block">
-            <div className="flex justify-between relative">
-              {/* Progress Line */}
-              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -z-10 -translate-y-1/2"></div>
-              <div
-                className="absolute top-1/2 left-0 h-0.5 bg-blue-600 -z-10 -translate-y-1/2 transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              ></div>
-
-              {sectionTypes.map((s, idx) => {
-                const isActive = s.id === activeTab;
-                const isCompleted = idx < activeSectionIndex;
-
-                return (
-                  <button
-                    key={s.id}
-                    onClick={() => handleStepChange(s.id)}
-                    className={`flex flex-col items-center gap-1 group focus:outline-none`}
-                    title={s.label}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-200 bg-white ${
-                        isActive
-                          ? "border-blue-600 text-blue-600 ring-2 ring-blue-100"
-                          : isCompleted
-                          ? "border-blue-600 text-blue-600 bg-blue-50"
-                          : "border-gray-300 text-gray-300 group-hover:border-gray-400"
-                      }`}
-                    >
-                      <s.Icon size={14} />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Manual Save Button */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => saveSection()}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold border transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all flex items-center gap-2 ${
                 isDirty
-                  ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 active:scale-95"
+                  ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
                   : "bg-gray-50 text-gray-400 border-gray-200"
               }`}
             >
@@ -537,172 +539,182 @@ const ResumeEditor = () => {
                   isDirty ? "bg-blue-500 animate-pulse" : "bg-gray-300"
                 }`}
               />
-              {isDirty ? (
-                <span className="hidden xs:inline">Save Changes</span>
-              ) : (
-                "Saved"
-              )}
-              {isDirty && <span className="xs:hidden">Save</span>}
+              {isDirty ? "Save Changes" : "Saved"}
             </button>
 
             <button
               onClick={() => setShowATSModal(true)}
-              className="px-3 sm:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-[10px] sm:text-sm font-bold hover:bg-gray-50 transition-all active:scale-95 flex items-center gap-2 mr-2"
+              className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-[11px] font-bold hover:bg-gray-50 transition-all flex items-center gap-2"
             >
-              <SparklesIcon className="w-4 h-4 text-blue-600" />
-              <span className="hidden sm:inline">ATS Score</span>
+              ATS Check
             </button>
 
             <button
               onClick={() => {
                 if (isDirty) saveSection();
-                setShowGenerationModal(true);
+                setShowPreview(true);
               }}
-              className="px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-lg text-[10px] sm:text-sm font-bold hover:bg-black transition-all active:scale-95 flex items-center gap-2 shadow-lg shadow-gray-900/10"
+              className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-[11px] font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-600/10 flex items-center gap-2"
             >
-              <ZapIcon size={14} className="text-yellow-400" />
-              <span className="hidden sm:inline">Generate Resume</span>
-              <span className="sm:hidden">Generate</span>
+              <DownloadIcon size={12} className="text-white" />
+              Download
             </button>
           </div>
         </header>
 
-        {/* Split Layout */}
+     
+
+        <ResumePreviewModal
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+          resume={resume}
+          sections={getProcessedPreviewSections()}
+          template={template}
+          themeColor={themeColor}
+          settings={settings}
+          onSave={handlePreferencesSave}
+        />
+
+        {/* Dynamic Editor Body */}
         <div className="flex-1 flex overflow-hidden">
-          {/* LEFT: Form Editor (60%) */}
-          <div className="w-full lg:w-3/5 flex flex-col bg-white border-r border-gray-200 h-full overflow-hidden relative shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
-            {/* Mobile Section Selection Header */}
-            <div className="lg:hidden p-4 border-b border-gray-100 bg-white sticky top-0 z-20 flex items-center justify-between shadow-sm">
-              <div
-                className="flex items-center gap-2"
-                onClick={() => setIsMobileMenuOpen(true)}
-              >
-                <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                    Current Section
-                  </span>
-                  <div className="flex items-center gap-2 font-bold text-gray-900 text-lg">
-                    {sectionTypes.find((s) => s.id === activeTab)?.label}
-                    <ChevronDownIcon size={16} className="text-blue-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-                {activeSectionIndex + 1} / {sectionTypes.length}
-              </div>
-            </div>
-
-            {/* Mobile Section Drawer */}
-            <AnimatePresence>
-              {isMobileMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[60] flex flex-col justify-end bg-gray-900/60 backdrop-blur-sm"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <motion.div
-                    initial={{ y: "100%" }}
-                    animate={{ y: 0 }}
-                    exit={{ y: "100%" }}
-                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="bg-white rounded-t-3xl p-6 sm:p-8 max-h-[85vh] overflow-y-auto w-full max-w-lg mx-auto shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
+          {/* Sidebar Navigation */}
+          <aside className="w-16 md:w-56 bg-white border-r border-gray-100 overflow-y-auto flex flex-col shrink-0">
+            <div className="p-3 space-y-1">
+              {sectionTypes.map((s, idx) => {
+                const isActive = s.id === activeTab;
+                const isHidden = (settings.hidden_sections || []).includes(
+                  s.id
+                );
+                return (
+                  <div
+                    key={s.id}
+                    className={`group w-full flex items-center gap-2 p-2 rounded-xl transition-all ${
+                      isActive
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
                   >
-                    <div className="flex items-center justify-between mb-8">
-                      <div>
-                        <h3 className="text-2xl font-black text-gray-900">
-                          Jump to Section
-                        </h3>
-                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
-                          Navigate through steps
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+                    <button
+                      onClick={() => handleStepChange(s.id)}
+                      className="flex-1 flex items-center gap-3 text-left"
+                    >
+                      <div
+                        className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                          isActive
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                            : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
+                        }`}
                       >
-                        <ChevronDownIcon size={24} className="rotate-0" />
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      {sectionTypes.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => {
-                            handleStepChange(s.id);
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all ${
-                            activeTab === s.id
-                              ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md shadow-blue-600/5 ring-4 ring-blue-50"
-                              : "border-gray-50 hover:border-gray-100 hover:bg-gray-50 text-gray-600"
-                          }`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                                activeTab === s.id
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-gray-100 text-gray-500"
-                              }`}
-                            >
-                              <s.Icon size={20} />
-                            </div>
-                            <span className="font-black text-sm tracking-tight text-left">
-                              {s.label}
-                            </span>
-                          </div>
-                          {activeTab === s.id && (
-                            <div className="bg-blue-600 text-white rounded-full p-1.5">
-                              <CheckIcon size={14} />
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                        <s.Icon size={14} />
+                      </div>
+                      <span
+                        className={`hidden md:block text-xs font-semibold tracking-tight ${
+                          isHidden ? "opacity-50 line-through" : ""
+                        }`}
+                      >
+                        {s.label}
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Toggle Visibility
+                        const currentHidden = settings.hidden_sections || [];
+                        let newHidden;
+                        if (currentHidden.includes(s.id)) {
+                          newHidden = currentHidden.filter(
+                            (id: string) => id !== s.id
+                          );
+                        } else {
+                          newHidden = [...currentHidden, s.id];
+                        }
+                        handlePreferencesSave(template, themeColor, {
+                          ...settings,
+                          hidden_sections: newHidden,
+                        });
+                      }}
+                      className={`p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 ${
+                        isHidden
+                          ? "opacity-100 text-gray-400 hover:text-gray-600 bg-gray-100"
+                          : "text-blue-200 hover:text-blue-600 hover:bg-blue-50"
+                      }`}
+                      title={isHidden ? "Show Section" : "Hide Section"}
+                    >
+                      {isHidden ? (
+                        <EyeOffIcon size={12} />
+                      ) : (
+                        <EyeIcon size={12} />
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </aside>
 
-            {/* Scrollable Form Content */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-white relative">
-              <div className="max-w-2xl mx-auto p-6 md:p-10 pb-32">
-                <div className="flex items-center justify-between mb-8">
+          {/* Form Editor Area */}
+          <main className="flex-1 overflow-hidden bg-white flex flex-col">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
+              <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">
+                {/* Section Header */}
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                        {(() => {
+                          const s = sectionTypes.find(
+                            (t) => t.id === activeTab
+                          );
+                          return s ? <s.Icon size={12} /> : null;
+                        })()}
+                      </span>
                       {sectionTypes.find((s) => s.id === activeTab)?.label}
                     </h2>
-                    <p className="text-gray-500 text-sm mt-1">
-                      Fill in the details below.
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      {activeTab === "personal_info" &&
+                        "Manage your contact details and professional profile."}
+                      {activeTab === "summary" &&
+                        "Write a compelling professional summary that highlights your strengths."}
+                      {activeTab === "experience" &&
+                        "List your professional work history, starting with your most recent role."}
+                      {activeTab === "education" &&
+                        "Detail your academic background and qualifications."}
+                      {activeTab === "skills" &&
+                        "Highlight your technical and interpersonal skills."}
+                      {activeTab === "projects" &&
+                        "Showcase your best projects and their impact."}
+                      {activeTab === "certifications" &&
+                        "List your professional certifications and licenses."}
+                      {activeTab === "achievements" &&
+                        "Highlight awards, honors, and specific accomplishments."}
+                      {activeTab === "languages" &&
+                        "Add languages you speak and your proficiency levels."}
+                      {activeTab === "volunteering" &&
+                        "Share your volunteer work and community service."}
+                      {activeTab === "publications" &&
+                        "List your published papers, articles, or books."}
+                      {activeTab === "hobbies" &&
+                        "Add your interests to show your personality."}
+                      {activeTab === "references" &&
+                        "Include professional references who can vouch for you."}
+                      {activeTab === "declaration" &&
+                        "Sign off with a formal declaration of accuracy."}
                     </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {isDirty ? (
-                      <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full font-medium border border-amber-100">
-                        Unsaved Changes
-                      </span>
-                    ) : (
-                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium border border-green-100">
-                        Saved
-                      </span>
-                    )}
                   </div>
                 </div>
 
+                {/* Form Logic */}
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.15 }}
                   >
                     {renderSectionForm(
                       activeTab,
-                      formData[activeTab],
+                      formData[activeTab] || {},
                       handleInputChange,
                       handleAddArrayItem,
                       handleRemoveArrayItem,
@@ -718,129 +730,122 @@ const ResumeEditor = () => {
                       degreeInputs,
                       setDegreeInputs,
                       showDegreeSuggestions,
-                      setShowDegreeSuggestions
+                      setShowDegreeSuggestions,
+                      {
+                        fileInputRef,
+                        handlePhotoUpload,
+                        uploading,
+                      }
                     )}
                   </motion.div>
                 </AnimatePresence>
               </div>
             </div>
 
-            {/* Sticky Navigation Footer */}
-            <div className="shrink-0 p-4 sm:p-5 bg-white border-t border-gray-100 flex justify-between items-center z-20 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            {/* Sticky Navigation Actions */}
+            <div className="shrink-0 border-t border-gray-100 bg-white p-4 flex items-center justify-between">
               <button
                 disabled={activeSectionIndex === 0}
                 onClick={() =>
                   handleStepChange(sectionTypes[activeSectionIndex - 1].id)
                 }
-                className="px-6 py-3 rounded-2xl border-2 border-gray-100 text-gray-600 font-black text-sm hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+                className="px-4 py-2 text-xs font-semibold text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
-                Back
+                <ChevronLeftIcon size={14} /> Previous
               </button>
-              <div className="hidden sm:flex items-center gap-1.5 h-1.5 px-4 bg-gray-50 rounded-full">
-                {sectionTypes.map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                      i === activeSectionIndex
-                        ? "bg-blue-600 w-4"
-                        : i < activeSectionIndex
-                        ? "bg-blue-200"
-                        : "bg-gray-200"
-                    }`}
-                  />
-                ))}
-              </div>
+
               <button
                 onClick={async () => {
                   if (activeSectionIndex === sectionTypes.length - 1) {
                     await saveSection();
-                    setShowGenerationModal(true);
+                    setShowPreview(true);
                   } else {
                     handleStepChange(sectionTypes[activeSectionIndex + 1].id);
                   }
                 }}
-                className="px-8 py-3 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 active:scale-95 flex items-center gap-3"
+                className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-black transition-all shadow-md shadow-gray-900/10"
               >
                 {activeSectionIndex === sectionTypes.length - 1
-                  ? "Finish & Generate"
-                  : "Next Step"}
-                <ArrowRightIcon size={18} />
+                  ? "Finish"
+                  : "Continue"}
+                <ArrowRightIcon size={14} />
               </button>
             </div>
-          </div>
+          </main>
 
-          {/* Mobile Preview Fab */}
-          <div className="lg:hidden absolute bottom-24 right-6 z-30">
-            <button
-              onClick={() => setShowPreview(true)}
-              className="bg-blue-900 text-white p-4 rounded-full shadow-xl hover:bg-blue-800 transition-colors"
-            >
-              <EyeIcon size={24} />
-            </button>
-          </div>
+          {/* Right Live Preview Panel */}
+          <aside className="hidden xl:flex w-[400px] bg-gray-50 border-l border-gray-100 overflow-y-auto flex-col items-center p-6 shrink-0 relative">
+            <div className="sticky top-0 z-20 w-full flex flex-col gap-4 mb-8">
+              <div className="bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-gray-200/50 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                    <TemplateIcon size={16} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
+                      Template
+                    </p>
+                    <select
+                      value={template}
+                      onChange={(e) =>
+                        handlePreferencesSave(e.target.value, themeColor)
+                      }
+                      className="bg-transparent text-xs font-bold text-gray-900 focus:outline-none cursor-pointer appearance-none"
+                    >
+                      {TEMPLATE_REGISTRY.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-          {/* RIGHT: Live Preview (40%) */}
-          <div className="hidden lg:flex w-2/5 bg-slate-100 overflow-y-auto flex-col items-center px-8 relative custom-scrollbar overflow-x-hidden">
-            {/* Sticky Template Switcher Overlay - Pane Level */}
-            <div className="sticky top-0 right-0 z-50 w-full flex justify-end bg-slate-100/60 backdrop-blur-md pointer-events-none">
-              <div className="pointer-events-auto bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-200/50 shadow-sm flex items-center gap-2 mr-4 mt-4">
-                <TemplateIcon size={12} className="text-gray-400" />
-                <select
-                  value={template}
-                  onChange={(e) =>
-                    handlePreferencesSave(e.target.value, themeColor)
-                  }
-                  className="bg-transparent text-[10px] font-bold text-gray-500 hover:text-gray-900 transition-all outline-none appearance-none cursor-pointer pr-4"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right center",
-                    backgroundSize: "0.6rem",
-                  }}
-                >
-                  {TEMPLATE_REGISTRY.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-6 h-6 rounded-full border-2 border-white shadow-sm cursor-pointer"
+                    style={{ backgroundColor: themeColor }}
+                    onClick={() => {
+                      /* Color Picker? */
+                    }}
+                  />
+                  <div className="h-4 w-px bg-gray-200 mx-1" />
+                  <button
+                    onClick={() => setShowPreview(true)}
+                    className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <EyeIcon size={16} />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="sticky top-0 pb-8 origin-top scale-[0.65] xl:scale-[0.8] flex flex-col items-center">
+            {/* Resume Preview Box */}
+            <div className="w-full shadow-2xl shadow-gray-200/50 rounded-lg overflow-hidden transform-gpu hover:scale-[1.01] transition-transform duration-500 bg-white">
               <div
-                className="bg-white shadow-2xl shadow-slate-200/50 rounded-sm overflow-hidden transition-all duration-300 transform"
+                className="relative w-full origin-top-left"
                 style={{
-                  width: "210mm",
-                  minHeight: "297mm",
+                  paddingBottom: "141.4%", // Aspect ratio of A4 (1/1.414)
                 }}
               >
-                <ResumeRenderer
-                  resume={resume}
-                  sections={getProcessedPreviewSections()}
-                  template={template}
-                  themeColor={themeColor}
-                  settings={settings}
-                />
+                <div className="absolute inset-0 scale-[0.45] w-[210mm] h-[297mm] origin-top-left">
+                  <ResumeRenderer
+                    resume={resume}
+                    sections={getProcessedPreviewSections()}
+                    template={template}
+                    themeColor={themeColor}
+                    settings={settings}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Modals */}
-        <ResumePreviewModal
-          isOpen={showPreview || showGenerationModal}
-          onClose={() => {
-            setShowPreview(false);
-            setShowGenerationModal(false);
-          }}
-          resume={resume || { title: "New Resume" }}
-          sections={getPreviewSections()}
-          template={template}
-          themeColor={themeColor}
-          settings={settings}
-          onSave={handlePreferencesSave}
-        />
+            <div className="mt-6 text-[10px] font-medium text-gray-400 flex items-center gap-1.5 uppercase tracking-widest">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              Live Preview
+            </div>
+          </aside>
+        </div>
       </div>
 
       {/* PRINT PORTAL: Only visible during print */}
@@ -879,8 +884,8 @@ const Input = ({
   helperText,
   list,
 }: any) => (
-  <div className="mb-3">
-    <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
+  <div className="mb-2">
+    <label className="block text-[9px] font-bold text-gray-700 uppercase tracking-wide mb-1">
       {label} {required && <span className="text-red-500 font-bold">*</span>}
     </label>
     <input
@@ -890,7 +895,7 @@ const Input = ({
       name={name}
       placeholder={placeholder}
       list={list}
-      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium"
+      className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"
       readOnly={!onChange}
     />
     {helperText && (
@@ -910,8 +915,8 @@ const Textarea = ({
   rows = 4,
   required,
 }: any) => (
-  <div className="mb-3">
-    <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
+  <div className="mb-2">
+    <label className="block text-[9px] font-bold text-gray-700 uppercase tracking-wide mb-1">
       {label} {required && <span className="text-red-500 font-bold">*</span>}
     </label>
     <textarea
@@ -920,22 +925,22 @@ const Textarea = ({
       name={name}
       placeholder={placeholder}
       rows={rows}
-      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium resize-none shadow-inner"
+      className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium resize-none shadow-inner"
       readOnly={!onChange}
     />
   </div>
 );
 
 const Select = ({ label, name, options, value, onChange }: any) => (
-  <div className="mb-3">
-    <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
+  <div className="mb-2">
+    <label className="block text-[9px] font-bold text-gray-700 uppercase tracking-wide mb-1">
       {label}
     </label>
     <select
       value={value || ""}
       onChange={onChange ? onChange : undefined}
       name={name}
-      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium"
+      className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs font-medium"
     >
       <option value="">Select...</option>
       {options.map((opt: string) => (
@@ -965,7 +970,12 @@ const renderSectionForm = (
   degreeInputs?: { [key: number]: string },
   setDegreeInputs?: any,
   showDegreeSuggestions?: { [key: number]: boolean },
-  setShowDegreeSuggestions?: any
+  setShowDegreeSuggestions?: any,
+  photoHelpers?: {
+    fileInputRef: any;
+    handlePhotoUpload: any;
+    uploading: boolean;
+  }
 ) => {
   const handleChange = (name: string, value: any) => {
     onChange(name, value);
@@ -974,7 +984,75 @@ const renderSectionForm = (
   switch (type) {
     case "personal_info":
       return (
-        <div className="space-y-1 animate-fade-in-up">
+        <div className="animate-fade-in-up space-y-6">
+          <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-gray-100">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden transition-all group-hover:border-blue-400">
+                {data.photoUrl ? (
+                  <img
+                    src={data.photoUrl}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <UserIcon size={32} className="text-gray-300" />
+                )}
+                {photoHelpers?.uploading && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => photoHelpers?.fileInputRef.current?.click()}
+                  className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl shadow-lg border border-gray-100 text-gray-600 hover:text-blue-600 transition-all hover:scale-110"
+                >
+                  <UploadIcon size={14} />
+                </button>
+                <label className="flex items-center gap-2 cursor-pointer mt-2 w-max">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={data.showPhoto !== false}
+                      onChange={(e) =>
+                        handleChange("showPhoto", e.target.checked)
+                      }
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                    Show Photo
+                  </span>
+                </label>
+              </div>
+              <input
+                ref={photoHelpers?.fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={photoHelpers?.handlePhotoUpload}
+              />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="text-sm font-bold text-gray-900 mb-1">
+                Profile Photo
+              </h3>
+              <p className="text-[11px] text-gray-500 mb-3">
+                Upload a professional photo to make your resume stand out.
+              </p>
+              {data.photoUrl && (
+                <button
+                  onClick={() => handleChange("photoUrl", "")}
+                  className="text-[10px] font-bold text-red-500 hover:text-red-700 uppercase tracking-widest flex items-center gap-1.5 mx-auto sm:mx-0"
+                >
+                  <DeleteIcon size={12} /> Remove Photo
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Full Name"
@@ -983,35 +1061,17 @@ const renderSectionForm = (
               onChange={(e: any) => handleChange("name", e.target.value)}
               placeholder="John Doe"
             />
-            <div className="relative">
-              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-                Job Title <span className="text-red-500 font-bold">*</span>
-              </label>
-              <input
-                type="text"
-                value={
-                  jobTitleInput !== undefined
-                    ? jobTitleInput
-                    : data.jobTitle || ""
-                }
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (setJobTitleInput) setJobTitleInput(val);
-                  onChange("jobTitle", val);
-                  if (setShowJobTitleSuggestions)
-                    setShowJobTitleSuggestions(val.length > 0);
+            <div className="relative w-full">
+              <Input
+                label="Job Title"
+                value={data.jobTitle}
+                required
+                onChange={(e: any) => {
+                  handleChange("jobTitle", e.target.value);
+                  setJobTitleInput(e.target.value);
+                  setShowJobTitleSuggestions(true);
                 }}
-                onFocus={() =>
-                  jobTitleInput &&
-                  setShowJobTitleSuggestions &&
-                  setShowJobTitleSuggestions(true)
-                }
-                onBlur={() =>
-                  setShowJobTitleSuggestions &&
-                  setTimeout(() => setShowJobTitleSuggestions(false), 200)
-                }
                 placeholder="Software Engineer"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium"
               />
               {showJobTitleSuggestions && jobTitleInput && (
                 <div className="absolute z-20 w-full mt-1 bg-white border-2 border-blue-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
@@ -1054,15 +1114,6 @@ const renderSectionForm = (
               value={data.phone}
               onChange={(e: any) => handleChange("phone", e.target.value)}
               placeholder="+1 (555) 000-0000"
-            />
-          </div>
-          <div className="grid grid-cols-1">
-            <Input
-              label="Photo URL"
-              value={data.photoUrl}
-              onChange={(e: any) => handleChange("photoUrl", e.target.value)}
-              placeholder="https://example.com/photo.jpg"
-              helperText="Provide a public link to your profile photo (ideal for portfolios)."
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1132,31 +1183,29 @@ const renderSectionForm = (
         "Results-oriented professional with a strong track record of success in building high-scale applications and managing cross-functional teams.",
         "Passionate and innovative developer with expertise in modern web technologies and a commitment to delivering high-quality user experiences.",
         "Accomplished specialist with extensive experience in strategic planning, cloud architecture, and optimizing enterprise-grade systems.",
-        "Dynamic leader and team player with a solid foundation in software engineering and a focus on driving continuous improvement.",
-        "Resourceful and analytical thinker with a passion for solving complex technical challenges and a history of successful project delivery.",
       ];
 
       return (
-        <div className="animate-fade-in-up space-y-6">
+        <div className="animate-fade-in-up space-y-4">
           <Textarea
             label="Professional Summary"
             value={data.text}
-            rows={12}
+            rows={10}
             onChange={(e: any) => handleChange("text", e.target.value)}
             placeholder="A brief overview of your career highlights, skills, and goals..."
             required
           />
 
-          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 sm:p-5">
-            <h4 className="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+            <h4 className="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-2 flex items-center gap-2">
               <SparklesIcon className="w-3 h-3" /> Quick Suggestions
             </h4>
-            <div className="flex flex-col gap-2.5">
+            <div className="space-y-2">
               {suggestions.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => handleChange("text", s)}
-                  className="text-left p-3 rounded-lg bg-white border border-gray-100 text-[11px] leading-relaxed text-gray-600 hover:border-blue-400 hover:text-blue-700 hover:shadow-sm transition-all active:scale-[0.99]"
+                  className="w-full text-left p-2.5 rounded-lg bg-white border border-blue-100 text-[11px] text-gray-600 hover:border-blue-300 hover:text-blue-700 transition-all leading-relaxed shadow-sm"
                 >
                   {s}
                 </button>
@@ -1302,11 +1351,6 @@ const renderSectionForm = (
     case "education":
       return (
         <div className="space-y-4 animate-fade-in-up">
-          <datalist id="degree-suggestions">
-            {POPULAR_DEGREES.map((degree) => (
-              <option key={degree} value={degree} />
-            ))}
-          </datalist>
           {(data.items || []).map((item: any, idx: number) => (
             <div
               key={idx}
@@ -1324,24 +1368,72 @@ const renderSectionForm = (
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="School / University"
-                  value={item.school}
+                  label="Institution / University"
+                  value={item.institution}
                   required
                   onChange={(e: any) =>
-                    onArrayChange(idx, "school", e.target.value)
+                    onArrayChange(idx, "institution", e.target.value)
                   }
-                  placeholder="e.g. Stanford University"
+                  placeholder="Harvard University"
                 />
-                <Input
-                  label="Degree / Field of Study"
-                  value={item.degree}
-                  required
-                  onChange={(e: any) =>
-                    onArrayChange(idx, "degree", e.target.value)
-                  }
-                  placeholder="e.g. BSc Computer Science"
-                  list="degree-suggestions"
-                />
+                <div className="relative">
+                  <Input
+                    label="Degree / Field of Study"
+                    value={item.degree}
+                    required
+                    onChange={(e: any) => {
+                      onArrayChange(idx, "degree", e.target.value);
+                      if (setDegreeInputs && setShowDegreeSuggestions) {
+                        setDegreeInputs({
+                          ...degreeInputs,
+                          [idx]: e.target.value,
+                        });
+                        setShowDegreeSuggestions({
+                          ...showDegreeSuggestions,
+                          [idx]: true,
+                        });
+                      }
+                    }}
+                    placeholder="Bachelor of Computer Science"
+                  />
+                  {showDegreeSuggestions?.[idx] &&
+                    item.degree &&
+                    item.degree.length > 0 &&
+                    POPULAR_DEGREES.filter((d) =>
+                      d.toLowerCase().includes(item.degree.toLowerCase())
+                    ).length > 0 && (
+                      <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-xl mt-1 max-h-48 overflow-y-auto">
+                        {POPULAR_DEGREES.filter((d) =>
+                          d.toLowerCase().includes(item.degree.toLowerCase())
+                        )
+                          .slice(0, 10)
+                          .map((degree) => (
+                            <button
+                              key={degree}
+                              onClick={() => {
+                                onArrayChange(idx, "degree", degree);
+                                if (
+                                  setDegreeInputs &&
+                                  setShowDegreeSuggestions
+                                ) {
+                                  setDegreeInputs({
+                                    ...degreeInputs,
+                                    [idx]: "",
+                                  });
+                                  setShowDegreeSuggestions({
+                                    ...showDegreeSuggestions,
+                                    [idx]: false,
+                                  });
+                                }
+                              }}
+                              className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors text-sm font-medium text-gray-700 hover:text-blue-600 border-b border-gray-100 last:border-b-0"
+                            >
+                              {degree}
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                </div>
                 <Input
                   label="Graduation Date"
                   value={item.graduationDate}
@@ -1404,60 +1496,57 @@ const renderSectionForm = (
       };
 
       return (
-        <div className="space-y-3 animate-fade-in-up">
-          {/* Compact Header */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-                <ZapIcon size={14} className="text-white" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-gray-900">Your Skills</h3>
-                <p className="text-[10px] text-gray-500">
-                  Showcase your expertise
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Compact Input Section */}
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-            <label className="block text-xs font-bold text-gray-700 mb-2">
-              Add New Skill
+        <div className="space-y-6 animate-fade-in-up">
+          {/* Main Input Section */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+              Add Skills
             </label>
             <div className="relative">
-              <input
-                type="text"
-                value={skillInput}
-                onChange={(e) => {
-                  setSkillInput(e.target.value);
-                  setShowSuggestions(e.target.value.length > 0);
-                }}
-                onFocus={() =>
-                  skillInput.length > 0 && setShowSuggestions(true)
-                }
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                placeholder="Type a skill..."
-                className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none font-medium transition-all"
-                onKeyDown={(e: any) => {
-                  if (e.key === "Enter" && skillInput.trim()) {
-                    e.preventDefault();
-                    addSkill(skillInput);
-                  }
-                }}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <kbd className="px-1.5 py-0.5 bg-gray-200 text-gray-600 text-[10px] font-bold rounded">
-                  Enter
-                </kbd>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={skillInput}
+                    onChange={(e) => {
+                      setSkillInput(e.target.value);
+                      setShowSuggestions(e.target.value.length > 0);
+                    }}
+                    onFocus={() =>
+                      skillInput.length > 0 && setShowSuggestions(true)
+                    }
+                    onBlur={() =>
+                      setTimeout(() => setShowSuggestions(false), 200)
+                    }
+                    placeholder="E.g. Project Management, React, Leadership..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none font-medium transition-all"
+                    onKeyDown={(e: any) => {
+                      if (e.key === "Enter" && skillInput.trim()) {
+                        e.preventDefault();
+                        addSkill(skillInput);
+                      }
+                    }}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <kbd className="hidden sm:inline-block px-2 py-1 bg-white border border-gray-200 text-gray-400 text-[10px] font-bold rounded-md shadow-sm">
+                      Enter
+                    </kbd>
+                  </div>
+                </div>
+                <button
+                  onClick={() => skillInput.trim() && addSkill(skillInput)}
+                  className="px-4 py-3 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-900/10"
+                >
+                  Add
+                </button>
               </div>
 
-              {/* Enhanced Suggestions Dropdown */}
+              {/* Suggestions Dropdown */}
               {showSuggestions && filteredSkills.length > 0 && (
-                <div className="absolute z-20 w-full mt-3 bg-white border-2 border-blue-200 rounded-2xl shadow-2xl max-h-72 overflow-y-auto">
-                  <div className="p-2 bg-blue-50 border-b border-blue-100">
-                    <p className="text-xs font-bold text-blue-700 px-2">
-                      💡 Suggested Skills
+                <div className="absolute z-20 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto overflow-hidden ring-1 ring-black/5">
+                  <div className="p-2 bg-gray-50/50 border-b border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2">
+                      Suggestions
                     </p>
                   </div>
                   {filteredSkills.map((skill) => (
@@ -1468,13 +1557,11 @@ const renderSectionForm = (
                         e.preventDefault();
                         addSkill(skill);
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-all text-sm font-medium text-gray-700 hover:text-blue-600 border-b border-gray-100 last:border-b-0 group"
+                      className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-all text-sm font-medium text-gray-700 hover:text-blue-700 border-b border-gray-50 last:border-b-0 flex items-center justify-between group"
                     >
-                      <span className="flex items-center justify-between">
-                        <span>{skill}</span>
-                        <span className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                          →
-                        </span>
+                      {skill}
+                      <span className="opacity-0 group-hover:opacity-100 text-blue-500 text-xs font-bold">
+                        + Add
                       </span>
                     </button>
                   ))}
@@ -1483,126 +1570,40 @@ const renderSectionForm = (
             </div>
           </div>
 
-          {/* Added Skills Display */}
-          <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-sm font-bold text-gray-900">
-                Added Skills
-                <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
-                  {(data.items || []).length}
-                </span>
-              </h4>
-            </div>
-            <div className="flex flex-wrap gap-2 min-h-[60px]">
-              {(data.items || []).map((skill: any, idx: number) => {
-                const skillName =
-                  typeof skill === "string" ? skill : skill.name;
-                return (
-                  <span
-                    key={idx}
-                    className="group inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all hover:scale-105"
-                  >
-                    <span>{skillName}</span>
-                    <button
-                      onClick={() => onRemove("items", idx)}
-                      className="w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+          {/* Added Skills List */}
+          {(data.items || []).length > 0 && (
+            <div className="bg-white border-2 border-gray-100 border-dashed rounded-xl p-6">
+              <div className="flex flex-wrap gap-2">
+                {(data.items || []).map((skill: any, idx: number) => {
+                  const skillName =
+                    typeof skill === "string" ? skill : skill.name;
+                  return (
+                    <span
+                      key={idx}
+                      className="group inline-flex items-center gap-2 pl-3 pr-2 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-xs font-bold transition-all hover:bg-blue-100 hover:border-blue-200 hover:shadow-sm"
                     >
-                      ×
-                    </button>
-                  </span>
-                );
-              })}
-              {(data.items || []).length === 0 && (
-                <div className="w-full text-center py-8">
-                  <div className="text-4xl mb-2">🎯</div>
-                  <p className="text-gray-400 text-sm font-medium">
-                    No skills added yet
-                  </p>
-                  <p className="text-gray-300 text-xs mt-1">
-                    Start typing to add your first skill
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Categorized Popular Skills */}
-          <div className="bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-200 rounded-2xl p-6">
-            <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span>✨</span>
-              Popular Skills by Category
-            </h4>
-
-            <div className="space-y-4">
-              {/* Technical Skills */}
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  💻 Technical
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "React",
-                    "TypeScript",
-                    "Node.js",
-                    "Python",
-                    "AWS",
-                    "SQL",
-                  ].map((skill) => (
-                    <button
-                      key={skill}
-                      onClick={() => addSkill(skill)}
-                      className="px-3 py-1.5 rounded-lg bg-white text-gray-700 text-xs font-bold hover:bg-blue-500 hover:text-white transition-all border border-gray-200 hover:border-blue-500 hover:shadow-md"
-                    >
-                      + {skill}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Soft Skills */}
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  🤝 Soft Skills
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "Leadership",
-                    "Communication",
-                    "Project Management",
-                    "Problem Solving",
-                  ].map((skill) => (
-                    <button
-                      key={skill}
-                      onClick={() => addSkill(skill)}
-                      className="px-3 py-1.5 rounded-lg bg-white text-gray-700 text-xs font-bold hover:bg-purple-500 hover:text-white transition-all border border-gray-200 hover:border-purple-500 hover:shadow-md"
-                    >
-                      + {skill}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Design */}
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  🎨 Design
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {["UI/UX Design", "Figma", "Adobe XD", "Graphic Design"].map(
-                    (skill) => (
+                      <span>{skillName}</span>
                       <button
-                        key={skill}
-                        onClick={() => addSkill(skill)}
-                        className="px-3 py-1.5 rounded-lg bg-white text-gray-700 text-xs font-bold hover:bg-pink-500 hover:text-white transition-all border border-gray-200 hover:border-pink-500 hover:shadow-md"
+                        onClick={() => onRemove("items", idx)}
+                        className="w-4 h-4 rounded hover:bg-white flex items-center justify-center text-blue-400 hover:text-red-500 transition-colors"
                       >
-                        + {skill}
+                        ×
                       </button>
-                    )
-                  )}
-                </div>
+                    </span>
+                  );
+                })}
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Empty State Hint */}
+          {(data.items || []).length === 0 && (
+            <div className="text-center py-8 opacity-50">
+              <p className="text-sm font-medium text-gray-400">
+                Start typing to add your top skills
+              </p>
+            </div>
+          )}
         </div>
       );
 
@@ -1873,6 +1874,246 @@ const renderSectionForm = (
             className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
           >
             <GlobeIcon size={16} /> Add Language
+          </button>
+        </div>
+      );
+
+    case "volunteering":
+      return (
+        <div className="space-y-4 animate-fade-in-up">
+          <p className="text-xs text-gray-500 mb-4">
+            Add volunteer experience or community service.
+          </p>
+          {(data.items || []).map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3 relative group"
+            >
+              <button
+                onClick={() => onRemove("items", idx)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+              >
+                ×
+              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label="Organization"
+                  value={item.organization}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "organization", e.target.value)
+                  }
+                  placeholder="Red Cross"
+                />
+                <Input
+                  label="Role"
+                  value={item.role}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "role", e.target.value)
+                  }
+                  placeholder="Volunteer Coordinator"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label="Start Date"
+                  value={item.startDate}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "startDate", e.target.value)
+                  }
+                  placeholder="Jan 2020"
+                />
+                <Input
+                  label="End Date"
+                  value={item.endDate}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "endDate", e.target.value)
+                  }
+                  placeholder="Present"
+                />
+              </div>
+              <Textarea
+                label="Description"
+                value={item.description}
+                onChange={(e: any) =>
+                  onArrayChange(idx, "description", e.target.value)
+                }
+                placeholder="Briefly describe your contributions..."
+              />
+            </div>
+          ))}
+          <button
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+          >
+            + Add Experience
+          </button>
+        </div>
+      );
+
+    case "publications":
+      return (
+        <div className="space-y-4 animate-fade-in-up">
+          <p className="text-xs text-gray-500 mb-4">
+            List your research papers, articles, or books.
+          </p>
+          {(data.items || []).map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3 relative group"
+            >
+              <button
+                onClick={() => onRemove("items", idx)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+              >
+                ×
+              </button>
+              <Input
+                label="Title"
+                value={item.title}
+                onChange={(e: any) =>
+                  onArrayChange(idx, "title", e.target.value)
+                }
+                placeholder="The Future of AI"
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label="Publisher/Journal"
+                  value={item.publisher}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "publisher", e.target.value)
+                  }
+                  placeholder="IEEE"
+                />
+                <Input
+                  label="Date"
+                  value={item.date}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "date", e.target.value)
+                  }
+                  placeholder="March 2023"
+                />
+              </div>
+              <Input
+                label="URL (Optional)"
+                value={item.url}
+                onChange={(e: any) => onArrayChange(idx, "url", e.target.value)}
+                placeholder="https://example.com/paper"
+              />
+            </div>
+          ))}
+          <button
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+          >
+            + Add Publication
+          </button>
+        </div>
+      );
+
+    case "hobbies":
+      return (
+        <div className="space-y-4 animate-fade-in-up">
+          <p className="text-xs text-gray-500 mb-4">
+            Add your hobbies and interests to show personality and cultural fit.
+          </p>
+          {(data.items || []).map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative group"
+            >
+              <button
+                onClick={() => onRemove("items", idx)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+              >
+                ×
+              </button>
+              <Input
+                label="Interest/Hobby"
+                value={item.name || item.hobby}
+                onChange={(e: any) =>
+                  onArrayChange(idx, "name", e.target.value)
+                }
+                placeholder="e.g., Photography, Chess, Open Source Contributing"
+              />
+            </div>
+          ))}
+          <button
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+          >
+            + Add Interest
+          </button>
+        </div>
+      );
+
+    case "references":
+      return (
+        <div className="space-y-4 animate-fade-in-up">
+          <p className="text-xs text-gray-500 mb-4">
+            Add professional references who can vouch for your work.
+          </p>
+          {(data.items || []).map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3 relative group"
+            >
+              <button
+                onClick={() => onRemove("items", idx)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+              >
+                ×
+              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label="Name"
+                  value={item.name}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "name", e.target.value)
+                  }
+                  placeholder="John Smith"
+                />
+                <Input
+                  label="Title"
+                  value={item.title}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "title", e.target.value)
+                  }
+                  placeholder="Senior Manager"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label="Company"
+                  value={item.company}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "company", e.target.value)
+                  }
+                  placeholder="ABC Corporation"
+                />
+                <Input
+                  label="Email"
+                  value={item.email}
+                  onChange={(e: any) =>
+                    onArrayChange(idx, "email", e.target.value)
+                  }
+                  placeholder="john@example.com"
+                />
+              </div>
+              <Input
+                label="Phone (Optional)"
+                value={item.phone}
+                onChange={(e: any) =>
+                  onArrayChange(idx, "phone", e.target.value)
+                }
+                placeholder="+1 234 567 8900"
+              />
+            </div>
+          ))}
+          <button
+            onClick={() => onAdd()}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 text-sm font-bold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+          >
+            + Add Reference
           </button>
         </div>
       );

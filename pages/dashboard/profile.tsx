@@ -172,7 +172,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50/80 py-4 px-4">
       <Head>
-        <title>Profile - Cloud9</title>
+        <title>Profile</title>
       </Head>
 
       <input

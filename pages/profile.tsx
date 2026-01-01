@@ -73,7 +73,7 @@ const ProfilePage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Profile - Cloud9</title>
+        <title>Profile - Cloud9Profile</title>
       </Head>
 
       <div className="min-h-screen bg-gray-50/80">

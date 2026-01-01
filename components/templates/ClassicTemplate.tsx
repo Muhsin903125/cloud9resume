@@ -6,6 +6,7 @@ export const ClassicTemplate = ({
   themeColor,
   hexToRgba,
   font,
+  settings,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -37,7 +38,7 @@ export const ClassicTemplate = ({
                 className="text-center border-b-2 pb-4 mb-5"
                 style={{ borderColor: themeColor }}
               >
-                {personalInfo.photoUrl && (
+                {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
                   <img
                     src={personalInfo.photoUrl}
                     alt={personalInfo.name}

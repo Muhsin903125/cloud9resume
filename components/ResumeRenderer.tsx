@@ -126,6 +126,7 @@ export const ResumeRenderer: React.FC<ResumeRendererProps> = ({
     secondaryColor: settings.secondary_color || themeColor,
     font: currentFont,
     hexToRgba,
+    settings, // Pass all settings including showPhoto
   };
 
   return (

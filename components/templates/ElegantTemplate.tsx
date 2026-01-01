@@ -6,6 +6,7 @@ export const ElegantTemplate = ({
   themeColor,
   hexToRgba,
   font,
+  settings,
 }: any) => {
   const sortedSections = [...sections].sort(
     (a, b) => (a.order_index || 0) - (b.order_index || 0)
@@ -38,7 +39,7 @@ export const ElegantTemplate = ({
           <tr>
             <td className="align-top">
               <header className="text-center mb-12">
-                {personalInfo.photoUrl && (
+                {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
                   <img
                     src={personalInfo.photoUrl}
                     alt={personalInfo.name}
