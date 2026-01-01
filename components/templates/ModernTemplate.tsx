@@ -45,7 +45,7 @@ export const ModernTemplate = ({
     >
       {/* SIDEBAR (30%) */}
       <div
-        className="w-[30%] text-white p-5 flex flex-col gap-5 print:text-white relative"
+        className="w-[30%] text-white p-6 flex flex-col gap-6 print:text-white relative"
         style={{
           backgroundColor: "#1e293b",
           // Helper for print background extension
@@ -55,7 +55,7 @@ export const ModernTemplate = ({
         {/* Photo / Name */}
         <div className="text-center">
           {personalInfo.showPhoto !== false && (
-            <div className="w-16 h-16 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-3 border-2 border-slate-700 overflow-hidden relative">
+            <div className="w-20 h-20 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-4 border-2 border-slate-700 overflow-hidden relative">
               {personalInfo.photoUrl ? (
                 <img
                   src={personalInfo.photoUrl}
@@ -63,17 +63,17 @@ export const ModernTemplate = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-xl font-bold text-slate-500">
+                <span className="text-2xl font-bold text-slate-500">
                   {personalInfo.name ? personalInfo.name.charAt(0) : "U"}
                 </span>
               )}
             </div>
           )}
-          <h1 className="text-base font-bold tracking-tight mb-0.5 break-words">
+          <h1 className="text-lg font-bold tracking-tight mb-1 break-words leading-tight">
             {personalInfo.name || "Your Name"}
           </h1>
           <p
-            className="text-[9px] uppercase tracking-widest font-medium opacity-80 break-words"
+            className="text-[10px] uppercase tracking-widest font-medium opacity-80 break-words"
             style={{ color: themeColor }}
           >
             {personalInfo.jobTitle || "Job Title"}
@@ -83,7 +83,7 @@ export const ModernTemplate = ({
         <hr className="border-slate-800" />
 
         {/* Contact Info */}
-        <div className="space-y-1.5 text-[9px] text-slate-300">
+        <div className="space-y-2 text-[10px] text-slate-300">
           {[
             { icon: MailIcon, val: personalInfo.email },
             { icon: PhoneIcon, val: personalInfo.phone },
@@ -96,9 +96,9 @@ export const ModernTemplate = ({
           ].map(
             (item, i) =>
               item.val && (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
-                    <item.icon size={8} />
+                <div key={i} className="flex items-start gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
+                    <item.icon size={9} />
                   </div>
                   <span className="break-all">{item.val}</span>
                 </div>
@@ -106,9 +106,9 @@ export const ModernTemplate = ({
           )}
 
           {personalInfo.linkedin && (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
-                <span className="font-bold text-[8px]">in</span>
+            <div className="flex items-start gap-2.5">
+              <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="font-bold text-[9px]">in</span>
               </div>
               <a
                 href={personalInfo.linkedin}
@@ -120,9 +120,9 @@ export const ModernTemplate = ({
             </div>
           )}
           {personalInfo.portfolio && (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
-                <GlobeIcon size={8} />
+            <div className="flex items-start gap-2.5">
+              <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
+                <GlobeIcon size={9} />
               </div>
               <a
                 href={personalInfo.portfolio}
@@ -146,13 +146,13 @@ export const ModernTemplate = ({
 
           return (
             <div key={section.id} className="break-inside-avoid">
-              <h3 className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2">
                 {section_type.replace("_", " ")}
               </h3>
 
               {section_type === "skills" || section_type === "languages" ? (
                 /* Simplified Skills/Languages List */
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {(Array.isArray(section_data)
                     ? section_data
                     : section_data?.items || []
@@ -166,7 +166,7 @@ export const ModernTemplate = ({
                     return (
                       <span
                         key={idx}
-                        className="text-[9px] text-slate-300 border-b border-slate-700 pb-0.5"
+                        className="text-[10px] text-slate-300 border-b border-slate-700 pb-0.5"
                       >
                         {val}
                       </span>
@@ -180,7 +180,7 @@ export const ModernTemplate = ({
                     : section_data?.items || []
                   ).map((item: any, idx: number) => (
                     <div key={idx}>
-                      <div className="font-bold text-white text-[10px]">
+                      <div className="font-bold text-white text-[11px] leading-snug">
                         {/* Fallback chain for various section types in sidebar */}
                         {item.school ||
                           item.university ||
@@ -189,10 +189,10 @@ export const ModernTemplate = ({
                           item.title ||
                           item.language}
                       </div>
-                      <div className="text-slate-400 text-[9px]">
+                      <div className="text-slate-400 text-[10px]">
                         {item.degree || item.company || item.proficiency}
                       </div>
-                      <div className="text-slate-500 text-[9px] mt-0.5">
+                      <div className="text-slate-500 text-[10px] mt-0.5 italic">
                         {item.graduationDate || item.date || item.endDate}
                       </div>
                     </div>
@@ -214,7 +214,7 @@ export const ModernTemplate = ({
           </thead>
           <tbody>
             <tr>
-              <td className="px-8 pb-8 align-top">
+              <td className="px-8 py-8 align-top">
                 {mainSections.map((section: any) => {
                   const { section_type, section_data } = section;
                   if (
@@ -223,12 +223,10 @@ export const ModernTemplate = ({
                   )
                     return null;
 
-                  // Declaration is handled explicitly at the bottom
-
                   return (
-                    <div key={section.id} className="mb-6 break-inside-avoid">
+                    <div key={section.id} className="mb-7 break-inside-avoid">
                       <h3
-                        className="text-xs font-bold text-slate-900 border-b-2 border-slate-100 pb-1 mb-3 uppercase tracking-wider flex items-center gap-2"
+                        className="text-sm font-bold text-slate-900 border-b-2 border-slate-100 pb-1.5 mb-4 uppercase tracking-wider flex items-center gap-2"
                         style={{ borderColor: hexToRgba(themeColor, 0.2) }}
                       >
                         <span style={{ color: themeColor }}>
@@ -237,28 +235,28 @@ export const ModernTemplate = ({
                       </h3>
 
                       {section_type === "summary" ? (
-                        <p className="text-slate-700 leading-relaxed text-[11px] text-justify">
+                        <p className="text-slate-700 leading-relaxed text-[12px] text-justify">
                           {section_data.text || section_data}
                         </p>
                       ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                           {(Array.isArray(section_data)
                             ? section_data
                             : section_data?.items || []
                           ).map((item: any, idx: number) => (
                             <div key={idx} className="relative group">
-                              <div className="flex justify-between items-start mb-0.5 gap-4">
+                              <div className="flex justify-between items-baseline mb-1 gap-4">
                                 <div className="flex-1">
-                                  <h4 className="font-bold text-slate-900 text-sm">
+                                  <h4 className="font-bold text-slate-900 text-[13px]">
                                     {item.position || item.title}
                                   </h4>
                                   <div
-                                    className="font-medium text-[11px] mb-1"
+                                    className="font-medium text-[12px] mt-0.5"
                                     style={{ color: themeColor }}
                                   >
                                     {item.company || item.issuer || item.school}
                                     {item.location && (
-                                      <span className="text-slate-400 ml-1">
+                                      <span className="text-slate-400 ml-1 font-normal">
                                         • {item.location}
                                       </span>
                                     )}
@@ -268,7 +266,7 @@ export const ModernTemplate = ({
                                 {(item.startDate ||
                                   item.date ||
                                   item.endDate) && (
-                                  <span className="text-[9px] font-bold text-slate-500 whitespace-nowrap bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 shrink-0">
+                                  <span className="text-[10px] font-bold text-slate-500 whitespace-nowrap bg-slate-50 px-2 py-1 rounded border border-slate-100 shrink-0">
                                     {item.startDate && `${item.startDate} – `}
                                     {item.endDate || item.date}
                                   </span>
@@ -276,7 +274,7 @@ export const ModernTemplate = ({
                               </div>
 
                               {item.description && (
-                                <p className="text-[11px] text-slate-600 leading-relaxed whitespace-pre-wrap text-justify mt-1">
+                                <p className="text-[12px] text-slate-600 leading-relaxed whitespace-pre-wrap text-justify mt-1.5">
                                   {item.description}
                                 </p>
                               )}
@@ -294,12 +292,12 @@ export const ModernTemplate = ({
                     .section_data?.text && (
                     <div className="mb-6 break-inside-avoid">
                       <h3
-                        className="text-xs font-bold text-slate-900 border-b-2 border-slate-100 pb-1 mb-3 uppercase tracking-wider flex items-center gap-2"
+                        className="text-sm font-bold text-slate-900 border-b-2 border-slate-100 pb-1.5 mb-4 uppercase tracking-wider flex items-center gap-2"
                         style={{ borderColor: hexToRgba(themeColor, 0.2) }}
                       >
                         <span style={{ color: themeColor }}>Declaration</span>
                       </h3>
-                      <p className="text-slate-700 leading-relaxed text-[11px] text-justify">
+                      <p className="text-slate-700 leading-relaxed text-[12px] text-justify">
                         {
                           sections.find(
                             (s: any) => s.section_type === "declaration"

@@ -35,7 +35,7 @@ export const ClassicTemplate = ({
           <tr>
             <td className="align-top">
               <header
-                className="text-center border-b-2 pb-4 mb-5"
+                className="text-center border-b-2 pb-6 mb-6"
                 style={{ borderColor: themeColor }}
               >
                 {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
@@ -46,19 +46,19 @@ export const ClassicTemplate = ({
                   />
                 )}
                 <h1
-                  className="text-2xl font-bold mb-1 uppercase tracking-wide"
+                  className="text-3xl font-bold mb-2 uppercase tracking-wide"
                   style={{ color: themeColor }}
                 >
                   {personalInfo.name || "Your Name"}
                 </h1>
-                <p className="text-sm italic text-gray-700 mb-2">
+                <p className="text-base italic text-gray-700 mb-3 font-medium">
                   {personalInfo.jobTitle}
                 </p>
-                <div className="flex flex-wrap justify-center gap-3 text-[10px] text-gray-600">
+                <div className="flex flex-wrap justify-center gap-4 text-[12px] text-gray-600">
                   {[personalInfo.email, personalInfo.phone, personalInfo.city]
                     .filter(Boolean)
                     .map((t, i) => (
-                      <span key={i}>
+                      <span key={i} className="flex items-center gap-4">
                         {t} {i < 2 ? "•" : ""}
                       </span>
                     ))}
@@ -78,9 +78,9 @@ export const ClassicTemplate = ({
                 if (section_type === "declaration") return null;
 
                 return (
-                  <div key={section.id} className="mb-5 break-inside-avoid">
+                  <div key={section.id} className="mb-6 break-inside-avoid">
                     <h3
-                      className="font-bold text-base border-b pb-1 mb-3 uppercase"
+                      className="font-bold text-lg border-b pb-1.5 mb-4 uppercase"
                       style={{
                         borderColor: hexToRgba(themeColor, 0.3),
                         color: themeColor,
@@ -90,21 +90,21 @@ export const ClassicTemplate = ({
                     </h3>
 
                     {section_type === "summary" && (
-                      <p className="leading-relaxed text-sm text-justify">
+                      <p className="leading-relaxed text-sm text-justify text-gray-800">
                         {section_data.text || section_data}
                       </p>
                     )}
 
                     {(section_type === "skills" ||
                       section_type === "languages") && (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-2">
                         {(Array.isArray(section_data)
                           ? section_data
                           : section_data?.items || []
                         ).map((s: any, idx: number) => (
                           <span
                             key={idx}
-                            className="border border-gray-400 px-2 py-0.5 rounded text-xs"
+                            className="border border-gray-300 px-2.5 py-1 rounded text-sm bg-gray-50 text-gray-700"
                           >
                             {typeof s === "string"
                               ? s
@@ -121,29 +121,29 @@ export const ClassicTemplate = ({
                     {!["summary", "skills", "languages"].includes(
                       section_type
                     ) && (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {(Array.isArray(section_data)
                           ? section_data
                           : section_data?.items || []
                         ).map((item: any, idx: number) => (
-                          <div key={idx}>
-                            <div className="flex justify-between font-bold text-sm">
-                              <span>
+                          <div key={idx} className="group">
+                            <div className="flex justify-between font-bold text-[15px] mb-0.5">
+                              <span className="text-gray-900">
                                 {item.position ||
                                   item.title ||
                                   item.school ||
                                   item.institution}
                               </span>
-                              <span className="text-xs font-normal">
+                              <span className="text-sm font-semibold text-gray-500 whitespace-nowrap ml-4">
                                 {item.endDate ||
                                   item.date ||
                                   item.graduationDate}
                               </span>
                             </div>
-                            <div className="italic text-gray-700 text-xs mb-1">
+                            <div className="italic text-gray-700 text-sm mb-2 font-medium">
                               {item.company || item.issuer || item.degree}
                             </div>
-                            <p className="text-xs leading-relaxed text-justify">
+                            <p className="text-sm leading-relaxed text-justify text-gray-700 whitespace-pre-wrap">
                               {item.description}
                             </p>
                           </div>
@@ -158,9 +158,9 @@ export const ClassicTemplate = ({
               {sections.find((s: any) => s.section_type === "declaration") &&
                 sections.find((s: any) => s.section_type === "declaration")
                   .section_data?.text && (
-                  <div className="mb-5 break-inside-avoid">
+                  <div className="mb-6 break-inside-avoid">
                     <h3
-                      className="font-bold text-base border-b pb-1 mb-3 uppercase"
+                      className="font-bold text-lg border-b pb-1.5 mb-4 uppercase"
                       style={{
                         borderColor: hexToRgba(themeColor, 0.3),
                         color: themeColor,
@@ -168,7 +168,7 @@ export const ClassicTemplate = ({
                     >
                       Declaration
                     </h3>
-                    <p className="leading-relaxed text-sm text-justify">
+                    <p className="leading-relaxed text-sm text-justify text-gray-800">
                       {
                         sections.find(
                           (s: any) => s.section_type === "declaration"

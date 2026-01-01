@@ -25,28 +25,38 @@ export const BoldTemplate = ({
         fontFamily: font || "inherit",
       }}
     >
-      <header className="mb-12">
+      <header className="mb-14">
         <h1
-          className="text-6xl font-black uppercase tracking-tighter leading-none mb-4"
+          className="text-7xl font-black uppercase tracking-tighter leading-none mb-5"
           style={{ color: themeColor }}
         >
           {personalInfo.name || "Your Name"}
         </h1>
-        <div className="flex flex-wrap items-center gap-6 text-sm font-bold uppercase tracking-wide">
-          <span className="bg-slate-900 text-white px-2 py-0.5">
+        <div className="flex flex-wrap items-center gap-6 text-sm font-bold uppercase tracking-wider">
+          <span
+            className="text-white px-3 py-1 text-xs"
+            style={{ backgroundColor: themeColor }}
+          >
             {personalInfo.jobTitle}
           </span>
-          {[personalInfo.email, personalInfo.phone, personalInfo.city]
+          {[
+            personalInfo.email,
+            personalInfo.phone,
+            [personalInfo.city, personalInfo.country]
+              .filter(Boolean)
+              .join(", "),
+          ]
             .filter(Boolean)
             .map((val, i) => (
-              <span key={i} className="text-slate-500">
+              <span key={i} className="text-slate-500 flex items-center gap-2">
+                {i > 0 && <span className="text-slate-300">|</span>}
                 {val}
               </span>
             ))}
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-12">
+      <div className="grid grid-cols-1 gap-14">
         {sortedSections.map((section: any) => {
           if (section.section_type === "personal_info") return null;
           const { section_type, section_data } = section;
@@ -58,16 +68,16 @@ export const BoldTemplate = ({
             return null;
 
           return (
-            <div key={section.id}>
+            <div key={section.id} className="break-inside-avoid">
               <h3
-                className="text-4xl font-black uppercase mb-6 tracking-tighter opacity-10"
+                className="text-5xl font-black uppercase mb-8 tracking-tighter opacity-15"
                 style={{ color: themeColor }}
               >
-                {section_type}
+                {section_type.replace("_", " ")}
               </h3>
 
               {["summary", "declaration"].includes(section_type) && (
-                <p className="text-lg font-medium leading-relaxed max-w-3xl">
+                <p className="text-base font-medium leading-8 max-w-3xl text-slate-700 text-justify">
                   {section_data.text || section_data}
                 </p>
               )}
@@ -80,7 +90,21 @@ export const BoldTemplate = ({
                   ).map((s: any, idx: number) => (
                     <span
                       key={idx}
-                      className="text-sm font-bold border-2 border-slate-900 px-3 py-1 uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-default"
+                      className="text-sm font-bold border-2 px-4 py-1.5 uppercase hover:text-white transition-colors cursor-default"
+                      style={{
+                        borderColor: themeColor,
+                        color: themeColor,
+                      }}
+                      onMouseOver={(e) => {
+                        (e.target as HTMLElement).style.backgroundColor =
+                          themeColor;
+                        (e.target as HTMLElement).style.color = "white";
+                      }}
+                      onMouseOut={(e) => {
+                        (e.target as HTMLElement).style.backgroundColor =
+                          "transparent";
+                        (e.target as HTMLElement).style.color = themeColor;
+                      }}
                     >
                       {typeof s === "string"
                         ? s
@@ -97,24 +121,35 @@ export const BoldTemplate = ({
               {!["summary", "skills", "languages", "declaration"].includes(
                 section_type
               ) && (
-                <div className="space-y-8 border-l-4 border-slate-900 pl-6">
+                <div
+                  className="space-y-10 border-l-4 pl-8"
+                  style={{ borderColor: themeColor }}
+                >
                   {(Array.isArray(section_data)
                     ? section_data
                     : section_data?.items || []
                   ).map((item: any, idx: number) => (
-                    <div key={idx}>
-                      <div className="flex flex-col sm:flex-row justify-between sm:items-baseline mb-2">
-                        <h4 className="text-xl font-bold uppercase">
+                    <div key={idx} className="group">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-baseline mb-2 gap-2">
+                        <h4 className="text-xl font-bold uppercase text-slate-900 tracking-tight">
                           {item.position || item.title}
                         </h4>
-                        <span className="text-sm font-bold text-slate-400">
+                        <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 uppercase tracking-wide whitespace-nowrap">
                           {item.startDate} — {item.endDate || "Present"}
                         </span>
                       </div>
-                      <div className="text-sm font-bold uppercase mb-3 text-slate-500">
+                      <div
+                        className="text-sm font-bold uppercase mb-4 tracking-wider"
+                        style={{ color: themeColor }}
+                      >
                         {item.company || item.issuer || item.degree}
+                        {item.location && (
+                          <span className="text-slate-400 ml-2 font-medium normal-case">
+                            • {item.location}
+                          </span>
+                        )}
                       </div>
-                      <p className="text-sm font-medium leading-7 text-slate-700 max-w-2xl">
+                      <p className="text-sm font-medium leading-7 text-slate-600 max-w-2xl text-justify whitespace-pre-wrap">
                         {item.description}
                       </p>
                     </div>
@@ -131,12 +166,12 @@ export const BoldTemplate = ({
             .section_data?.text && (
             <div className="break-inside-avoid">
               <h3
-                className="text-4xl font-black uppercase mb-6 tracking-tighter opacity-10"
+                className="text-5xl font-black uppercase mb-8 tracking-tighter opacity-15"
                 style={{ color: themeColor }}
               >
                 Declaration
               </h3>
-              <p className="text-lg font-medium leading-relaxed max-w-3xl">
+              <p className="text-base font-medium leading-8 max-w-3xl text-slate-700 text-justify">
                 {
                   sections.find((s: any) => s.section_type === "declaration")
                     .section_data.text
