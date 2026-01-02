@@ -18,7 +18,7 @@ export const ClassicTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-white text-gray-900 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto px-[15mm]"
+      className="bg-white text-gray-900 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto px-[12mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -35,26 +35,26 @@ export const ClassicTemplate = ({
           <tr>
             <td className="align-top">
               <header
-                className="text-center border-b-2 pb-6 mb-6"
+                className="text-center border-b-2 pb-3 mb-4"
                 style={{ borderColor: themeColor }}
               >
                 {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
                   <img
                     src={personalInfo.photoUrl}
                     alt={personalInfo.name}
-                    className="w-24 h-24 mx-auto rounded-full object-cover mb-4 border border-gray-200"
+                    className="w-20 h-20 mx-auto rounded-full object-cover mb-3 border border-gray-200"
                   />
                 )}
                 <h1
-                  className="text-3xl font-bold mb-2 uppercase tracking-wide"
+                  className="text-2xl font-bold mb-1 uppercase tracking-wide"
                   style={{ color: themeColor }}
                 >
                   {personalInfo.name || "Your Name"}
                 </h1>
-                <p className="text-base italic text-gray-700 mb-3 font-medium">
+                <p className="text-sm italic text-gray-700 mb-2 font-medium">
                   {personalInfo.jobTitle}
                 </p>
-                <div className="flex flex-wrap justify-center gap-4 text-[12px] text-gray-600">
+                <div className="flex flex-wrap justify-center gap-3 text-[11px] text-gray-600">
                   {[personalInfo.email, personalInfo.phone, personalInfo.city]
                     .filter(Boolean)
                     .map((t, i) => (

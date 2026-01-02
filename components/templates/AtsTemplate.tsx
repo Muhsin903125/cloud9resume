@@ -22,7 +22,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
 
   return (
     <div
-      className="bg-white text-black p-[20mm] mx-auto"
+      className="bg-white text-black p-[12mm] mx-auto"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -32,15 +32,15 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
       }}
     >
       {/* Header / Personal Info */}
-      <header className="border-b-2 border-black pb-4 mb-6 text-center">
-        <h1 className="text-3xl font-bold uppercase tracking-wide mb-2 text-black">
+      <header className="border-b-2 border-black pb-2 mb-4 text-center">
+        <h1 className="text-2xl font-bold uppercase tracking-wide mb-1 text-black">
           {personalInfo.name ||
             personalInfo.fullName ||
             resume.title ||
             "Your Name"}
         </h1>
 
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-black">
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-xs text-black">
           {personalInfo.email && <span>{personalInfo.email}</span>}
           {personalInfo.phone && <span>| {personalInfo.phone}</span>}
           {(personalInfo.city || personalInfo.address) && (
@@ -67,7 +67,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
       </header>
 
       {/* Sections */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {sortedSections.map((section: any) => {
           const { section_type, section_data } = section;
           if (!section_data || section_type === "personal_info") return null;
@@ -96,13 +96,13 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
               {!["summary", "skills", "languages", "declaration"].includes(
                 section_type
               ) && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {(Array.isArray(section_data)
                     ? section_data
                     : section_data?.items || []
                   ).map((item: any, idx: number) => (
                     <div key={idx}>
-                      <div className="flex justify-between items-baseline font-bold text-base text-black">
+                      <div className="flex justify-between items-baseline font-bold text-sm text-black">
                         <h3>
                           {item.position ||
                             item.title ||

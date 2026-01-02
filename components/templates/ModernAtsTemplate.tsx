@@ -23,7 +23,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
 
   return (
     <div
-      className="bg-white text-slate-900 p-[20mm] mx-auto"
+      className="bg-white text-slate-900 p-[12mm] mx-auto"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -32,14 +32,14 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
       }}
     >
       {/* Header */}
-      <header className="mb-10">
-        <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-slate-900">
+      <header className="mb-5">
+        <h1 className="text-3xl font-extrabold tracking-tight mb-1 text-slate-900">
           {personalInfo.name ||
             personalInfo.fullName ||
             resume.title ||
             "Your Name"}
         </h1>
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
           {personalInfo.email && (
             <span className="flex items-center gap-1">
               {personalInfo.email}
@@ -69,7 +69,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
         </div>
       </header>
 
-      <div className="space-y-10">
+      <div className="space-y-5">
         {sortedSections.map((section: any) => {
           const { section_type, section_data } = section;
           if (!section_data || section_type === "personal_info") return null;
@@ -92,7 +92,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
               {/* Summary / Text Sections */}
               {(section_type === "summary" ||
                 section_type === "declaration") && (
-                <p className="text-sm text-slate-600 leading-relaxed text-justify whitespace-pre-wrap">
+                <p className="text-xs text-slate-600 leading-snug text-justify whitespace-pre-wrap">
                   {section_data.text || section_data}
                 </p>
               )}
@@ -101,7 +101,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
               {!["summary", "skills", "languages", "declaration"].includes(
                 section_type
               ) && (
-                <div className="space-y-8">
+                <div className="space-y-4">
                   {(Array.isArray(section_data)
                     ? section_data
                     : section_data?.items || []
@@ -109,7 +109,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                     <div key={idx} className="group relative">
                       <div className="flex justify-between items-start mb-1">
                         <div>
-                          <h3 className="text-base font-bold text-slate-900">
+                          <h3 className="text-sm font-bold text-slate-900">
                             {item.position ||
                               item.title ||
                               item.degree ||

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import puppeteer from "puppeteer";
+import htmlPdf from "html-pdf-node";
 import ReactDOMServer from "react-dom/server";
 import React from "react";
 import { ResumeRenderer } from "../../../components/ResumeRenderer";
@@ -183,30 +183,20 @@ export default async function handler(
     `;
 
     if (format === "pdf") {
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--font-render-hinting=none",
-        ],
-      });
-      const page = await browser.newPage();
-
-      await page.setContent(fullHtml, { waitUntil: "networkidle2" });
-
-      const pdfBuffer = await page.pdf({
+      const options = {
         format: "A4",
         printBackground: true,
         margin: {
-          top: "20mm",
-          bottom: "20mm",
-          left: "15mm",
-          right: "15mm",
+          top: "10mm",
+          bottom: "10mm",
+          left: "1mm",
+          right: "1mm",
         },
-      });
+      };
 
-      await browser.close();
+      const file = { content: fullHtml };
+
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Length", pdfBuffer.length);
@@ -244,7 +234,7 @@ export default async function handler(
                 }),
               ],
               alignment: AlignmentType.CENTER,
-              spacing: { after: 100 },
+              spacing: { after: 50 },
             })
           );
         }
@@ -261,7 +251,7 @@ export default async function handler(
                 }),
               ],
               alignment: AlignmentType.CENTER,
-              spacing: { after: 100 },
+              spacing: { after: 50 },
             })
           );
         }
@@ -283,7 +273,7 @@ export default async function handler(
                 }),
               ],
               alignment: AlignmentType.CENTER,
-              spacing: { after: 200 },
+              spacing: { after: 50 },
             })
           );
         }
@@ -294,7 +284,7 @@ export default async function handler(
             border: {
               bottom: { color: "CCCCCC", size: 1, style: BorderStyle.SINGLE },
             },
-            spacing: { after: 200 },
+            spacing: { after: 50 },
           })
         );
 
@@ -319,7 +309,7 @@ export default async function handler(
                 }),
               ],
               heading: HeadingLevel.HEADING_2,
-              spacing: { before: 300, after: 100 },
+              spacing: { before: 50, after: 50 },
               border: {
                 bottom: {
                   color: themeColorToUse.replace("#", ""),
@@ -344,7 +334,7 @@ export default async function handler(
               docChildren.push(
                 new Paragraph({
                   children: [new TextRun({ text: summaryText, size: 22 })],
-                  spacing: { after: 150 },
+                  spacing: { after: 50 },
                 })
               );
             }
@@ -368,7 +358,7 @@ export default async function handler(
                       size: 24,
                     }),
                   ],
-                  spacing: { before: 150 },
+                  spacing: { before: 50 },
                 })
               );
               if (exp.date || exp.start_date || exp.duration) {

@@ -51,11 +51,11 @@ export const VibrantCreativeTemplate = ({
       {/* Main Container */}
       <div className="flex-1 flex lg:flex-row flex-col">
         {/* Sidebar Space (32%) */}
-        <div className="lg:w-[32%] w-full bg-slate-50 border-r border-slate-100 p-8 flex flex-col gap-10">
+        <div className="lg:w-[32%] w-full bg-slate-50 border-r border-slate-100 p-5 flex flex-col gap-5">
           {/* Photo & Name Card */}
           <div className="text-center lg:text-left">
             {personalInfo.showPhoto !== false && (
-              <div className="w-28 h-28 mx-auto lg:mx-0 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-slate-100 mb-6 overflow-hidden relative rotate-3 transition-transform hover:rotate-0">
+              <div className="w-24 h-24 mx-auto lg:mx-0 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-slate-100 mb-3 overflow-hidden relative rotate-3 transition-transform hover:rotate-0">
                 {personalInfo.photoUrl ? (
                   <img
                     src={personalInfo.photoUrl}
@@ -69,7 +69,7 @@ export const VibrantCreativeTemplate = ({
                 )}
               </div>
             )}
-            <h1 className="text-3xl font-black text-slate-900 leading-none mb-3 tracking-tight">
+            <h1 className="text-2xl font-black text-slate-900 leading-none mb-2 tracking-tight">
               {personalInfo.name || "YOUR NAME"}
             </h1>
             <p
@@ -81,11 +81,11 @@ export const VibrantCreativeTemplate = ({
           </div>
 
           {/* Contact Block */}
-          <div className="space-y-4">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 pb-2 border-b border-slate-200">
+          <div className="space-y-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pb-1 border-b border-slate-200">
               Connection
             </h3>
-            <div className="space-y-3.5 text-[11px] font-semibold text-slate-600">
+            <div className="space-y-2 text-[10px] font-semibold text-slate-600">
               {[
                 { icon: MailIcon, val: personalInfo.email },
                 { icon: PhoneIcon, val: personalInfo.phone },
@@ -110,8 +110,8 @@ export const VibrantCreativeTemplate = ({
 
           {/* Sidebar Modules (Skills, Languages, etc) */}
           {sidebarSections.map((section: any) => (
-            <div key={section.id} className="space-y-4">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 pb-2 border-b border-slate-200">
+            <div key={section.id} className="space-y-2">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pb-1 border-b border-slate-200">
                 {section.section_type.replace("_", " ")}
               </h3>
 
@@ -131,7 +131,7 @@ export const VibrantCreativeTemplate = ({
                   ))}
                 </div>
               ) : (
-                <div className="space-y-5">
+                <div className="space-y-2">
                   {(Array.isArray(section.section_data)
                     ? section.section_data
                     : section.section_data?.items || []
@@ -152,8 +152,8 @@ export const VibrantCreativeTemplate = ({
         </div>
 
         {/* Main Content Area (68%) */}
-        <div className="flex-1 p-12 bg-white">
-          <div className="space-y-12">
+        <div className="flex-1 p-6 bg-white">
+          <div className="space-y-5">
             {mainSections.map((section: any) => {
               const { section_type, section_data } = section;
               if (
@@ -185,7 +185,7 @@ export const VibrantCreativeTemplate = ({
                       {section_data.text || section_data}
                     </p>
                   ) : (
-                    <div className="space-y-10">
+                    <div className="space-y-4">
                       {(Array.isArray(section_data)
                         ? section_data
                         : section_data?.items || []

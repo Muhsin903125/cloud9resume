@@ -43,16 +43,16 @@ export const CreativeTemplate = ({
     >
       {/* Left Sidebar (35%) - Dynamic Checkered/Artistic BG concept or just bold color */}
       <div
-        className="w-[35%] p-8 flex flex-col gap-10 text-white relative overflow-hidden"
+        className="w-[35%] p-6 flex flex-col gap-4 text-white relative overflow-hidden"
         style={{ backgroundColor: themeColor }}
       >
-        {/* Artistic shapes overlay */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 scale-150 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-black opacity-10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
+        {/* Artistic shapes overlay - simplified for PDF */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-black opacity-5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
         <div className="relative z-10 text-center">
           {personalInfo.showPhoto !== false && (
-            <div className="w-36 h-36 mx-auto bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/20 mb-6 overflow-hidden relative shadow-2xl">
+            <div className="w-28 h-28 mx-auto bg-white/10 rounded-full flex items-center justify-center border-3 border-white/20 mb-4 overflow-hidden relative shadow-lg">
               {personalInfo.photoUrl ? (
                 <img
                   src={personalInfo.photoUrl}
@@ -67,20 +67,20 @@ export const CreativeTemplate = ({
             </div>
           )}
 
-          <h1 className="text-3xl font-black uppercase leading-none mb-3 tracking-tighter drop-shadow-md">
+          <h1 className="text-2xl font-black uppercase leading-none mb-2 tracking-tighter">
             {personalInfo.name?.split(" ").map((word: string, i: number) => (
               <span key={i} className="block">
                 {word}
               </span>
             )) || "YOUR NAME"}
           </h1>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80 border-t border-white/30 pt-4 mt-2 inline-block px-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] opacity-80 border-t border-white/30 pt-2 mt-1 inline-block px-3">
             {personalInfo.jobTitle}
           </p>
         </div>
 
         {/* Contact Info */}
-        <div className="relative z-10 space-y-4 text-xs font-medium opacity-95">
+        <div className="relative z-10 space-y-2 text-xs font-medium opacity-95">
           {[
             { icon: MailIcon, val: personalInfo.email },
             { icon: PhoneIcon, val: personalInfo.phone },
@@ -102,7 +102,7 @@ export const CreativeTemplate = ({
         </div>
 
         {/* Sidebar Sections (Skills, Education, etc) */}
-        <div className="relative z-10 flex-1 space-y-10">
+        <div className="relative z-10 flex-1 space-y-4">
           {sidebarSections.map((section: any) => {
             const { section_type, section_data } = section;
             if (
@@ -113,7 +113,7 @@ export const CreativeTemplate = ({
 
             return (
               <div key={section.id}>
-                <h3 className="text-sm font-black uppercase mb-5 flex items-center gap-3 tracking-widest opacity-90">
+                <h3 className="text-xs font-black uppercase mb-2 flex items-center gap-2 tracking-widest opacity-90">
                   <span className="w-1.5 h-1.5 bg-white rounded-full block"></span>
                   {section_type.replace("_", " ")}
                 </h3>
@@ -139,7 +139,7 @@ export const CreativeTemplate = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="space-y-5">
+                  <div className="space-y-2">
                     {(Array.isArray(section_data)
                       ? section_data
                       : section_data?.items || []
@@ -162,7 +162,7 @@ export const CreativeTemplate = ({
       </div>
 
       {/* Right Content */}
-      <div className="flex-1 p-12 bg-white">
+      <div className="flex-1 p-6 bg-white">
         {mainSections.map((section: any) => {
           const { section_type, section_data } = section;
           if (
@@ -172,9 +172,9 @@ export const CreativeTemplate = ({
             return null;
 
           return (
-            <div key={section.id} className="mb-12 break-inside-avoid">
-              <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900 mb-8 flex items-center gap-4">
-                <span className="w-8 h-1 bg-gray-900"></span>
+            <div key={section.id} className="mb-5 break-inside-avoid">
+              <h3 className="text-lg font-black uppercase tracking-tight text-gray-900 mb-3 flex items-center gap-3">
+                <span className="w-6 h-0.5 bg-gray-900"></span>
                 {section_type.replace("_", " ")}
               </h3>
 
@@ -183,7 +183,7 @@ export const CreativeTemplate = ({
                   {section_data.text || section_data}
                 </p>
               ) : (
-                <div className="space-y-10 border-l-2 border-gray-100 ml-4 pl-8 relative">
+                <div className="space-y-4 border-l-2 border-gray-100 ml-3 pl-5 relative">
                   {(Array.isArray(section_data)
                     ? section_data
                     : section_data?.items || []
@@ -195,7 +195,7 @@ export const CreativeTemplate = ({
                       ></div>
 
                       <div className="flex justify-between items-baseline mb-2 gap-4">
-                        <h4 className="text-lg font-bold text-gray-900 leading-tight">
+                        <h4 className="text-sm font-bold text-gray-900 leading-tight">
                           {item.position || item.title}
                         </h4>
                         <span className="text-xs font-bold text-gray-500 bg-gray-50 px-3 py-1 rounded-full whitespace-nowrap">
@@ -204,7 +204,7 @@ export const CreativeTemplate = ({
                       </div>
 
                       <div
-                        className="text-xs font-extrabold uppercase tracking-wider mb-3"
+                        className="text-[10px] font-extrabold uppercase tracking-wider mb-1"
                         style={{ color: themeColor }}
                       >
                         {item.company || item.issuer || item.school}
@@ -215,7 +215,7 @@ export const CreativeTemplate = ({
                         )}
                       </div>
 
-                      <p className="text-[13px] text-gray-600 leading-relaxed max-w-2xl text-justify whitespace-pre-wrap">
+                      <p className="text-[11px] text-gray-600 leading-snug max-w-2xl text-justify whitespace-pre-wrap">
                         {item.description}
                       </p>
                     </div>
@@ -231,7 +231,7 @@ export const CreativeTemplate = ({
           sections.find((s: any) => s.section_type === "declaration")
             .section_data?.text && (
             <div className="break-inside-avoid">
-              <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900 mb-6 flex items-center gap-4">
+              <h3 className="text-lg font-black uppercase tracking-tight text-gray-900 mb-3 flex items-center gap-3">
                 <span className="w-8 h-1 bg-gray-900"></span>
                 Declaration
               </h3>

@@ -19,7 +19,7 @@ export const ProfessionalTemplate = ({
     <div
       id="resume-preview-content"
       // Added print styles directly to ensure they apply
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[15mm]"
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[12mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -29,26 +29,26 @@ export const ProfessionalTemplate = ({
     >
       {/* Header */}
       <header
-        className="border-b-4 pb-8 mb-10"
+        className="border-b-4 pb-4 mb-5"
         style={{ borderColor: themeColor }}
       >
-        <div className="flex justify-between items-start gap-8">
-          <div className="flex gap-6 items-center flex-1">
+        <div className="flex justify-between items-start gap-5">
+          <div className="flex gap-4 items-center flex-1">
             {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
               <img
                 src={personalInfo.photoUrl}
                 alt={personalInfo.name}
-                className="w-28 h-28 rounded-xl object-cover shadow-sm border border-gray-100"
+                className="w-20 h-20 rounded-xl object-cover shadow-sm border border-gray-100"
               />
             )}
             <div className="flex-1 min-w-0">
               <h1
-                className="text-4xl font-extrabold uppercase tracking-tight mb-2 break-words"
+                className="text-2xl font-extrabold uppercase tracking-tight mb-1 break-words"
                 style={{ color: themeColor }}
               >
                 {personalInfo.name || "Your Name"}
               </h1>
-              <p className="text-xl font-medium text-gray-500 uppercase tracking-wide">
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 {personalInfo.jobTitle}
               </p>
             </div>
