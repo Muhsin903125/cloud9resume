@@ -201,12 +201,11 @@ export class ResumeParserService {
       4. Output ONLY valid JSON, no markdown.
     `;
 
-    // Models ordered by free tier availability and stability
+    // Models ordered by stability and cost-effectiveness (as of Jan 2026)
     const modelsToTry = [
-      "gemini-1.5-flash", // Most stable, good free tier
-      "gemini-1.5-flash-8b", // Cheapest
-      "gemini-1.5-pro", // Higher quality fallback
-      "gemini-pro", // Legacy but stable
+      "gemini-2.5-flash", // Current stable, cost-effective
+      "gemini-2.5-pro", // Higher quality fallback
+      "gemini-2.0-flash", // Fallback (will be deprecated March 2026)
     ];
 
     let lastError: any = null;

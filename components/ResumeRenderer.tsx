@@ -131,14 +131,19 @@ export const ResumeRenderer: React.FC<ResumeRendererProps> = ({
 
   return (
     <div style={{ fontFamily: currentFont }}>
+      {/* Font loading - using link for better server-side rendering compatibility */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Playfair+Display:wght@400;600;700&family=Roboto+Mono:wght@400;500&family=Roboto:wght@300;400;500;700&display=swap"
+        rel="stylesheet"
+      />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;400;700&family=Playfair+Display:wght@400;600;700&family=Roboto+Mono:wght@400;500&family=Roboto:wght@300;400;500;700&display=swap');
         @media print {
           @page { margin: 0; size: auto; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          /* Ensure backgrounds print */
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
+        /* Ensure font cascades to all elements */
+        * { font-family: inherit; }
       `}</style>
 
       {(() => {

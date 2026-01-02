@@ -281,13 +281,35 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
     try {
       await handleSave();
 
+      // Ensure personal_info is always included in export
+      const exportSections = (() => {
+        const hasPersonalInfo = previewSections.some(
+          (s) => s.section_type === "personal_info"
+        );
+        if (!hasPersonalInfo) {
+          // Try to get personal_info from resume sections or localSections
+          const personalInfoSection =
+            resume.sections?.find(
+              (s: any) => s.section_type === "personal_info"
+            ) ||
+            resume.resume_sections?.find(
+              (s: any) => s.section_type === "personal_info"
+            ) ||
+            localSections.find((s) => s.section_type === "personal_info");
+          if (personalInfoSection) {
+            return [personalInfoSection, ...previewSections];
+          }
+        }
+        return previewSections;
+      })();
+
       const exportParams = {
         resumeId: resume.id,
         format: format,
         template: template,
         themeColor: themeColor,
         font: font,
-        sections: previewSections,
+        sections: exportSections,
         resumeData: { ...resume, theme_color: themeColor },
       };
 

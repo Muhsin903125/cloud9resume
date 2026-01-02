@@ -19,6 +19,27 @@ function generateSiteMap(profiles: any[]) {
      <url>
        <loc>${EXTERNAL_DATA_URL}/plans</loc>
      </url>
+     <url>
+       <loc>${EXTERNAL_DATA_URL}/resume</loc>
+     </url>
+     <url>
+       <loc>${EXTERNAL_DATA_URL}/portfolio</loc>
+     </url>
+     <url>
+       <loc>${EXTERNAL_DATA_URL}/ats-checker</loc>
+     </url>
+     <url>
+       <loc>${EXTERNAL_DATA_URL}/about</loc>
+     </url>
+     <url>
+       <loc>${EXTERNAL_DATA_URL}/contact</loc>
+     </url>
+     <url>
+       <loc>${EXTERNAL_DATA_URL}/privacy</loc>
+     </url>
+     <url>
+       <loc>${EXTERNAL_DATA_URL}/terms</loc>
+     </url>
      ${profiles
        .map(({ username }) => {
          return `

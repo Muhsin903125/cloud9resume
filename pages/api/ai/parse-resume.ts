@@ -251,7 +251,15 @@ export default async function handler(
     const educationSection = {
       resume_id: newResume.id,
       section_type: "education",
-      section_data: { items: parsedData.education },
+      section_data: {
+        items: parsedData.education.map((edu) => ({
+          institution: edu.school, // Map school -> institution
+          degree: edu.degree,
+          graduationDate: edu.endDate, // Map endDate -> graduationDate
+          description: edu.description,
+          location: edu.location,
+        })),
+      },
       order_index: 3,
     };
 

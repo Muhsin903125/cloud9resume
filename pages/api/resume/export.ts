@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import htmlPdf from "html-pdf-node";
+import puppeteer from "puppeteer";
 import ReactDOMServer from "react-dom/server";
 import React from "react";
 import { ResumeRenderer } from "../../../components/ResumeRenderer";
@@ -144,6 +144,76 @@ export default async function handler(
 
     const htmlContent = ReactDOMServer.renderToStaticMarkup(element);
 
+    // Font mapping for CSS
+    const fontFamilyMap: { [key: string]: string } = {
+      inter: "'Inter', sans-serif",
+      roboto: "'Roboto', sans-serif",
+      manrope: "'Manrope', sans-serif",
+      poppins: "'Poppins', sans-serif",
+      calibri: "Calibri, Candara, Segoe, 'Segoe UI', Optima, Arial, sans-serif",
+      arial: "Arial, Helvetica, sans-serif",
+    };
+    const fontFamily = fontFamilyMap[fontToUse] || fontFamilyMap.inter;
+
+    const fontsCss = `
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 300;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuOKfMZg.ttf) format('truetype');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf) format('truetype');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf) format('truetype');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf) format('truetype');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf) format('truetype');
+      }
+      @font-face {
+        font-family: 'Manrope';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/manrope/v14/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk79FN_C-bw.ttf) format('truetype');
+      }
+      @font-face {
+        font-family: 'Poppins';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrJJfecg.ttf) format('truetype');
+      }
+      @font-face {
+        font-family: 'Roboto';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.ttf) format('truetype');
+      }
+    `;
+
     const fullHtml = `
       <!DOCTYPE html>
       <html>
@@ -151,7 +221,7 @@ export default async function handler(
           <meta charset="utf-8">
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+            ${fontsCss}
             * { 
               box-sizing: border-box; 
             }
@@ -159,6 +229,7 @@ export default async function handler(
               width: 100%;
               margin: 0;
               padding: 0;
+              font-family: ${fontFamily};
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
@@ -183,26 +254,54 @@ export default async function handler(
     `;
 
     if (format === "pdf") {
-      const options = {
-        format: "A4",
-        printBackground: true,
-        margin: {
-          top: "10mm",
-          bottom: "10mm",
-          left: "1mm",
-          right: "1mm",
-        },
-      };
+      let browser;
+      try {
+        browser = await puppeteer.launch({
+          headless: true,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        });
+        const page = await browser.newPage();
 
-      const file = { content: fullHtml };
+        // setContent with waitUntil: networkidle0 ensures fonts are loaded
+        await page.setContent(fullHtml, {
+          waitUntil: "networkidle0",
+          timeout: 60000,
+        });
 
-      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+        // Explicitly wait for fonts to be ready
+        await page.evaluate(async () => {
+          await document.fonts.ready;
+        });
 
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Length", pdfBuffer.length);
-      res.setHeader("Content-Disposition", `attachment; filename=resume.pdf`);
-      res.send(Buffer.from(pdfBuffer));
-      return;
+        const pdfBuffer = await page.pdf({
+          format: "A4",
+          printBackground: true,
+          margin: {
+            top: "0mm", // Template handles padding
+            bottom: "0mm",
+            left: "0mm",
+            right: "0mm",
+          },
+        });
+
+        await browser.close();
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=${
+            resume.title || "resume"
+          }_${templateToUse}.pdf`
+        );
+        return res.end(Buffer.from(pdfBuffer));
+      } catch (err: any) {
+        if (browser) await browser.close();
+        console.error("PDF Generation Error (Puppeteer):", err);
+        return res.status(500).json({
+          error: "Failed to generate PDF",
+          details: err.message,
+        });
+      }
     }
 
     // DOCX Export Implementation

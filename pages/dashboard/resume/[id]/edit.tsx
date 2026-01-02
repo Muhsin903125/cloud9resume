@@ -464,8 +464,7 @@ const ResumeEditor = () => {
     }
 
     // Return all sections - the modal handles visibility internally via hiddenSectionIds
-    // Filter out personal_info as it's always shown and managed separately
-    return sorted.filter((s) => s.section_type !== "personal_info");
+    return sorted;
   };
 
   const activeSectionIndex = sectionTypes.findIndex((s) => s.id === activeTab);
@@ -561,8 +560,6 @@ const ResumeEditor = () => {
             </button>
           </div>
         </header>
-
-     
 
         <ResumePreviewModal
           isOpen={showPreview}
