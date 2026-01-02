@@ -27,14 +27,18 @@ const LoginPage: NextPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
 
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push("/dashboard");
+      if (user?.is_admin) {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, router, user]);
 
   // Load saved email if remember me was enabled, and check for OAuth errors
   useEffect(() => {
