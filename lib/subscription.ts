@@ -1,47 +1,65 @@
 import { UserProfile } from "./types";
 
-export type PlanType = "free" | "starter" | "pro" | "pro_plus" | "enterprise";
+export type PlanType = "free" | "professional" | "premium" | "enterprise";
 
 export const PLAN_LIMITS = {
   free: {
-    resumes: 1,
+    resumes: 3,
     portfolios: 1,
     cover_letters: 1,
     canAddExperience: true,
+    hasWatermark: true,
+    canUseAI: true,
+    canPublishPortfolio: true,
+    portfolioPublishDays: 30, // Free users get 30-day publishing trial
   },
-  starter: {
-    resumes: 1,
-    portfolios: 1,
-    cover_letters: 1,
-    canAddExperience: false, // Fresher restriction
-  },
-  pro: {
-    resumes: 5,
-    portfolios: 2,
-    cover_letters: 50,
-    canAddExperience: true,
-  },
-  pro_plus: {
+  professional: {
     resumes: Infinity,
-    portfolios: 10,
-    cover_letters: 10,
+    portfolios: 5,
+    cover_letters: Infinity,
     canAddExperience: true,
+    hasWatermark: false,
+    canUseAI: true,
+    canPublishPortfolio: true,
+    portfolioPublishDays: 0, // 0 = unlimited/no expiration
+    customDomain: false,
+  },
+  premium: {
+    resumes: Infinity,
+    portfolios: Infinity,
+    cover_letters: Infinity,
+    canAddExperience: true,
+    hasWatermark: false,
+    canUseAI: true,
+    canPublishPortfolio: true,
+    portfolioPublishDays: 0, // unlimited
+    customDomain: true,
+    interviewPrep: true,
+    linkedInOptimization: true,
   },
   enterprise: {
     resumes: Infinity,
     portfolios: Infinity,
     cover_letters: Infinity,
     canAddExperience: true,
+    hasWatermark: false,
+    canUseAI: true,
+    canPublishPortfolio: true,
+    portfolioPublishDays: 0, // unlimited
+    customDomain: true,
+    interviewPrep: true,
+    linkedInOptimization: true,
   },
 };
 
 export const CREDIT_COSTS = {
-  resume_download: 5,
-  portfolio_publish: 10, // First publish usually higher or flat rate?
-  portfolio_update: 2, // Cheaper to update
+  resume_download_pdf: 1,
+  portfolio_publish: 5,
+  portfolio_update: 1,
   ai_generation: 2,
   ai_fix: 1,
   cover_letter_generation: 5,
+  ats_scan: 3,
 };
 
 // Helper: Check if user can create more resources
@@ -64,15 +82,23 @@ export function canAddSection(plan: PlanType, sectionType: string): boolean {
   return true;
 }
 
+// Helper: Check if user can create cover letters
+export function canCreateCoverLetter(
+  plan: PlanType,
+  currentCount: number
+): boolean {
+  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+  const limit = limits.cover_letters;
+  return currentCount < limit;
+}
+
 // Helper: Get plan display name
 export function getPlanName(plan: PlanType): string {
   switch (plan) {
-    case "starter":
-      return "Starter (Fresher)";
-    case "pro":
-      return "Pro";
-    case "pro_plus":
-      return "Pro+";
+    case "professional":
+      return "Professional";
+    case "premium":
+      return "Premium";
     case "enterprise":
       return "Enterprise";
     default:

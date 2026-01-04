@@ -72,18 +72,22 @@ export default async function handler(
     // types.ts says UserProfile has 'plan': "free" | "starter"...
     // Let's rely on that if possible, or fallback.
 
-    // Map plan_id to plan string if needed
-    // PRIORITIZE plan_id like the credits API does, as 'plan' column might be stale
+    // Map plan_id to plan string
     let userPlan = "free";
-    const pid = userProfile.plan_id;
 
-    if (pid === 2) userPlan = "starter";
-    else if (pid === 3) userPlan = "pro";
-    else if (pid === 4) userPlan = "pro_plus";
-    else if (pid === 5) userPlan = "enterprise";
-    else if (userProfile.plan) {
-      // Fallback to plan column text if plan_id is missing/0
+    // trust the plan string first if it matches our new types
+    if (
+      userProfile.plan &&
+      ["free", "professional", "premium"].includes(userProfile.plan)
+    ) {
       userPlan = userProfile.plan;
+    } else {
+      // fallback to legacy plan_id mapping
+      const pid = userProfile.plan_id;
+      if (pid === 2) userPlan = "professional";
+      else if (pid === 3) userPlan = "professional";
+      else if (pid === 4) userPlan = "premium";
+      else if (pid === 5) userPlan = "enterprise";
     }
 
     if (req.method === "GET") {

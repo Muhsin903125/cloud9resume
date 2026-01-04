@@ -126,35 +126,39 @@ const PlansPage: NextPage = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
                 {plans.map((plan) => (
                   <div
                     key={plan.id}
                     className={`relative flex flex-col rounded-xl border-2 overflow-hidden transition-all duration-300 ${
                       plan.isPopular
-                        ? "border-gray-900 shadow-xl scale-105 z-10"
+                        ? "border-blue-600 shadow-xl scale-105 z-10"
+                        : plan.isComingSoon
+                        ? "border-gray-300 opacity-75"
                         : "border-gray-200 hover:border-gray-300 hover:shadow-md"
                     } bg-white`}
                   >
-                    {plan.isPopular && (
-                      <div className="absolute top-0 inset-x-0 bg-gray-900 text-white py-1 text-center">
+                    {/* Coming Soon Badge */}
+                    {plan.isComingSoon && (
+                      <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-1 text-center z-20">
+                        <span className="text-xs font-semibold tracking-wide uppercase">
+                          Coming Soon
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Best Value Badge */}
+                    {plan.isPopular && !plan.isComingSoon && (
+                      <div className="absolute top-0 inset-x-0 bg-blue-600 text-white py-1 text-center">
                         <span className="text-xs font-semibold tracking-wide uppercase">
                           Best Value
                         </span>
                       </div>
                     )}
 
-                    {plan.id === "starter" && (
-                      <div className="absolute top-0 inset-x-0 bg-green-600 text-white py-1 text-center">
-                        <span className="text-xs font-semibold tracking-wide uppercase">
-                          For Freshers
-                        </span>
-                      </div>
-                    )}
-
                     <div
                       className={`p-6 flex-1 flex flex-col ${
-                        plan.isPopular || plan.id === "starter" ? "pt-10" : ""
+                        plan.isPopular || plan.isComingSoon ? "pt-10" : ""
                       }`}
                     >
                       <div className="mb-6">
@@ -168,18 +172,45 @@ const PlansPage: NextPage = () => {
 
                       {/* Pricing */}
                       <div className="mb-6 pb-6 border-b border-gray-100">
-                        <div className="flex items-baseline mb-2">
-                          <span className="text-4xl font-extrabold text-gray-900">
-                            {plan.price === 0 ? "Free" : `$${plan.price}`}
-                          </span>
-                          {plan.price > 0 && (
-                            <span className="text-gray-500 ml-1 text-xs">
+                        {plan.price === 0 ? (
+                          <div className="flex items-baseline mb-2">
+                            <span className="text-4xl font-extrabold text-gray-900">
+                              Free
+                            </span>
+                          </div>
+                        ) : plan.hasTrial && !plan.isComingSoon ? (
+                          <>
+                            {/* Trial Pricing */}
+                            <div className="mb-2">
+                              <div className="flex items-baseline">
+                                <span className="text-3xl font-extrabold text-blue-600">
+                                  ${plan.trialPrice}
+                                </span>
+                                <span className="text-gray-500 ml-2 text-sm">
+                                  for {plan.trialDays} days
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-400 mt-1">
+                                Then ${plan.price}/month
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-baseline mb-2">
+                            <span className="text-4xl font-extrabold text-gray-900">
+                              ${plan.price}
+                            </span>
+                            <span className="text-gray-500 ml-1 text-sm">
                               /mo
                             </span>
-                          )}
-                        </div>
-                        <div className="text-sm font-medium text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded">
+                          </div>
+                        )}
+
+                        <div className="text-sm font-medium text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded mt-2">
                           {plan.credits} Credits
+                          {plan.billingPeriod === "monthly" && plan.price > 0
+                            ? "/month"
+                            : ""}
                         </div>
                       </div>
 
@@ -214,14 +245,22 @@ const PlansPage: NextPage = () => {
                       <Button
                         variant={plan.isPopular ? "primary" : "secondary"}
                         className="w-full mt-auto"
-                        disabled={loadingPlanId === plan.id}
-                        onClick={() => handleSelectPlan(plan)}
+                        disabled={
+                          loadingPlanId === plan.id || plan.isComingSoon
+                        }
+                        onClick={() =>
+                          !plan.isComingSoon && handleSelectPlan(plan)
+                        }
                       >
-                        {loadingPlanId === plan.id
+                        {plan.isComingSoon
+                          ? "Coming Soon"
+                          : loadingPlanId === plan.id
                           ? "Processing..."
                           : plan.price === 0
-                          ? "Select Plan"
-                          : "Upgrade"}
+                          ? "Get Started Free"
+                          : plan.hasTrial
+                          ? `Start 14-Day Trial - $${plan.trialPrice}`
+                          : "Upgrade Now"}
                       </Button>
                     </div>
                   </div>

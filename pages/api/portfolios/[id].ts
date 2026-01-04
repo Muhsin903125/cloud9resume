@@ -71,30 +71,44 @@ export default async function handler(
         (updates.is_active === true || updates.is_active === undefined);
 
       if (isPublishing) {
-        if (currentPlan === "free") {
-          return res
-            .status(403)
-            .json({
-              success: false,
-              error: "Free plan cannot publish portfolios. Please upgrade.",
-            });
-        }
-        cost = 10; // Publish cost
+        // Free users: allow publishing with 30-day expiration
+        // Paid users: unlimited publishing
+        const PLAN_LIMITS = {
+          free: { publishDays: 30, cost: 5 },
+          professional: { publishDays: 0, cost: 5 }, // 0 = unlimited
+          premium: { publishDays: 0, cost: 5 },
+          enterprise: { publishDays: 0, cost: 0 }, // enterprise is free
+        };
+
+        const planLimits =
+          PLAN_LIMITS[currentPlan as keyof typeof PLAN_LIMITS] ||
+          PLAN_LIMITS.free;
+        cost = planLimits.cost;
         actionDescription = "Publish Portfolio";
+
+        // Set expiration date for free users
+        if (planLimits.publishDays > 0) {
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + planLimits.publishDays);
+          updates.published_at = new Date().toISOString();
+          updates.expires_at = expiresAt.toISOString();
+        } else {
+          // Paid plans: no expiration
+          updates.published_at = new Date().toISOString();
+          updates.expires_at = null;
+        }
       } else if (isUpdatingPublished) {
-        cost = 2; // Update cost
+        cost = 1; // Update cost
         actionDescription = "Update Published Portfolio";
       }
 
       // Check Credits
       if (cost > 0) {
         if (currentCredits < cost) {
-          return res
-            .status(400)
-            .json({
-              success: false,
-              error: `Insufficient credits. ${actionDescription} costs ${cost} credits.`,
-            });
+          return res.status(400).json({
+            success: false,
+            error: `Insufficient credits. ${actionDescription} costs ${cost} credits.`,
+          });
         }
 
         // Deduct

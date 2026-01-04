@@ -19,6 +19,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "../../lib/apiClient";
 import PlanSelectionModal from "../../components/PlanSelectionModal";
 import OnboardingModal from "../../components/OnboardingModal";
+import { PLAN_LIMITS, PlanType } from "../../lib/subscription";
+import { formatDistanceToNow } from "date-fns";
 
 const DashboardPage: NextPage = () => {
   const router = useRouter();
@@ -33,7 +35,9 @@ const DashboardPage: NextPage = () => {
     portfolioViews: 0,
     templatesUsed: 8,
     creditsRemaining: 0,
-    plan: "free",
+    creditsRemaining: 0,
+    plan: "free" as PlanType,
+    portfolioExpiresAt: null as string | null,
   });
 
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
@@ -268,6 +272,86 @@ const DashboardPage: NextPage = () => {
 
         {/* Content */}
         <main className="max-w-5xl mx-auto px-4 py-8 relative z-10">
+          {/* Portfolio Expiration Warning */}
+          {stats.portfolioExpiresAt && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
+            >
+              <div className="p-2 bg-amber-100 rounded-full text-amber-600 flex-shrink-0">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-amber-900">
+                  Portfolio Expiring Soon
+                </h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  Your portfolio publishing trial expires{" "}
+                  {formatDistanceToNow(new Date(stats.portfolioExpiresAt), {
+                    addSuffix: true,
+                  })}
+                  . Upgrade to Professional to keep it live forever.
+                </p>
+              </div>
+              <Button
+                variant="primary"
+                size="small"
+                onClick={() => setShowPlanModal(true)}
+                className="whitespace-nowrap bg-amber-600 hover:bg-amber-700 border-transparent"
+              >
+                Upgrade Now
+              </Button>
+            </motion.div>
+          )}
+
+          {/* Free Plan Upgrade Banner */}
+          {stats.plan === "free" && !stats.portfolioExpiresAt && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg"
+            >
+              <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold mb-1">
+                    Upgrade to Professional
+                  </h2>
+                  <p className="text-blue-100 text-sm">
+                    Get unlimited resumes, portfolios, and AI credits. Try it
+                    risk-free!
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold bg-white/20 px-3 py-1 rounded-full uppercase tracking-wider">
+                    14-Day Trial
+                  </span>
+                  <Button
+                    onClick={() => setShowPlanModal(true)}
+                    className="bg-white text-blue-600 hover:bg-blue-50 border-none font-bold shadow-md"
+                  >
+                    Start Trial - $6.50
+                  </Button>
+                </div>
+              </div>
+              {/* Decorative background circles */}
+              <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl"></div>
+            </motion.div>
+          )}
+
           {/* Credits Banner */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -334,6 +418,7 @@ const DashboardPage: NextPage = () => {
                 icon: DocumentIcon,
                 href: "/dashboard/resume",
                 color: "blue",
+                limit: PLAN_LIMITS[stats.plan]?.resumes,
               },
               {
                 label: "Portfolios",
@@ -341,6 +426,7 @@ const DashboardPage: NextPage = () => {
                 icon: PortfolioIcon,
                 href: "/dashboard/portfolio",
                 color: "purple",
+                limit: PLAN_LIMITS[stats.plan]?.portfolios,
               },
               {
                 label: "ATS Scans",
@@ -406,6 +492,16 @@ const DashboardPage: NextPage = () => {
                       </p>
                       <p className="text-3xl font-bold text-gray-900 mt-1">
                         {isDataLoading ? "..." : stat.value}
+                        {stat.limit && typeof stat.limit === "number" && (
+                          <span className="text-sm font-medium text-gray-400 ml-1">
+                            / {stat.limit}
+                          </span>
+                        )}
+                        {stat.limit === Infinity && (
+                          <span className="text-xs font-medium text-gray-400 ml-2 bg-gray-100 px-2 py-0.5 rounded-full">
+                            UNLIMITED
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div

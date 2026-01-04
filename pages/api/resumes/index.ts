@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
+import { PLAN_LIMITS } from "../../../lib/subscription";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -143,28 +144,31 @@ export default async function handler(
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("plan_id")
+        .select("plan_id, plan")
         .eq("id", userId)
         .single();
 
       if (profileData) {
-        const pid = profileData.plan_id;
-        if (pid === 2) userPlan = "starter";
-        else if (pid === 3) userPlan = "pro";
-        else if (pid === 4) userPlan = "pro_plus";
-        else if (pid === 5) userPlan = "enterprise";
+        // trust the plan string first if it matches our new types
+        if (["free", "professional", "premium"].includes(profileData.plan)) {
+          userPlan = profileData.plan;
+        } else {
+          // fallback to legacy plan_id mapping
+          const pid = profileData.plan_id;
+          if (pid === 2) userPlan = "professional"; // starter -> professional
+          else if (pid === 3) userPlan = "professional"; // pro -> professional
+          else if (pid === 4) userPlan = "premium"; // pro_plus -> premium
+          else if (pid === 5) userPlan = "enterprise";
+        }
       }
 
       console.log("✅ Determined user plan:", userPlan);
 
-      const limits: Record<string, number> = {
-        free: 1,
-        starter: 3,
-        pro: 10,
-        pro_plus: 100,
-        enterprise: 1000,
-      };
-      const limit = limits[userPlan] || 1;
+      // Use PLAN_LIMITS from subscription.ts
+      // Default to free limits if plan not found
+      const planLimits =
+        PLAN_LIMITS[userPlan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.free;
+      const limit = planLimits.resumes;
 
       const { data: allResumes, error: countError } = await supabase
         .from("resumes")

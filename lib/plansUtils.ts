@@ -9,6 +9,10 @@ export interface Plan {
   credits: number;
   features: string[];
   isPopular?: boolean;
+  hasTrial?: boolean;
+  trialPrice?: number;
+  trialDays?: number;
+  isComingSoon?: boolean;
   description: string;
   limitations?: string[];
 }

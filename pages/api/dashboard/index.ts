@@ -16,6 +16,7 @@ interface DashboardResponse {
       portfolioViews: number;
       creditsRemaining: number;
       plan: string;
+      portfolioExpiresAt?: string | null;
     };
     recentActivities: any[];
   };
@@ -136,7 +137,10 @@ export default async function handler(
     // 3. Fetch Portfolios
     const { data: portfolios, error: portError } = await supabase
       .from("portfolios")
-      .select("id, title, is_active, created_at, updated_at, view_count")
+      .from("portfolios")
+      .select(
+        "id, title, is_active, created_at, updated_at, view_count, expires_at"
+      )
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
@@ -151,6 +155,11 @@ export default async function handler(
       (acc, curr) => acc + (curr.view_count || 0),
       0
     );
+
+    // Find nearest expiration date
+    const portfolioExpiresAt = fetchedPortfolios.find(
+      (p) => p.is_active && p.expires_at
+    )?.expires_at;
 
     // Combine Activities
     const activities = [
@@ -185,6 +194,7 @@ export default async function handler(
           portfolioViews: totalViews,
           creditsRemaining: credits,
           plan: plan,
+          portfolioExpiresAt: portfolioExpiresAt || null,
         },
         recentActivities: activities,
       },

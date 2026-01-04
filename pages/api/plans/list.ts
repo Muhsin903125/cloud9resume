@@ -9,6 +9,10 @@ export interface Plan {
   credits: number;
   features: string[];
   isPopular?: boolean;
+  hasTrial?: boolean;
+  trialPrice?: number;
+  trialDays?: number;
+  isComingSoon?: boolean;
   description: string;
   limitations?: string[];
 }
@@ -18,67 +22,72 @@ const PLANS: Record<string, Plan> = {
   free: {
     id: "free",
     name: "Free",
-    displayName: "Free Plan",
+    displayName: "Free",
     price: 0,
     billingPeriod: "monthly",
-    credits: 10,
-    description: "Perfect for getting started",
-    features: ["1 Resume", "1 Portfolio", "5 AI Credits", "Standard Templates"],
-    limitations: ["Max 1 Resume", "Max 1 Portfolio"],
-  },
-  starter: {
-    id: "starter",
-    name: "Starter",
-    displayName: "Starter (Fresher)",
-    price: 0,
-    billingPeriod: "monthly",
-    credits: 10,
-    description: "Best for students & freshers",
+    credits: 5,
+    description: "Perfect for trying out Cloud9Profile",
     features: [
-      "1 Resume",
+      "3 Resumes",
       "1 Portfolio",
+      "Portfolio Publishing (30 days)",
+      "1 Cover Letter",
       "5 AI Credits",
-      "Portfolio Publishing",
+      "Basic ATS Checker",
+      "Standard Templates",
+      "PDF Export (with watermark)",
     ],
-    limitations: ["No Experience Section", "Max 1 Resume"],
+    limitations: [
+      "Portfolio expires after 30 days",
+      "PDF exports have watermark",
+      "Limited AI credits",
+    ],
   },
-  pro: {
-    id: "pro",
-    name: "Pro",
-    displayName: "Pro Plan",
-    price: 9.99,
+  professional: {
+    id: "professional",
+    name: "Professional",
+    displayName: "Professional",
+    price: 12.99,
     billingPeriod: "monthly",
-    credits: 150,
+    credits: 200,
     isPopular: true,
-    description: "For serious job seekers",
+    hasTrial: true,
+    trialPrice: 6.5,
+    trialDays: 14,
+    description: "Everything you need for a successful job search",
     features: [
-      "5 Resumes",
-      "2 Portfolios",
-      "150 AI Credits",
-      "Advanced ATS Scoring",
-      "AI Resume Suggestions",
+      "Unlimited Resumes",
+      "5 Published Portfolios",
+      "Unlimited Cover Letters",
+      "200 AI Credits/month",
+      "AI Resume Generation",
       "Cover Letter Generator",
-      "PDF Downloads",
+      "Advanced ATS Scoring",
+      "JD Optimization",
+      "PDF Export (no watermark)",
+      "Portfolio Publishing",
       "Priority Email Support",
     ],
   },
-  pro_plus: {
-    id: "pro_plus",
-    name: "Pro Plus",
-    displayName: "Pro Plus",
-    price: 19.99,
+  premium: {
+    id: "premium",
+    name: "Premium",
+    displayName: "Premium",
+    price: 24.99,
     billingPeriod: "monthly",
-    credits: 400,
-    description: "Max power for professionals",
+    credits: 500,
+    isComingSoon: true,
+    description: "Advanced features for career professionals",
     features: [
-      "Unlimited Resumes",
-      "10 Portfolios",
-      "400 AI Credits",
-      "Priority ATS Scoring",
-      "Interview Prep",
-      "LinkedIn Optimization",
-      "Custom Domain",
-      "Priority Support",
+      "Everything in Professional",
+      "500 AI Credits/month",
+      "Unlimited Portfolios",
+      "Interview Prep (AI Mock Interviews)",
+      "LinkedIn Profile Optimization",
+      "Custom Domain for Portfolio",
+      "Advanced OCR",
+      "Priority Chat Support",
+      "Early Access to New Features",
     ],
   },
   enterprise: {
@@ -121,8 +130,8 @@ export default async function handler(
     const plans = Object.values(PLANS)
       .filter((plan) => plan.id !== "enterprise")
       .sort((a, b) => {
-        // Custom sort order: Free, Starter, Pro, Pro+
-        const order = ["free", "starter", "pro", "pro_plus"];
+        // Custom sort order: Free, Professional, Premium
+        const order = ["free", "professional", "premium"];
         return order.indexOf(a.id) - order.indexOf(b.id);
       });
 

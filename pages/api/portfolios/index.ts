@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { supabase } from "../../../lib/backend/supabaseClient";
 import jwt from "jsonwebtoken";
 import { Portfolio } from "../../../lib/types";
+import { PLAN_LIMITS } from "../../../lib/subscription";
 
 function extractUserIdFromToken(req: NextApiRequest): string | null {
   try {
@@ -60,13 +61,55 @@ export default async function handler(
           .json({ success: false, error: "Title and Resume ID are required" });
       }
 
+      // Check portfolio limit based on plan
+      let userPlan = "free";
+
+      const { data: profileCheck, error: profileErr } = await supabase
+        .from("profiles")
+        .select("plan_id, plan")
+        .eq("id", userId)
+        .single();
+
+      if (profileCheck) {
+        if (["free", "professional", "premium"].includes(profileCheck.plan)) {
+          userPlan = profileCheck.plan;
+        } else {
+          const pid = profileCheck.plan_id;
+          if (pid === 2 || pid === 3) userPlan = "professional";
+          else if (pid === 4) userPlan = "premium";
+          else if (pid === 5) userPlan = "enterprise";
+        }
+      }
+
+      const planLimits =
+        PLAN_LIMITS[userPlan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.free;
+      const limit = planLimits.portfolios;
+
+      if (limit !== Infinity) {
+        const { count, error: countError } = await supabase
+          .from("portfolios")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .neq("is_active", false); // Only count active portfolios
+
+        if (countError) throw countError;
+
+        if ((count || 0) >= limit) {
+          return res.status(403).json({
+            success: false,
+            error:
+              "Portfolio limit reached. Upgrade to create more portfolios.",
+          });
+        }
+      }
+
       // Check slug uniqueness if provided
       if (slug) {
         const { data: existing } = await supabase
           .from("portfolios")
           .select("id")
           .eq("slug", slug)
-          .maybeSingle(); // Removed .neq("user_id", userId) to ensure global uniqueness
+          .maybeSingle();
 
         if (existing) {
           return res

@@ -4,6 +4,8 @@ import ReactDOMServer from "react-dom/server";
 import React from "react";
 import { ResumeRenderer } from "../../../components/ResumeRenderer";
 import jwt from "jsonwebtoken";
+import { createClient } from "@supabase/supabase-js";
+import { PLAN_LIMITS } from "../../../lib/subscription";
 import {
   Document,
   Packer,
@@ -12,10 +14,6 @@ import {
   HeadingLevel,
   AlignmentType,
   BorderStyle,
-  TableRow,
-  Table,
-  TableCell,
-  WidthType,
 } from "docx";
 
 const supabase = createClient(
@@ -23,18 +21,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Simple Tailwind CSS injection for the PDF
-// In production, you might want to read this from a file or use a styled-components approach
-// For now, we'll use a CDN link or minimal critical CSS for strict ATS
 const TAILWIND_CDN =
   "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css";
-
-// Helper to get resume data (mock or DB)
-// For this implementation, we expect the resume object to be passed in the body
-// to avoid double DB fetching if the client already has it,
-// OR we fetch from DB if only ID is provided.
-// Ideally, fetch from DB for security.
-import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(
   req: NextApiRequest,
@@ -46,8 +34,10 @@ export default async function handler(
 
   const { resumeId, format = "pdf", template = "ats", resumeData } = req.body;
 
-  // 1. Enforce Download Limits
+  // Auth & Plan Check
+  let hasWatermark = true;
   const token = req.headers.authorization?.split(" ")[1];
+
   if (token) {
     try {
       const decoded = jwt.decode(token) as any;
@@ -56,12 +46,31 @@ export default async function handler(
       if (userId) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("downloads_used, downloads_limit")
+          .select("downloads_used, downloads_limit, plan_id, plan")
           .eq("id", userId)
           .single();
 
         if (profile) {
-          // Check limit (if not unlimited i.e. -1)
+          // Determine Plan
+          let userPlan = "free";
+          if (
+            profile.plan &&
+            ["free", "professional", "premium"].includes(profile.plan)
+          ) {
+            userPlan = profile.plan;
+          } else {
+            const pid = profile.plan_id;
+            if (pid === 2 || pid === 3) userPlan = "professional";
+            else if (pid === 4) userPlan = "premium";
+            else if (pid === 5) userPlan = "enterprise";
+          }
+
+          const planLimits =
+            PLAN_LIMITS[userPlan as keyof typeof PLAN_LIMITS] ||
+            PLAN_LIMITS.free;
+          hasWatermark = planLimits.hasWatermark;
+
+          // Check download limit (if not unlimited i.e. -1)
           if (
             profile.downloads_limit !== -1 &&
             profile.downloads_used >= profile.downloads_limit
@@ -214,6 +223,15 @@ export default async function handler(
       }
     `;
 
+    // Simple watermark CSS
+    const watermarkHtml = hasWatermark
+      ? `
+      <div style="position: fixed; bottom: 0; right: 0; width: 100%; text-align: right; padding: 20px 40px; opacity: 0.6; font-size: 14px; color: #64748b; pointer-events: none; z-index: 9999; font-family: sans-serif;">
+         Created with <b>Cloud9Profile.com</b>
+      </div>
+    `
+      : "";
+
     const fullHtml = `
       <!DOCTYPE html>
       <html>
@@ -232,6 +250,7 @@ export default async function handler(
               font-family: ${fontFamily};
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+              background: white;
             }
             /* Remove template fixed heights so content flows naturally across pages */
             #root > div {
@@ -249,6 +268,7 @@ export default async function handler(
         </head>
         <body>
           <div id="root">${htmlContent}</div>
+          ${watermarkHtml}
         </body>
       </html>
     `;
