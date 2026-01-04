@@ -35,7 +35,6 @@ const DashboardPage: NextPage = () => {
     portfolioViews: 0,
     templatesUsed: 8,
     creditsRemaining: 0,
-    creditsRemaining: 0,
     plan: "free" as PlanType,
     portfolioExpiresAt: null as string | null,
   });
@@ -238,18 +237,16 @@ const DashboardPage: NextPage = () => {
                 Dashboard
               </h1>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <span className="text-xs text-gray-500 flex items-center gap-2">
-                Welcome, {displayName}
+                <span className="hidden sm:inline">Welcome, {displayName}</span>
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${
                     stats.plan === "free"
                       ? "bg-gray-100 text-gray-500"
-                      : stats.plan === "starter"
-                      ? "bg-green-100 text-green-700"
-                      : stats.plan === "pro"
+                      : stats.plan === "professional"
                       ? "bg-blue-100 text-blue-700"
-                      : stats.plan === "pro_plus"
+                      : stats.plan === "premium"
                       ? "bg-purple-100 text-purple-700"
                       : "bg-yellow-100 text-yellow-700"
                   }`}
@@ -271,7 +268,7 @@ const DashboardPage: NextPage = () => {
         </header>
 
         {/* Content */}
-        <main className="max-w-5xl mx-auto px-4 py-8 relative z-10">
+        <main className="max-w-5xl mx-auto px-4 py-8 pb-24 relative z-10">
           {/* Portfolio Expiration Warning */}
           {stats.portfolioExpiresAt && (
             <motion.div

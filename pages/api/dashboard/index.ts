@@ -134,9 +134,8 @@ export default async function handler(
     console.log("[Dashboard API] Resumes found (total):", resumes?.length || 0);
     console.log("[Dashboard API] Resumes found (valid):", validResumes.length);
 
-    // 3. Fetch Portfolios
+    // 3. Get Portfolios (need to see which one is expiring soon)
     const { data: portfolios, error: portError } = await supabase
-      .from("portfolios")
       .from("portfolios")
       .select(
         "id, title, is_active, created_at, updated_at, view_count, expires_at"
