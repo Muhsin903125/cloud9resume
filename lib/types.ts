@@ -118,3 +118,18 @@ export interface ATSAnalysisRecord {
   keywords_missing: string[];
   created_at: string;
 }
+
+// Cover Letter types
+export interface CoverLetter {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string; // Markdown or HTML
+  content_short?: string; // Short version (e.g. for LinkedIn)
+  resume_id?: string;
+  job_description?: string;
+  company_name?: string;
+  job_title?: string;
+  created_at: string;
+  updated_at: string;
+}

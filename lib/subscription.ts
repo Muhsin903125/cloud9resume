@@ -6,26 +6,31 @@ export const PLAN_LIMITS = {
   free: {
     resumes: 1,
     portfolios: 1,
+    cover_letters: 1,
     canAddExperience: true,
   },
   starter: {
     resumes: 1,
     portfolios: 1,
+    cover_letters: 1,
     canAddExperience: false, // Fresher restriction
   },
   pro: {
     resumes: 5,
     portfolios: 2,
+    cover_letters: 50,
     canAddExperience: true,
   },
   pro_plus: {
     resumes: Infinity,
     portfolios: 10,
+    cover_letters: 10,
     canAddExperience: true,
   },
   enterprise: {
     resumes: Infinity,
     portfolios: Infinity,
+    cover_letters: Infinity,
     canAddExperience: true,
   },
 };
@@ -36,6 +41,7 @@ export const CREDIT_COSTS = {
   portfolio_update: 2, // Cheaper to update
   ai_generation: 2,
   ai_fix: 1,
+  cover_letter_generation: 5,
 };
 
 // Helper: Check if user can create more resources

@@ -332,7 +332,7 @@ const ResumeDashboard = () => {
           <ResumeUploader
             onUploadSuccess={(data, resumeId) => {
               setShowImportModal(false);
-              router.push(`/dashboard/resume/${resumeId}/templates`);
+              router.push(`/dashboard/resume/${resumeId}/edit`);
             }}
             onCancel={() => setShowImportModal(false)}
           />
