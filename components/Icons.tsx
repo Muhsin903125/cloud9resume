@@ -797,3 +797,23 @@ export const SparklesIcon = ({
     <path d="M7 5h4" />
   </svg>
 );
+export const CreditCardIcon = ({
+  size = 20,
+  color = "currentColor",
+  className,
+}: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+    <line x1="1" y1="10" x2="23" y2="10" />
+  </svg>
+);

@@ -4,11 +4,12 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
+import { motion } from "framer-motion";
 import "../styles/globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ConfirmationModal from "../components/ConfirmationModal";
-import PlanSelectionModal from "../components/PlanSelectionModal";
+import PlanUpgradeModal from "../components/PlanUpgradeModal";
 import { useAuth } from "../lib/authUtils";
 import {
   DocumentIcon,
@@ -88,9 +89,19 @@ export default function App({ Component, pageProps }: AppProps) {
     );
   }
 
-  // ... rest of the file remains the same
+  // For non-dashboard pages (landing, login, signup, etc.)
+  return (
+    <>
+      <Toaster />
+      {!isNoLayoutPage && <Navbar />}
+      <Component {...pageProps} />
+      {!isNoLayoutPage && <Footer />}
+      <CookieBanner />
+    </>
+  );
+}
 
-// ... DashboardLayout implementation below
+// DashboardLayout Component
 function DashboardLayout({
   children,
   userName,
@@ -122,7 +133,11 @@ function DashboardLayout({
 
   const navigationItems = [
     { name: "Dashboard", href: "/dashboard", Icon: Squares2X2Icon },
-    { name: "Resume Builder", href: "/dashboard/resume", Icon: DocumentTextIcon },
+    {
+      name: "Resume Builder",
+      href: "/dashboard/resume",
+      Icon: DocumentTextIcon,
+    },
     {
       name: "Portfolio Builder", // Added name back just in case
       href: "/dashboard/portfolio",
@@ -133,7 +148,11 @@ function DashboardLayout({
       href: "/dashboard/cover-letters",
       Icon: EnvelopeIcon,
     },
-    { name: "ATS Checker", href: "/dashboard/ats", Icon: ClipboardDocumentCheckIcon },
+    {
+      name: "ATS Checker",
+      href: "/dashboard/ats",
+      Icon: ClipboardDocumentCheckIcon,
+    },
     { name: "Credits", href: "/dashboard/credits", Icon: CreditCardIcon },
   ];
 
@@ -158,7 +177,26 @@ function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen flex flex-row bg-gray-50 font-sans">
+    <div className="min-h-screen flex flex-row bg-gray-50 font-sans relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <motion.div
+          animate={{ x: [0, 30, 0], y: [0, 20, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[10%] left-[5%] w-96 h-96 bg-blue-100/30 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{ x: [0, -25, 0], y: [0, 40, 0] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[10%] right-[5%] w-[500px] h-[500px] bg-purple-100/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{ x: [0, 20, 0], y: [0, -30, 0] }}
+          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[50%] right-[20%] w-80 h-80 bg-indigo-100/25 rounded-full blur-3xl"
+        />
+      </div>
+
       <Toaster
         position="bottom-right"
         toastOptions={{
@@ -213,39 +251,39 @@ function DashboardLayout({
               <Bars3Icon className="w-6 h-6" />
             </button>
 
-            {/* Light Theme Sidebar with SVG Pattern */}
+            {/* Light Theme Sidebar */}
             <div
-              className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 md:h-screen md:w-72 border-r border-gray-200 overflow-hidden print:hidden flex flex-col ${
+              className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 md:h-screen md:w-72 border-r border-gray-100 overflow-hidden print:hidden flex flex-col ${
                 isMenuOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              {/* SVG Background Pattern */}
-              <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
+              {/* Subtle Pattern Background */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.02]">
                 <svg width="100%" height="100%">
                   <defs>
                     <pattern
-                      id="sidebar-dots"
+                      id="dots"
                       x="0"
                       y="0"
-                      width="20"
-                      height="20"
+                      width="30"
+                      height="30"
                       patternUnits="userSpaceOnUse"
                     >
-                      <circle cx="2" cy="2" r="1" fill="currentColor" />
+                      <circle cx="3" cy="3" r="2" fill="#3B82F6" />
                     </pattern>
                   </defs>
-                  <rect width="100%" height="100%" fill="url(#sidebar-dots)" />
+                  <rect width="100%" height="100%" fill="url(#dots)" />
                 </svg>
               </div>
 
               <div className="flex flex-col h-full relative z-10">
                 {/* Logo Area */}
-                <div className="flex items-center justify-between flex-shrink-0 px-6 py-3 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
                   <Link href="/" className="flex items-center group">
                     <img
                       src={getAssetUrl("/logo.png")}
                       alt="Cloud9"
-                      className="h-9 w-auto object-contain"
+                      className="h-8 w-auto object-contain"
                     />
                   </Link>
                   <button
@@ -257,7 +295,7 @@ function DashboardLayout({
                 </div>
 
                 {/* Navigation */}
-                <div className="flex-grow flex flex-col py-4 px-3 gap-1 overflow-y-auto">
+                <div className="flex-grow flex flex-col py-6 px-3 gap-1 overflow-y-auto">
                   <nav className="space-y-1">
                     {navigationItems.map((item) => {
                       const isActive = router.pathname === item.href;
@@ -266,29 +304,35 @@ function DashboardLayout({
                           key={item.name}
                           href={item.href}
                           onClick={() => setIsMenuOpen(false)}
-                          className={`group relative flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                          className={`group relative flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                             isActive
-                              ? "bg-blue-50 text-blue-700 shadow-sm"
-                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                              ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
+                              : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"
                           }`}
                         >
-                          {/* Active Indicator */}
-                          {isActive && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-600 rounded-r-full"></div>
-                          )}
-
                           <span className="flex items-center mr-3">
                             <item.Icon
-                              className={`w-5 h-5 transition-colors ${
+                              className={`w-5 h-5 transition-transform ${
                                 isActive
-                                  ? "text-blue-600"
-                                  : "text-gray-400 group-hover:text-gray-600"
+                                  ? "text-white"
+                                  : "text-gray-400 group-hover:text-blue-600 group-hover:scale-110"
                               }`}
                             />
                           </span>
                           <span className="leading-none pt-0.5">
                             {item.name}
                           </span>
+                          {isActive && (
+                            <motion.div
+                              layoutId="activeTab"
+                              className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl -z-10"
+                              transition={{
+                                type: "spring",
+                                bounce: 0.2,
+                                duration: 0.6,
+                              }}
+                            />
+                          )}
                         </Link>
                       );
                     })}
@@ -296,27 +340,35 @@ function DashboardLayout({
                 </div>
 
                 {/* Credit & Plan Usage Section */}
-                <div className="flex-shrink-0 px-4 pb-2">
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <div className="flex-shrink-0 px-4 pb-3">
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-100/50 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         My Plan
                       </span>
-                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase">
+                      <span className="text-xs font-bold text-blue-600 bg-white px-2.5 py-1 rounded-full border border-blue-200 uppercase shadow-sm">
                         {userPlan}
                       </span>
                     </div>
 
                     <div className="mb-3">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-600 font-medium">Credits</span>
-                        <span className="text-gray-900 font-bold">{userCredits}</span>
+                      <div className="flex justify-between text-xs mb-1.5">
+                        <span className="text-gray-600 font-medium">
+                          Credits
+                        </span>
+                        <span className="text-gray-900 font-bold">
+                          {userCredits}
+                        </span>
                       </div>
-                      {/* Simple visual bar (capped at 50 for visual nicety, or purely decorative) */}
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                      <div className="w-full bg-white rounded-full h-2 overflow-hidden border border-blue-100">
                         <div
-                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-1.5 rounded-full transition-all duration-500"
-                          style={{ width: `${Math.min((userCredits / 100) * 100, 100)}%` }}
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(
+                              (userCredits / 100) * 100,
+                              100
+                            )}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -324,9 +376,9 @@ function DashboardLayout({
                     {userPlan === "free" && (
                       <button
                         onClick={() => setShowPlanModal(true)}
-                        className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-gray-900 to-black text-white text-xs font-bold py-2 px-3 rounded-lg hover:shadow-lg transition-all active:scale-95 group"
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold py-2.5 px-3 rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-95 group"
                       >
-                        <SparklesIcon className="w-3.5 h-3.5 text-yellow-300 group-hover:animate-pulse" />
+                        <SparklesIcon className="w-4 h-4 group-hover:rotate-12 transition-transform" />
                         Upgrade to Pro
                       </button>
                     )}
@@ -335,17 +387,17 @@ function DashboardLayout({
 
                 {/* User Profile Section (Bottom) */}
                 <div className="flex-shrink-0 border-t border-gray-100 p-3 bg-gray-50/50">
-                  <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white hover:shadow-sm transition-all cursor-pointer group">
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white hover:shadow-sm transition-all cursor-pointer group">
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                       {userPicture ? (
                         <img
                           src={userPicture}
                           alt={userName}
-                          className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm"
+                          className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-100 shadow-sm"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white text-gray-600 text-xs font-bold border border-gray-200 shadow-sm">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold shadow-sm">
                           {userName.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -372,7 +424,7 @@ function DashboardLayout({
                         handleSignOutClick();
                       }}
                       title="Sign out"
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <svg
                         className="w-4 h-4"
@@ -413,17 +465,12 @@ function DashboardLayout({
         onClose={handleCancelSignOut}
       />
 
-      {/* Plan Selection Modal */}
-      <PlanSelectionModal
+      {/* Plan Upgrade Modal (Redesigned) */}
+      <PlanUpgradeModal
         isOpen={showPlanModal}
         onClose={() => setShowPlanModal(false)}
-        onSuccess={() => {
-          // Optional: Reload page to refresh credits
-          window.location.reload();
-        }}
+        currentPlan={userPlan}
       />
     </div>
   );
-}
-
 }

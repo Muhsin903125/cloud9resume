@@ -17,8 +17,9 @@ import {
 } from "../../components/Icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "../../lib/apiClient";
-import PlanSelectionModal from "../../components/PlanSelectionModal";
+import PlanUpgradeModal from "../../components/PlanUpgradeModal";
 import OnboardingModal from "../../components/OnboardingModal";
+import { toast } from "react-hot-toast";
 import { PLAN_LIMITS, PlanType } from "../../lib/subscription";
 import { formatDistanceToNow } from "date-fns";
 
@@ -56,6 +57,35 @@ const DashboardPage: NextPage = () => {
     }
   }, [user]);
 
+  // Handle payment success from Dodo
+  // Handle payment success from Dodo with polling
+  useEffect(() => {
+    if (
+      router.query.status === "success" ||
+      router.query.payment === "success"
+    ) {
+      toast.success("Payment successful! Updating account...");
+      router.replace("/dashboard", undefined, { shallow: true });
+
+      // Poll for updates (webhook delay)
+      fetchDashboardData(); // Immediate
+
+      // Retry sequence to catch webhook update
+      const t1 = setTimeout(() => fetchDashboardData(true), 2000);
+      const t2 = setTimeout(() => fetchDashboardData(true), 5000);
+      const t3 = setTimeout(() => {
+        fetchDashboardData(true);
+        toast.success("Account synced!");
+      }, 9000);
+
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
+  }, [router.query.status, router.query.payment]);
+
   // Fetch real data
   useEffect(() => {
     if (isAuthenticated) {
@@ -66,8 +96,8 @@ const DashboardPage: NextPage = () => {
     }
   }, [isAuthenticated, user?.profile?.onboarding_completed]);
 
-  const fetchDashboardData = async () => {
-    setIsDataLoading(true);
+  const fetchDashboardData = async (silent = false) => {
+    if (!silent) setIsDataLoading(true);
     try {
       const result = await apiClient.get("/dashboard");
 
@@ -88,10 +118,10 @@ const DashboardPage: NextPage = () => {
           result.error || result.message
         );
       }
-    } catch (err) {
-      console.error("Dashboard data fetch error:", err);
+    } catch (error) {
+      console.error("Dashboard data fetch error", error);
     } finally {
-      setIsDataLoading(false);
+      if (!silent) setIsDataLoading(false);
     }
   };
 
@@ -228,44 +258,62 @@ const DashboardPage: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900 relative">
-        {/* Header */}
-        <header className="border-b border-gray-200 bg-white/80 backdrop-blur-md sticky top-0 z-30 shadow-sm">
-          <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-            <div>
-              <h1 className="text-base font-semibold text-gray-900">
-                Dashboard
-              </h1>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-xs text-gray-500 flex items-center gap-2">
-                <span className="hidden sm:inline">Welcome, {displayName}</span>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${
-                    stats.plan === "free"
-                      ? "bg-gray-100 text-gray-500"
-                      : stats.plan === "professional"
-                      ? "bg-blue-100 text-blue-700"
-                      : stats.plan === "premium"
-                      ? "bg-purple-100 text-purple-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {stats.plan?.replace("_", " ")}
-                </span>
-              </span>
-              <div className="h-4 w-px bg-gray-200 mx-1"></div>
-              <Button
-                variant="secondary"
-                size="small"
-                className="text-xs py-1.5 h-8"
-                onClick={() => setShowPlanModal(true)}
-              >
-                Upgrade
-              </Button>
-            </div>
-          </div>
-        </header>
+      <div className="min-h-screen font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900 relative overflow-hidden">
+        {/* Animated SVG Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+          {/* Floating SVG Shapes */}
+          <motion.svg
+            className="absolute top-[15%] right-[20%] opacity-10"
+            width="120"
+            height="120"
+            animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <circle cx="60" cy="60" r="40" fill="#3B82F6" />
+            <circle cx="60" cy="60" r="25" fill="#60A5FA" />
+          </motion.svg>
+
+          <motion.svg
+            className="absolute bottom-[30%] right-[30%] opacity-10"
+            width="80"
+            height="80"
+            animate={{ y: [0, 15, 0], rotate: [0, -15, 0] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <rect x="20" y="20" width="40" height="40" fill="#A78BFA" rx="8" />
+          </motion.svg>
+
+          <motion.svg
+            className="absolute top-[60%] left-[10%] opacity-10"
+            width="100"
+            height="100"
+            animate={{ y: [0, -25, 0], x: [0, 10, 0] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <polygon points="50,10 90,90 10,90" fill="#EC4899" />
+          </motion.svg>
+
+          <motion.svg
+            className="absolute top-[25%] left-[25%] opacity-10"
+            width="90"
+            height="90"
+            animate={{ y: [0, 20, 0], rotate: [0, 360, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <path d="M45,5 L85,45 L45,85 L5,45 Z" fill="#10B981" />
+          </motion.svg>
+
+          <motion.svg
+            className="absolute bottom-[15%] right-[15%] opacity-10"
+            width="70"
+            height="70"
+            animate={{ y: [0, -18, 0], x: [0, -10, 0] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <circle cx="35" cy="35" r="30" fill="#F59E0B" opacity="0.7" />
+            <circle cx="35" cy="35" r="15" fill="#FBBF24" />
+          </motion.svg>
+        </div>
 
         {/* Content */}
         <main className="max-w-5xl mx-auto px-4 py-8 pb-24 relative z-10">
@@ -337,7 +385,7 @@ const DashboardPage: NextPage = () => {
                   </span>
                   <Button
                     onClick={() => setShowPlanModal(true)}
-                    className="bg-white text-blue-600 hover:bg-blue-50 border-none font-bold shadow-md"
+                    className="bg-white text-gray-600 hover:bg-blue-50 border-none font-bold shadow-md"
                   >
                     Start Trial - $6.50
                   </Button>
@@ -652,11 +700,10 @@ const DashboardPage: NextPage = () => {
         </main>
       </div>
 
-      <PlanSelectionModal
+      <PlanUpgradeModal
         isOpen={showPlanModal}
         onClose={() => setShowPlanModal(false)}
-        currentPlanId={stats.plan}
-        onSuccess={fetchDashboardData}
+        currentPlan={stats.plan}
       />
 
       <OnboardingModal

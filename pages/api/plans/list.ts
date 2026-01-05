@@ -15,6 +15,7 @@ export interface Plan {
   isComingSoon?: boolean;
   description: string;
   limitations?: string[];
+  dodoProductId?: string;
 }
 
 // Define all available plans
@@ -68,6 +69,9 @@ const PLANS: Record<string, Plan> = {
       "Portfolio Publishing",
       "Priority Email Support",
     ],
+    dodoProductId:
+      process.env.DODO_PROFESSIONAL_PRODUCT_ID ||
+      "prod_professional_placeholder",
   },
   premium: {
     id: "premium",
@@ -89,6 +93,8 @@ const PLANS: Record<string, Plan> = {
       "Priority Chat Support",
       "Early Access to New Features",
     ],
+    dodoProductId:
+      process.env.DODO_PREMIUM_PRODUCT_ID || "prod_premium_placeholder",
   },
   enterprise: {
     id: "enterprise",
@@ -138,6 +144,7 @@ export default async function handler(
     return res.status(200).json({
       data: plans,
       enterprise: PLANS.enterprise,
+      creditsAddonId: process.env.DODO_CREDITS_ADDON_PRODUCT_ID || null,
     });
   } catch (error) {
     console.error("Fetch plans error:", error);

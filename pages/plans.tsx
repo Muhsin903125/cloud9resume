@@ -1,23 +1,27 @@
 import { NextPage } from "next";
 import { useState, useEffect } from "react";
-import Head from "next/head";
 import { useRouter } from "next/router";
+import { motion, AnimatePresence } from "framer-motion";
 import Button from "../components/Button";
-import Card from "../components/Card";
-import { fetchPlans, Plan, addCredits } from "../lib/plansUtils";
+import {
+  fetchPlans,
+  Plan,
+  addCredits,
+  initiateDodoCheckout,
+} from "../lib/plansUtils";
 import { useAuth } from "../lib/authUtils";
-import { CheckIcon } from "../components/Icons";
+import { CheckIcon, SparklesIcon } from "../components/Icons";
 import FAQ from "../components/FAQ";
 import SEO from "../components/SEO";
 
 const PlansPage: NextPage = () => {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [enterprise, setEnterprise] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
 
   // Fetch plans on mount
   useEffect(() => {
@@ -30,9 +34,6 @@ const PlansPage: NextPage = () => {
           setError(result.error);
         } else if (result.data) {
           setPlans(result.data.data || []);
-          if (result.data.enterprise) {
-            setEnterprise(result.data.enterprise);
-          }
         }
       } catch (err) {
         setError("Failed to load plans");
@@ -47,294 +48,273 @@ const PlansPage: NextPage = () => {
 
   const handleSelectPlan = async (plan: Plan) => {
     if (!isAuthenticated) {
-      router.push("/login");
+      router.push("/login?redirect=/plans");
       return;
     }
 
     setLoadingPlanId(plan.id);
     try {
-      // For paid plans, we would integrate Stripe here
-      // For Free/Starter, just update the plan directly via API
+      if (plan.price === 0) {
+        const result = await addCredits(plan.credits, plan.id);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        router.push("/dashboard");
+        return;
+      }
 
-      // Add credits to user account (and update plan)
-      const result = await addCredits(plan.credits, plan.id);
+      if (!plan.dodoProductId) {
+        setError("Payment integration error: Missing Product ID");
+        return;
+      }
+
+      const result = await initiateDodoCheckout(plan.dodoProductId, plan.id);
 
       if (result.error) {
         setError(result.error);
+      } else if (result.data?.url) {
+        window.location.href = result.data.url;
       } else {
-        // Show success and redirect
-        // For starter, show specific message
-        const msg =
-          plan.id === "starter"
-            ? `Switched to Starter Plan! Experience section disabled. Portfolio unlocked.`
-            : `Successfully upgraded to ${plan.displayName}! ${plan.credits} credits added.`;
-
-        alert(msg);
-        router.push("/dashboard");
+        setError("Failed to generate checkout link");
       }
     } catch (err) {
       setError("Failed to upgrade plan");
       console.error("Upgrade error:", err);
     } finally {
-      setLoadingPlanId(null);
+      if (plan.price === 0) setLoadingPlanId(null);
     }
   };
 
-  const handleContactSales = () => {
-    window.location.href =
-      "mailto:sales@cloud9profile.com?subject=Enterprise Plan Inquiry";
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
   };
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "PriceSpecification",
-    price: "0",
-    priceCurrency: "USD",
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
   };
 
   return (
     <>
       <SEO
-        title="Plans & Pricing - Cloud9Profile"
-        description="Choose the perfect plan for your career growth. Start free or upgrade anytime."
-        keywords={["pricing", "plans", "subscriptions", "free resume builder"]}
-        structuredData={structuredData}
+        title="Plans - Cloud9Profile"
+        description="Choose the perfect plan for your career growth."
+        keywords={["pricing", "plans"]}
       />
 
-      <div className="min-h-screen bg-white py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto py-8">
+      <div className="min-h-screen bg-slate-900 text-slate-50 overflow-hidden relative selection:bg-blue-500/30">
+        {/* Ambient Background Glows */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 mt-8 relative z-10">
           {/* Header */}
-          <div className="text-center mt-2 md:mt-10 mb-16">
-            <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 mb-4">
-              Simple, Transparent Pricing
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-16"
+          >
+            <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">
+              Invest in Your{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                Future
+              </span>
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Choose the plan that fits your career growth. Start free or
-              upgrade anytime.
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+              Unlock the full potential of your career with our AI-powered
+              tools.
+              <br className="hidden md:block" /> Simple pricing, no hidden fees.
             </p>
-          </div>
+          </motion.div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg text-sm mb-8 max-w-2xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm mb-8 text-center max-w-md mx-auto"
+            >
               {error}
-            </div>
+            </motion.div>
           )}
 
           {isLoading ? (
-            <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-gray-900"></div>
+            <div className="flex justify-center py-20">
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-                {plans.map((plan) => (
-                  <div
-                    key={plan.id}
-                    className={`relative flex flex-col rounded-xl border-2 overflow-hidden transition-all duration-300 ${
-                      plan.isPopular
-                        ? "border-blue-600 shadow-xl scale-105 z-10"
-                        : plan.isComingSoon
-                        ? "border-gray-300 opacity-75"
-                        : "border-gray-200 hover:border-gray-300 hover:shadow-md"
-                    } bg-white`}
-                  >
-                    {/* Coming Soon Badge */}
-                    {plan.isComingSoon && (
-                      <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-1 text-center z-20">
-                        <span className="text-xs font-semibold tracking-wide uppercase">
-                          Coming Soon
-                        </span>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto mb-20"
+            >
+              {plans.map((plan) => (
+                <motion.div
+                  key={plan.id}
+                  variants={item}
+                  onMouseEnter={() => setHoveredPlan(plan.id)}
+                  onMouseLeave={() => setHoveredPlan(null)}
+                  className={`relative flex flex-col p-6 rounded-3xl bg-slate-800/50 border transition-all duration-300 ${
+                    plan.isPopular
+                      ? "border-blue-500/50 shadow-2xl shadow-blue-500/10 z-10 scale-105"
+                      : "border-slate-700 hover:border-slate-600"
+                  }`}
+                >
+                  {/* Popular Badge */}
+                  {plan.isPopular && !plan.isComingSoon && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                        <SparklesIcon className="w-3 h-3" />
+                        Most Popular
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {/* Best Value Badge */}
-                    {plan.isPopular && !plan.isComingSoon && (
-                      <div className="absolute top-0 inset-x-0 bg-blue-600 text-white py-1 text-center">
-                        <span className="text-xs font-semibold tracking-wide uppercase">
-                          Best Value
-                        </span>
-                      </div>
-                    )}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      {plan.displayName}
+                    </h3>
+                    <p className="text-slate-400 text-sm h-10 leading-relaxed">
+                      {plan.description}
+                    </p>
+                  </div>
 
-                    <div
-                      className={`p-6 flex-1 flex flex-col ${
-                        plan.isPopular || plan.isComingSoon ? "pt-10" : ""
-                      }`}
-                    >
-                      <div className="mb-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                          {plan.displayName}
-                        </h3>
-                        <p className="text-gray-500 text-xs min-h-[40px]">
-                          {plan.description}
-                        </p>
-                      </div>
-
-                      {/* Pricing */}
-                      <div className="mb-6 pb-6 border-b border-gray-100">
-                        {plan.price === 0 ? (
-                          <div className="flex items-baseline mb-2">
-                            <span className="text-4xl font-extrabold text-gray-900">
-                              Free
+                  <div className="mb-6 pb-6 border-b border-slate-700/50">
+                    <div className="flex flex-col mb-2">
+                      {plan.hasTrial && plan.trialPrice ? (
+                        <>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-bold text-white">
+                              ${plan.trialPrice}
+                            </span>
+                            <span className="text-sm text-blue-400 font-medium bg-blue-500/10 px-2 py-0.5 rounded-full">
+                              50% OFF
                             </span>
                           </div>
-                        ) : plan.hasTrial && !plan.isComingSoon ? (
-                          <>
-                            {/* Trial Pricing */}
-                            <div className="mb-2">
-                              <div className="flex items-baseline">
-                                <span className="text-3xl font-extrabold text-blue-600">
-                                  ${plan.trialPrice}
-                                </span>
-                                <span className="text-gray-500 ml-2 text-sm">
-                                  for {plan.trialDays} days
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-400 mt-1">
-                                Then ${plan.price}/month
-                              </p>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex items-baseline mb-2">
-                            <span className="text-4xl font-extrabold text-gray-900">
-                              ${plan.price}
+                          <div className="flex items-baseline gap-1 mt-1">
+                            <span className="text-slate-400 text-sm">
+                              for first month, then
                             </span>
-                            <span className="text-gray-500 ml-1 text-sm">
+                            <span className="text-slate-300 text-sm font-medium">
+                              ${plan.price}/mo
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-baseline">
+                          <span className="text-3xl font-bold text-white">
+                            {plan.price === 0 ? "Free" : `$${plan.price}`}
+                          </span>
+                          {plan.price > 0 && (
+                            <span className="text-slate-500 ml-1 text-sm">
                               /mo
                             </span>
-                          </div>
-                        )}
-
-                        <div className="text-sm font-medium text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded mt-2">
-                          {plan.credits} Credits
-                          {plan.billingPeriod === "monthly" && plan.price > 0
-                            ? "/month"
-                            : ""}
+                          )}
                         </div>
-                      </div>
+                      )}
+                    </div>
 
-                      {/* Features */}
-                      <div className="space-y-3 mb-8 flex-1">
-                        {plan.features.map((feature, idx) => (
-                          <div key={idx} className="flex items-start">
-                            <CheckIcon className="w-4 h-4 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" />
-                            <span className="text-gray-600 text-xs text-left">
-                              {feature}
-                            </span>
-                          </div>
-                        ))}
-                        {/* Limitations (if any) */}
-                        {plan.limitations &&
-                          plan.limitations.map((limit, idx) => (
-                            <div
-                              key={`lim-${idx}`}
-                              className="flex items-start opacity-70"
-                            >
-                              <span className="w-4 h-4 mr-2 text-red-400 flex items-center justify-center text-[10px] border border-red-400 rounded-full flex-shrink-0">
-                                ✕
-                              </span>
-                              <span className="text-gray-500 text-xs text-left italic">
-                                {limit}
-                              </span>
-                            </div>
-                          ))}
-                      </div>
-
-                      {/* CTA Button */}
-                      <Button
-                        variant={plan.isPopular ? "primary" : "secondary"}
-                        className="w-full mt-auto"
-                        disabled={
-                          loadingPlanId === plan.id || plan.isComingSoon
-                        }
-                        onClick={() =>
-                          !plan.isComingSoon && handleSelectPlan(plan)
-                        }
-                      >
-                        {plan.isComingSoon
-                          ? "Coming Soon"
-                          : loadingPlanId === plan.id
-                          ? "Processing..."
-                          : plan.price === 0
-                          ? "Get Started Free"
-                          : plan.hasTrial
-                          ? `Start 14-Day Trial - $${plan.trialPrice}`
-                          : "Upgrade Now"}
-                      </Button>
+                    <div className="mt-3 inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-700/50 text-slate-300 text-xs font-medium border border-slate-700">
+                      {plan.credits} AI Credits
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {/* Enterprise Card */}
-              {enterprise && (
-                <div className="max-w-2xl mx-auto mb-16">
-                  <div className="rounded-xl border-2 border-gray-900 bg-white p-8 hover:shadow-lg transition-shadow duration-300">
-                    <div className="flex items-center justify-between gap-8">
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                          {enterprise.displayName}
-                        </h3>
-                        <p className="text-gray-600 mb-6 leading-relaxed">
-                          {enterprise.description}
-                        </p>
-                        <ul className="space-y-2 mb-6">
-                          {enterprise.features
-                            .slice(0, 4)
-                            .map((feature, idx) => (
-                              <li key={idx} className="flex items-start">
-                                <CheckIcon className="w-5 h-5 text-gray-900 mr-3 flex-shrink-0" />
-                                <span className="text-gray-700">{feature}</span>
-                              </li>
-                            ))}
-                        </ul>
-                        <p className="text-xs text-gray-600">
-                          + {Math.max(0, enterprise.features.length - 4)} more
-                          features
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <Button
-                          variant="primary"
-                          onClick={handleContactSales}
-                          className="whitespace-nowrap"
-                        >
-                          Contact Sales
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start text-sm">
+                        <div className="bg-blue-500/10 rounded-full p-0.5 mr-3 mt-0.5">
+                          <CheckIcon className="w-3 h-3 text-blue-400" />
+                        </div>
+                        <span className="text-slate-300">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
 
-              {/* FAQ Section */}
-              <FAQ
-                items={[
-                  {
-                    question: "Can I upgrade or downgrade my plan anytime?",
-                    answer:
-                      "Yes, you can change your plan at any time. Your credits never expire and will carry over when you upgrade.",
-                  },
-                  {
-                    question: "Do credits expire?",
-                    answer:
-                      "No, credits never expire. Use them whenever you need, on your own schedule.",
-                  },
-                  {
-                    question: "What happens when I run out of credits?",
-                    answer:
-                      "You can upgrade to a higher plan or purchase additional credits. You can also keep using the free plan with its monthly credit allowance.",
-                  },
-                  {
-                    question: "Is there a money-back guarantee?",
-                    answer:
-                      "We stand behind our service. Contact us if you're not satisfied, and we'll work with you on a solution.",
-                  },
-                ]}
-              />
-            </>
+                  <motion.button
+                    whileHover={
+                      !plan.isComingSoon && plan.id !== loadingPlanId
+                        ? { scale: 1.02 }
+                        : {}
+                    }
+                    whileTap={
+                      !plan.isComingSoon && plan.id !== loadingPlanId
+                        ? { scale: 0.98 }
+                        : {}
+                    }
+                    className={`w-full py-3 text-sm font-semibold rounded-xl transition-all flex items-center justify-center ${
+                      plan.isPopular
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:shadow-blue-600/25 text-white shadow-blue-900/20"
+                        : "bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white"
+                    } ${
+                      plan.isComingSoon || loadingPlanId === plan.id
+                        ? "opacity-50 cursor-not-allowed grayscale"
+                        : ""
+                    }`}
+                    disabled={loadingPlanId === plan.id || plan.isComingSoon}
+                    onClick={() => !plan.isComingSoon && handleSelectPlan(plan)}
+                  >
+                    {loadingPlanId === plan.id ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Processing
+                      </span>
+                    ) : plan.price === 0 ? (
+                      "Get Started Free"
+                    ) : plan.hasTrial ? (
+                      `Claim 50% Off - $${plan.trialPrice}`
+                    ) : (
+                      "Upgrade Plan"
+                    )}
+                  </motion.button>
+                </motion.div>
+              ))}
+            </motion.div>
           )}
+
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-xl font-bold text-white text-center mb-8">
+              Frequently Asked Questions
+            </h3>
+            <FAQ
+              items={[
+                {
+                  question: "Can I cancel my subscription anytime?",
+                  answer:
+                    "Yes, you can cancel your subscription at any time. You'll keep access to your plan features and remaining credits until the end of your billing cycle.",
+                },
+                {
+                  question: "Do my credits roll over?",
+                  answer:
+                    "Your credits never expire! Whether you're on a monthly plan or buying credit packs, they stay in your account until you use them.",
+                },
+                {
+                  question: "Can I separate my personal and work profiles?",
+                  answer:
+                    "Absolutely. You can create different resumes and portfolios for different purposes within a single account.",
+                },
+              ]}
+              theme="dark"
+            />
+          </div>
+
+          <div className="text-center mt-20 pt-10 border-t border-slate-800">
+            <p className="text-slate-500 text-sm">
+              Need a custom plan for your team?{" "}
+              <a
+                href="mailto:sales@cloud9profile.com"
+                className="text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Contact Sales
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </>

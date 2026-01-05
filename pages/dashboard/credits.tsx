@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
-import PlanSelectionModal from "../../components/PlanSelectionModal";
+import PlanUpgradeModal from "../../components/PlanUpgradeModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { fetchPlans, Plan } from "../../lib/plansUtils";
 import { apiClient } from "../../lib/apiClient";
@@ -309,11 +309,10 @@ const CreditsPage: NextPage = () => {
         </main>
       </div>
 
-      <PlanSelectionModal
+      <PlanUpgradeModal
         isOpen={showPlanModal}
         onClose={() => setShowPlanModal(false)}
-        currentPlanId={data?.stats?.plan}
-        onSuccess={fetchData}
+        currentPlan={data?.stats?.plan}
       />
 
       <ConfirmationModal

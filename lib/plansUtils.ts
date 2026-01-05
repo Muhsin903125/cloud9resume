@@ -15,6 +15,7 @@ export interface Plan {
   isComingSoon?: boolean;
   description: string;
   limitations?: string[];
+  dodoProductId?: string;
 }
 
 // Fetch all plans
@@ -62,6 +63,38 @@ export async function addCredits(
     creditsToAdd,
     planId,
     paymentIntentId,
+  });
+}
+
+// Initiate Dodo Checkout
+export async function initiateDodoCheckout(productId: string, planId: string) {
+  const token = localStorage.getItem("x_user_auth_token");
+  if (!token) {
+    return {
+      error: "Not authenticated",
+      message: "You must be logged in to checkout",
+    };
+  }
+
+  return apiClient.post("/payments/create-checkout", {
+    productId,
+    planId,
+  });
+}
+
+// Initiate Dodo Checkout for top-up credits
+export async function buyCredits(productId: string) {
+  const token = localStorage.getItem("x_user_auth_token");
+  if (!token) {
+    return {
+      error: "Not authenticated",
+      message: "You must be logged in to buy credits",
+    };
+  }
+
+  return apiClient.post("/payments/create-checkout", {
+    productId,
+    planId: "credits_addon",
   });
 }
 

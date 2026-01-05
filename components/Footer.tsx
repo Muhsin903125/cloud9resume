@@ -38,6 +38,12 @@ export default function Footer() {
               >
                 Privacy Policy
               </Link>
+              <Link
+                href="/plans"
+                className="hover:text-blue-400 transition-colors"
+              >
+                Pricing
+              </Link>
             </nav>
 
             <div className="flex items-center gap-4">
