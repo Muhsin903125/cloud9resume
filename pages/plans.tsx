@@ -267,6 +267,8 @@ const PlansPage: NextPage = () => {
                       </span>
                     ) : plan.price === 0 ? (
                       "Get Started Free"
+                    ) : plan.isComingSoon ? (
+                      "Coming Soon"
                     ) : plan.hasTrial ? (
                       `Claim 50% Off - $${plan.trialPrice}`
                     ) : (

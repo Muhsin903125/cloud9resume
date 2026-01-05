@@ -316,7 +316,7 @@ const DashboardPage: NextPage = () => {
         </div>
 
         {/* Content */}
-        <main className="max-w-5xl mx-auto px-4 py-8 pb-24 relative z-10">
+        <main className="max-w-6xl  px-8 py-8 pb-24 relative z-10">
           {/* Portfolio Expiration Warning */}
           {stats.portfolioExpiresAt && (
             <motion.div
@@ -375,20 +375,21 @@ const DashboardPage: NextPage = () => {
                     Upgrade to Professional
                   </h2>
                   <p className="text-blue-100 text-sm">
-                    Get unlimited resumes, portfolios, and AI credits. Try it
-                    risk-free!
+                    Get unlimited resumes, portfolios, and AI credits.
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-semibold bg-white/20 px-3 py-1 rounded-full uppercase tracking-wider">
-                    14-Day Trial
+                    50% Off First Month
                   </span>
-                  <Button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setShowPlanModal(true)}
-                    className="bg-white text-gray-600 hover:bg-blue-50 border-none font-bold shadow-md"
+                    className="bg-white text-gray-600 hover:bg-blue-50 border-none font-bold shadow-md px-4 py-2.5 rounded-lg text-sm transition-colors"
                   >
-                    Start Trial - $6.50
-                  </Button>
+                    Claim Offer - $6.49
+                  </motion.button>
                 </div>
               </div>
               {/* Decorative background circles */}

@@ -53,7 +53,7 @@ const PLANS: Record<string, Plan> = {
     credits: 200,
     isPopular: true,
     hasTrial: true,
-    trialPrice: 6.5,
+    trialPrice: 6.49,
     trialDays: 14,
     description: "Everything you need for a successful job search",
     features: [
