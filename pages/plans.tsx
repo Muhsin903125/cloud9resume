@@ -47,23 +47,29 @@ const PlansPage: NextPage = () => {
   }, []);
 
   const handleSelectPlan = async (plan: Plan) => {
-    if (!isAuthenticated) {
-      router.push("/login?redirect=/plans");
+    // Free plan handling - no payment, just redirect to get started or dashboard
+    if (plan.price === 0) {
+      if (!isAuthenticated) {
+        // Unauthenticated user - redirect to signup
+        router.push("/signup");
+      } else {
+        // Authenticated user - redirect to dashboard (credits are claimed during onboarding only)
+        router.push("/dashboard");
+      }
       return;
     }
 
+    // Paid plans require authentication
+    if (!isAuthenticated) {
+      // Redirect to login with plan info to resume payment after authentication
+      const redirectUrl = `/checkout?productId=${plan.dodoProductId}&planId=${plan.id}`;
+      router.push(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
+      return;
+    }
+
+    // Authenticated user selecting a paid plan - initiate checkout
     setLoadingPlanId(plan.id);
     try {
-      if (plan.price === 0) {
-        const result = await addCredits(plan.credits, plan.id);
-        if (result.error) {
-          setError(result.error);
-          return;
-        }
-        router.push("/dashboard");
-        return;
-      }
-
       if (!plan.dodoProductId) {
         setError("Payment integration error: Missing Product ID");
         return;
@@ -82,7 +88,7 @@ const PlansPage: NextPage = () => {
       setError("Failed to upgrade plan");
       console.error("Upgrade error:", err);
     } finally {
-      if (plan.price === 0) setLoadingPlanId(null);
+      setLoadingPlanId(null);
     }
   };
 

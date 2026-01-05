@@ -37,33 +37,14 @@ export default async function handler(
 
   const { experienceLevel } = req.body;
 
-  if (!experienceLevel) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
   try {
     let updates: any = {
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
+      plan_id: 1, // Free plan for all users
     };
 
-    // Experience Logic
-    if (experienceLevel === "fresher") {
-      updates.plan_id = 2; // Starter plan
-
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("credits")
-        .eq("id", userId)
-        .single();
-
-      const currentCredits = profile?.credits || 0;
-      updates.credits = currentCredits + CREDIT_ADDITION_AMOUNT;
-    } else if (experienceLevel === "experienced") {
-      updates.plan_id = 1; // Free plan
-    } else {
-      return res.status(400).json({ error: "Invalid experience level" });
-    }
+    // No bonus credits or experience level logic - all users start with free plan
 
     // Update Profile
     const { data, error } = await supabaseAdmin
@@ -78,14 +59,7 @@ export default async function handler(
     }
 
     // Log this action if needed (optional)
-    if (experienceLevel === "fresher") {
-      await supabaseAdmin.from("credit_usage").insert({
-        user_id: userId,
-        credits_used: -CREDIT_ADDITION_AMOUNT, // Negative for addition
-        action: "onboarding_bonus",
-        description: "Fresher Plan Bonus",
-      });
-    }
+    // No bonus credits in simplified onboarding
 
     // Fetch user details for email (since standard update might not return all fields depending on version/mock)
     // We used .select() above, usually it returns the updated rows.
@@ -101,8 +75,7 @@ export default async function handler(
         const name = updatedProfile.name;
         // Determine plan name based on ID or experience level
         const planId = updatedProfile.plan_id;
-        let planName = "free";
-        if (planId === 2) planName = "starter";
+        let planName = "free"; // All users start with free plan
 
         const credits = updatedProfile.credits;
 

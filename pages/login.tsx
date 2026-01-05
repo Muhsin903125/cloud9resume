@@ -32,7 +32,12 @@ const LoginPage: NextPage = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      if (user?.is_admin) {
+      // Check if there's a redirect URL in query params
+      const redirectUrl = router.query.redirect as string;
+
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      } else if (user?.is_admin) {
         router.push("/admin");
       } else {
         router.push("/dashboard");

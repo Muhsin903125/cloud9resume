@@ -164,12 +164,12 @@ export default function PlanUpgradeModal({
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-400 mt-1 leading-snug">
-                        <p>for first month,</p>
+                        <p> <span className="line-through decoration-slate-600 text-slate-500 mr-1">
+                            ${plan.price}
+                          </span>for first month,</p>
                         <p>
                           then{" "}
-                          <span className="line-through decoration-slate-600 text-slate-500 mr-1">
-                            ${plan.price}
-                          </span>
+                         
                           ${plan.price}/mo
                         </p>
                       </div>

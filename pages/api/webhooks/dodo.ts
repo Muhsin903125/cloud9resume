@@ -76,7 +76,7 @@ export default async function handler(
       // Get current credits and update
       const { data: profile } = await supabaseAdmin
         .from("profiles")
-        .select("credits, plan")
+        .select("credits, plan, has_used_professional_trial")
         .eq("id", userId)
         .single();
 
@@ -102,6 +102,14 @@ export default async function handler(
       if (!isAddon) {
         updateData.plan_id = numericPlanId;
         updateData.plan = planId;
+
+        // Mark trial as used if subscribing to professional for the first time
+        if (
+          planId === "professional" &&
+          !profile?.has_used_professional_trial
+        ) {
+          updateData.has_used_professional_trial = true;
+        }
       }
 
       const { error: updateError } = await supabaseAdmin

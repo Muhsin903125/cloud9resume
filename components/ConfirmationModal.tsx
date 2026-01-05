@@ -27,9 +27,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 }) => {
   return (
     <SharedModal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      <div className="space-y-4">
-        <p className="text-gray-600">{message}</p>
-        <div className="flex justify-end gap-3 mt-6">
+      <div className="p-4 space-y-2">
+        <p className="text-gray-600 leading-relaxed">{message}</p>
+        <div className="flex justify-end gap-3">
           <Button
             variant="outline"
             onClick={onClose}

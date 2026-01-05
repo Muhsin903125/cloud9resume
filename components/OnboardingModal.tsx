@@ -12,6 +12,8 @@ import {
   BriefcaseIcon,
   DocumentTextIcon,
   ChartBarIcon,
+  EnvelopeIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 interface OnboardingModalProps {
@@ -19,41 +21,32 @@ interface OnboardingModalProps {
   onComplete: () => void;
 }
 
-type Step = "level" | "method" | "import";
+type Step = "method" | "import";
 
 export default function OnboardingModal({
   isOpen,
   onComplete,
 }: OnboardingModalProps) {
-  const [step, setStep] = useState<Step>("level");
+  const [step, setStep] = useState<Step>("method");
   const [loading, setLoading] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const router = useRouter();
   const { user } = useAuth();
 
-  const handleSelection = async (level: "experienced" | "fresher") => {
-    if (!user) return;
-    setSelectedLevel(level);
-    setLoading(true);
-
-    try {
-      const res = await apiClient.post("/user/complete-onboarding", {
-        userId: user.id,
-        experienceLevel: level,
-      });
-
-      if (res.error) {
-        alert("Something went wrong. Please try again.");
-      } else {
-        setStep("method");
-      }
-    } catch (error) {
-      console.error("Onboarding error:", error);
-      alert("An error occurred.");
-    } finally {
-      setLoading(false);
+  // Mark onboarding as complete when modal opens
+  React.useEffect(() => {
+    if (isOpen && user) {
+      const completeOnboarding = async () => {
+        try {
+          await apiClient.post("/user/complete-onboarding", {
+            userId: user.id,
+          });
+        } catch (error) {
+          console.error("Onboarding error:", error);
+        }
+      };
+      completeOnboarding();
     }
-  };
+  }, [isOpen, user]);
 
   const handleMethodSelection = (method: "import" | "scratch") => {
     if (method === "import") {
@@ -64,7 +57,6 @@ export default function OnboardingModal({
   };
 
   const steps = [
-    { id: "level", label: "Experience" },
     { id: "method", label: "Method" },
     { id: "import", label: "Import" },
   ];
@@ -74,16 +66,16 @@ export default function OnboardingModal({
   return (
     <Dialog open={isOpen} onClose={() => {}} className="relative z-50">
       <div
-        className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-purple-900/95 backdrop-blur-lg"
         aria-hidden="true"
       />
 
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden">
+        <Dialog.Panel className="w-full max-w-3xl rounded-3xl bg-white shadow-2xl overflow-hidden border border-gray-100">
           {/* Progress Bar */}
-          <div className="h-1 bg-gray-100">
+          <div className="h-1.5 bg-gradient-to-r from-gray-100 to-gray-50">
             <div
-              className="h-full bg-blue-600 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 transition-all duration-700 ease-out"
               style={{
                 width: `${((currentStepIndex + 1) / steps.length) * 100}%`,
               }}
@@ -91,32 +83,32 @@ export default function OnboardingModal({
           </div>
 
           {/* Header */}
-          <div className="bg-blue-600 px-6 py-6 text-center relative">
+          <div className="relative px-8 py-8 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700">
             {/* Back Button */}
-            {step !== "level" && (
+            {step === "import" && (
               <button
-                onClick={() => setStep(step === "import" ? "method" : "level")}
-                className="absolute left-4 top-4 text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition"
+                onClick={() => setStep("method")}
+                className="absolute left-6 top-6 text-white/90 hover:text-white p-2.5 rounded-xl hover:bg-white/10 transition-all duration-200 backdrop-blur-sm"
               >
                 <ArrowLeftIcon className="w-5 h-5" />
               </button>
             )}
 
-            {/* Step Indicator */}
-            <div className="flex justify-center gap-2 mb-3">
+            {/* Step Indicators */}
+            <div className="flex justify-center gap-2 mb-5">
               {steps.map((s, i) => (
                 <div
                   key={s.id}
-                  className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full ${
+                  className={`flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-full backdrop-blur-md transition-all duration-300 ${
                     i <= currentStepIndex
-                      ? "bg-white/20 text-white"
-                      : "bg-white/10 text-white/50"
+                      ? "bg-white/25 text-white shadow-lg scale-105"
+                      : "bg-white/10 text-white/60 scale-95"
                   }`}
                 >
                   {i < currentStepIndex ? (
-                    <CheckCircleIcon className="w-3 h-3" />
+                    <CheckCircleIcon className="w-3.5 h-3.5" />
                   ) : (
-                    <span className="w-3 h-3 flex items-center justify-center text-[8px]">
+                    <span className="w-3.5 h-3.5 flex items-center justify-center text-[9px] font-bold">
                       {i + 1}
                     </span>
                   )}
@@ -125,163 +117,108 @@ export default function OnboardingModal({
               ))}
             </div>
 
-            <h2 className="text-xl font-bold text-white mb-1">
-              {step === "level" && "Welcome to Cloud9Profile"}
-              {step === "method" && "Choose Your Starting Point"}
-              {step === "import" && "Import Your Resume"}
-            </h2>
-            <p className="text-blue-100 text-sm">
-              {step === "level" && "Tell us about your experience level"}
-              {step === "method" &&
-                "Select how you'd like to build your profile"}
-              {step === "import" &&
-                "Upload your existing resume to get started"}
-            </p>
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                {step === "method" && "Welcome to Cloud9Profile"}
+                {step === "import" && "Import Your Resume"}
+              </h2>
+              <p className="text-blue-100/90 text-sm leading-relaxed max-w-lg mx-auto">
+                {step === "method" &&
+                  "Choose how you'd like to build your professional profile"}
+                {step === "import" &&
+                  "Upload your existing resume to get started quickly"}
+              </p>
+            </div>
           </div>
 
           {/* Content */}
-          <div className="p-6">
-            {/* Step 1: Experience Level */}
-            {step === "level" && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* Experienced */}
-                  <button
-                    onClick={() => handleSelection("experienced")}
-                    disabled={loading}
-                    className="group p-5 rounded-xl border-2 border-gray-200 hover:border-blue-500 bg-white hover:bg-blue-50/50 transition-all text-left"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-                        <BriefcaseIcon className="w-5 h-5" />
+          <div className="p-8">
+            {/* Step 1: Method Selection */}
+            {step === "method" && (
+              <div className="space-y-6">
+                {/* Welcome Info Banner */}
+                <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-2xl p-6 border border-gray-100 mb-6">
+                  <div className="flex items-center gap-2 mb-5">
+                    <SparklesIcon className="w-4 h-4 text-blue-600" />
+                    <p className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                      What You'll Get Access To
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center group">
+                      <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <DocumentTextIcon className="w-6 h-6" />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-0.5">
-                          Working Professional
-                        </h3>
-                        <p className="text-xs text-gray-500 leading-relaxed">
-                          I have work experience and want to enhance my career
-                          profile
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      <span className="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        Resume Builder
-                      </span>
-                      <span className="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        Portfolio
-                      </span>
-                      <span className="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        ATS Checker
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* Fresher */}
-                  <button
-                    onClick={() => handleSelection("fresher")}
-                    disabled={loading}
-                    className="group p-5 rounded-xl border-2 border-gray-200 hover:border-green-500 bg-white hover:bg-green-50/50 transition-all text-left relative"
-                  >
-                    <div className="absolute top-2 right-2 text-[8px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full">
-                      FREE CREDITS
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0">
-                        <AcademicCapIcon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-0.5">
-                          Student / Fresher
-                        </h3>
-                        <p className="text-xs text-gray-500 leading-relaxed">
-                          Starting my career and need help building my first
-                          resume
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      <span className="text-[9px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full">
-                        +10 Credits
-                      </span>
-                      <span className="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        Templates
-                      </span>
-                      <span className="text-[9px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                        Guided Setup
-                      </span>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Features Preview */}
-                <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase mb-3">
-                    What you'll get access to
-                  </p>
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div>
-                      <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                        <DocumentTextIcon className="w-4 h-4" />
-                      </div>
-                      <p className="text-[10px] font-medium text-gray-700">
+                      <p className="text-xs font-semibold text-gray-800">
                         Resume Builder
                       </p>
+                      <p className="text-[10px] text-gray-500">
+                        ATS-optimized templates
+                      </p>
                     </div>
-                    <div>
-                      <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                        <BriefcaseIcon className="w-4 h-4" />
+                    <div className="text-center group">
+                      <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <BriefcaseIcon className="w-6 h-6" />
                       </div>
-                      <p className="text-[10px] font-medium text-gray-700">
+                      <p className="text-xs font-semibold text-gray-800">
                         Portfolio Builder
                       </p>
+                      <p className="text-[10px] text-gray-500">
+                        Showcase your work
+                      </p>
                     </div>
-                    <div>
-                      <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                        <ChartBarIcon className="w-4 h-4" />
+                    <div className="text-center group">
+                      <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <EnvelopeIcon className="w-6 h-6" />
                       </div>
-                      <p className="text-[10px] font-medium text-gray-700">
+                      <p className="text-xs font-semibold text-gray-800">
+                        Cover Letters
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        AI-powered writing
+                      </p>
+                    </div>
+                    <div className="text-center group">
+                      <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <ChartBarIcon className="w-6 h-6" />
+                      </div>
+                      <p className="text-xs font-semibold text-gray-800">
                         ATS Score Check
                       </p>
+                      <p className="text-[10px] text-gray-500">Beat the bots</p>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Step 2: Method Selection */}
-            {step === "method" && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Import Resume */}
                   <button
                     onClick={() => handleMethodSelection("import")}
-                    className="group p-5 rounded-xl border-2 border-gray-200 hover:border-blue-500 bg-white hover:bg-blue-50/50 transition-all text-left relative"
+                    className="group p-6 rounded-2xl border-2 border-gray-200 hover:border-blue-500 bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-white hover:shadow-xl transition-all duration-300 text-left relative transform hover:-translate-y-1"
                   >
-                    <div className="absolute top-2 right-2 text-[8px] font-bold bg-blue-500 text-white px-2 py-0.5 rounded-full">
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-lg">
                       RECOMMENDED
                     </div>
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-                        <CloudArrowUpIcon className="w-5 h-5" />
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <CloudArrowUpIcon className="w-6 h-6" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-0.5">
+                        <h3 className="font-bold text-gray-900 mb-1 text-lg">
                           Import Resume
                         </h3>
-                        <p className="text-xs text-gray-500 leading-relaxed">
+                        <p className="text-sm text-gray-600 leading-relaxed">
                           Upload your existing PDF or DOCX resume
                         </p>
                       </div>
                     </div>
-                    <div className="mt-3 space-y-1">
-                      <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                        <CheckCircleIcon className="w-3 h-3 text-green-500" />
-                        Auto-fill all sections
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        Auto-fill all sections instantly
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                        <CheckCircleIcon className="w-3 h-3 text-green-500" />
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
                         Supports PDF and DOCX formats
                       </div>
                     </div>
@@ -290,47 +227,33 @@ export default function OnboardingModal({
                   {/* Start from Scratch */}
                   <button
                     onClick={() => handleMethodSelection("scratch")}
-                    className="group p-5 rounded-xl border-2 border-gray-200 hover:border-gray-400 bg-white hover:bg-gray-50 transition-all text-left"
+                    className="group p-6 rounded-2xl border-2 border-gray-200 hover:border-gray-400 bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-white hover:shadow-xl transition-all duration-300 text-left transform hover:-translate-y-1"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center flex-shrink-0">
-                        <DocumentPlusIcon className="w-5 h-5" />
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 text-white flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <DocumentPlusIcon className="w-6 h-6" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-0.5">
+                        <h3 className="font-bold text-gray-900 mb-1 text-lg">
                           Start Fresh
                         </h3>
-                        <p className="text-xs text-gray-500 leading-relaxed">
+                        <p className="text-sm text-gray-600 leading-relaxed">
                           Build your resume step-by-step from scratch
                         </p>
                       </div>
                     </div>
-                    <div className="mt-3 space-y-1">
-                      <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                        <CheckCircleIcon className="w-3 h-3 text-green-500" />
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
                         50+ professional templates
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                        <CheckCircleIcon className="w-3 h-3 text-green-500" />
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
                         Step-by-step guidance
                       </div>
                     </div>
                   </button>
                 </div>
-
-                {selectedLevel === "fresher" && (
-                  <div className="bg-green-50 border border-green-100 rounded-lg p-3 flex items-center gap-3">
-                    <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="text-xs font-medium text-green-800">
-                        10 free credits added to your account!
-                      </p>
-                      <p className="text-[10px] text-green-600">
-                        Use them to generate content and analyze resumes
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
@@ -349,10 +272,10 @@ export default function OnboardingModal({
 
           {/* Loading Indicator */}
           {loading && (
-            <div className="pb-6 text-center">
-              <div className="inline-flex items-center gap-2 text-xs text-gray-500 bg-gray-50 px-4 py-2 rounded-full">
-                <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                Setting up your account...
+            <div className="pb-8 text-center">
+              <div className="inline-flex items-center gap-3 text-sm text-gray-600 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-3 rounded-full border border-blue-100 shadow-lg">
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <span className="font-medium">Setting up your account...</span>
               </div>
             </div>
           )}

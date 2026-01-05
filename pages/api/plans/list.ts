@@ -1,4 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
 
 export interface Plan {
   id: string;
@@ -141,8 +143,51 @@ export default async function handler(
         return order.indexOf(a.id) - order.indexOf(b.id);
       });
 
+    // Check if user has already used the professional trial (50% off is one-time only)
+    let hasUsedTrial = false;
+    try {
+      // Get user ID from auth token
+      const token = req.cookies.auth_token;
+      let userId: string | null = null;
+
+      if (token) {
+        const decoded = jwt.decode(token) as { userId?: string } | null;
+        userId = decoded?.userId || null;
+      }
+
+      if (userId) {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("has_used_professional_trial")
+          .eq("id", userId)
+          .single();
+
+        hasUsedTrial = profile?.has_used_professional_trial || false;
+      }
+    } catch (error) {
+      // If user is not authenticated or error occurs, show trial pricing (default behavior)
+      console.log("Trial check skipped (user not authenticated):", error);
+    }
+
+    // Remove trial pricing for users who have already subscribed
+    const finalPlans = plans.map((plan) => {
+      if (plan.id === "professional" && hasUsedTrial) {
+        return {
+          ...plan,
+          hasTrial: false,
+          trialPrice: undefined,
+        };
+      }
+      return plan;
+    });
+
     return res.status(200).json({
-      data: plans,
+      data: finalPlans,
       enterprise: PLANS.enterprise,
       creditsAddonId: process.env.DODO_CREDITS_ADDON_PRODUCT_ID || null,
     });

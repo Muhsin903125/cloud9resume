@@ -92,6 +92,7 @@ const SharedModal: React.FC<ModalProps> = ({
     fontWeight: 600,
     color: theme === "dark" ? "#f8fafc" : colors.primary.black,
     margin: 0,
+    backgroundColor: "transparent",
   };
 
   const closeButtonStyles: React.CSSProperties = {
