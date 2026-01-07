@@ -59,11 +59,20 @@ export default function OnboardingModal({
           title: "My Resume",
         });
 
-        if (response.data && response.data.success && response.data.data) {
+        console.log("Resume creation response:", response);
+
+        // Handle different response formats
+        const resumeId = response.data?.data?.id || response.data?.id;
+
+        if (resumeId) {
+          console.log("Redirecting to:", `/dashboard/resume/${resumeId}/edit`);
           // Navigate directly to the editor page
-          window.location.href = `/dashboard/resume/${response.data.data.id}/edit`;
+          window.location.href = `/dashboard/resume/${resumeId}/edit`;
         } else {
-          console.error("Failed to create resume");
+          console.error(
+            "Failed to create resume - no ID in response:",
+            response
+          );
           onComplete();
         }
       } catch (error) {

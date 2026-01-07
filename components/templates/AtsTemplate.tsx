@@ -22,7 +22,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
 
   return (
     <div
-      className="bg-white text-black p-[12mm] mx-auto"
+      className="bg-white text-black p-[10mm] mx-auto"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -68,39 +68,26 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
 
       {/* Sections */}
       <div className="space-y-4">
-        {sortedSections.map((section: any) => {
-          const { section_type, section_data } = section;
-          if (!section_data || section_type === "personal_info") return null;
+        {/* Helper for List-based sections */}
+        {(() => {
+          const renderListSection = (section: any) => {
+            if (!section || !section.section_data) return null;
+            const { section_type, section_data } = section;
+            const items = Array.isArray(section_data)
+              ? section_data
+              : section_data?.items || [];
+            if (items.length === 0) return null;
 
-          // Special sections handled separately
-          if (section_type === "declaration") return null;
-
-          return (
-            <section key={section.id} className="break-inside-avoid">
-              <h2
-                className="text-lg font-bold uppercase border-b border-black mb-3 pb-1 text-black"
-                style={{ letterSpacing: "0.05em" }}
-              >
-                {section.title || section_type.replace("_", " ")}
-              </h2>
-
-              {/* Summary / Text Sections */}
-              {(section_type === "summary" ||
-                section_type === "declaration") && (
-                <p className="whitespace-pre-wrap text-sm text-black text-justify">
-                  {section_data.text || section_data}
-                </p>
-              )}
-
-              {/* List based sections (Experience, Education, Projects, etc.) */}
-              {!["summary", "skills", "languages", "declaration"].includes(
-                section_type
-              ) && (
+            return (
+              <section key={section.id} className="break-inside-avoid">
+                <h2
+                  className="text-lg font-bold uppercase border-b border-black mb-3 pb-1 text-black"
+                  style={{ letterSpacing: "0.05em" }}
+                >
+                  {section.title || section_type.replace("_", " ")}
+                </h2>
                 <div className="space-y-3">
-                  {(Array.isArray(section_data)
-                    ? section_data
-                    : section_data?.items || []
-                  ).map((item: any, idx: number) => (
+                  {items.map((item: any, idx: number) => (
                     <div key={idx}>
                       <div className="flex justify-between items-baseline font-bold text-sm text-black">
                         <h3>
@@ -152,62 +139,174 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                     </div>
                   ))}
                 </div>
-              )}
+              </section>
+            );
+          };
 
-              {/* Skills / Languages (Tag/List based) */}
-              {(section_type === "skills" || section_type === "languages") && (
+          const renderSkillsSection = (section: any) => {
+            if (!section || !section.section_data) return null;
+            return (
+              <section key={section.id} className="break-inside-avoid">
+                <h2
+                  className="text-lg font-bold uppercase border-b border-black mb-3 pb-1 text-black"
+                  style={{ letterSpacing: "0.05em" }}
+                >
+                  {section.title || "Skills"}
+                </h2>
                 <div className="text-sm text-black">
-                  {/* Handle tagged skills or categorized items */}
-                  {typeof section_data === "object" &&
-                    !Array.isArray(section_data) && (
-                      <div className="space-y-1">
-                        {Object.keys(section_data).map((category, idx) => {
-                          if (category === "items") return null;
-                          const skills = section_data[category];
-                          if (!Array.isArray(skills)) return null;
-                          return (
-                            <div key={idx}>
-                              <span className="font-bold">{category}: </span>
-                              <span>
-                                {skills
-                                  .map((s) =>
-                                    typeof s === "string"
-                                      ? s
-                                      : s.name || s.language
-                                  )
-                                  .join(", ")}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                  {(() => {
+                    const data = section.section_data;
+                    const categories =
+                      typeof data === "object" && !Array.isArray(data)
+                        ? Object.keys(data).filter((k) => k !== "items")
+                        : [];
 
-                  {/* Fallback to flat list */}
-                  {(Array.isArray(section_data) ||
-                    Array.isArray(section_data?.items)) && (
-                    <p>
-                      {(Array.isArray(section_data)
-                        ? section_data
-                        : section_data.items
-                      )
-                        .map((item: any) => {
-                          if (typeof item === "string") return item;
-                          if (section_type === "languages") {
-                            return `${item.language}${
-                              item.proficiency ? ` (${item.proficiency})` : ""
-                            }`;
-                          }
-                          return item.name || item.skill || item.language;
-                        })
-                        .join(", ")}
-                    </p>
-                  )}
+                    if (categories.length > 0) {
+                      return (
+                        <div className="space-y-1">
+                          {categories.map((category, idx) => {
+                            const skills = data[category];
+                            if (!Array.isArray(skills)) return null;
+                            return (
+                              <div key={idx}>
+                                <span className="font-bold">{category}: </span>
+                                <span>
+                                  {skills
+                                    .map((skill: any) =>
+                                      typeof skill === "string"
+                                        ? skill
+                                        : skill.name
+                                    )
+                                    .join(", ")}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    const items = Array.isArray(data) ? data : data.items || [];
+                    return (
+                      <p>
+                        {items
+                          .map((item: any) =>
+                            typeof item === "string" ? item : item.name
+                          )
+                          .join(", ")}
+                      </p>
+                    );
+                  })()}
                 </div>
-              )}
-            </section>
+              </section>
+            );
+          };
+
+          const experience = sortedSections.find(
+            (s) => s.section_type === "experience"
           );
-        })}
+          const skills = sortedSections.find(
+            (s) => s.section_type === "skills"
+          );
+          const education = sortedSections.find(
+            (s) => s.section_type === "education"
+          );
+          const summary = sortedSections.find(
+            (s) => s.section_type === "summary"
+          );
+
+          return (
+            <>
+              {/* 1. Summary */}
+              {summary && (
+                <section className="break-inside-avoid">
+                  <p className="whitespace-pre-wrap text-sm text-black text-justify">
+                    {summary.section_data.text || summary.section_data}
+                  </p>
+                </section>
+              )}
+
+              {/* 2. Experience */}
+              {experience && renderListSection(experience)}
+
+              {/* 3. Skills (Force after Experience) */}
+              {skills && renderSkillsSection(skills)}
+
+              {/* 4. Education (Force after Skills) */}
+              {education && renderListSection(education)}
+
+              {/* 5. Rest of sorted sections */}
+              {sortedSections.map((section: any) => {
+                const { section_type } = section;
+                if (
+                  [
+                    "summary",
+                    "experience",
+                    "skills",
+                    "education",
+                    "personal_info",
+                    "declaration",
+                    "languages",
+                    "hobbies",
+                  ].includes(section_type)
+                )
+                  return null;
+                return renderListSection(section);
+              })}
+            </>
+          );
+        })()}
+
+        {/* Explicit Languages rendering */}
+        {sections.find((s) => s.section_type === "languages") && (
+          <section className="break-inside-avoid">
+            <h2
+              className="text-lg font-bold uppercase border-b border-black mb-3 pb-1 text-black"
+              style={{ letterSpacing: "0.05em" }}
+            >
+              Languages
+            </h2>
+            <div className="text-sm text-black">
+              <p>
+                {(
+                  sections.find((s) => s.section_type === "languages")!
+                    .section_data.items || []
+                )
+                  .map((item: any) => {
+                    if (typeof item === "string") return item;
+                    return `${item.language}${
+                      item.proficiency ? ` (${item.proficiency})` : ""
+                    }`;
+                  })
+                  .join(", ")}
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* Explicit Interests (Hobbies) rendering */}
+        {sections.find((s) => s.section_type === "hobbies") && (
+          <section className="break-inside-avoid">
+            <h2
+              className="text-lg font-bold uppercase border-b border-black mb-3 pb-1 text-black"
+              style={{ letterSpacing: "0.05em" }}
+            >
+              Interests
+            </h2>
+            <div className="text-sm text-black">
+              <p>
+                {(
+                  sections.find((s) => s.section_type === "hobbies")!
+                    .section_data.items || []
+                )
+                  .map((item: any) =>
+                    typeof item === "string" ? item : item.name || item.hobby
+                  )
+                  .join(", ")}
+              </p>
+            </div>
+          </section>
+        )}
 
         {/* Explicit Declaration at Bottom */}
         {sections.find((s: any) => s.section_type === "declaration") &&

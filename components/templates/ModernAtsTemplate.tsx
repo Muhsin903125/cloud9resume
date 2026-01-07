@@ -70,42 +70,30 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
       </header>
 
       <div className="space-y-5">
-        {sortedSections.map((section: any) => {
-          const { section_type, section_data } = section;
-          if (!section_data || section_type === "personal_info") return null;
+        {/* Helper for sections */}
+        {(() => {
+          const renderListSection = (section: any) => {
+            if (!section || !section.section_data) return null;
+            const { section_type, section_data } = section;
+            const items = Array.isArray(section_data)
+              ? section_data
+              : section_data?.items || [];
+            if (items.length === 0) return null;
 
-          // Skip declaration
-          if (section_type === "declaration") return null;
+            return (
+              <section key={section.id} className="break-inside-avoid">
+                <div className="flex items-center gap-4 mb-5">
+                  <h2
+                    className="text-[13px] font-black uppercase tracking-[0.2em] whitespace-nowrap"
+                    style={{ color: themeColor }}
+                  >
+                    {section.title || section_type.replace("_", " ")}
+                  </h2>
+                  <div className="h-px bg-slate-100 flex-1"></div>
+                </div>
 
-          return (
-            <section key={section.id} className="break-inside-avoid">
-              <div className="flex items-center gap-4 mb-5">
-                <h2
-                  className="text-[13px] font-black uppercase tracking-[0.2em] whitespace-nowrap"
-                  style={{ color: themeColor }}
-                >
-                  {section.title || section_type.replace("_", " ")}
-                </h2>
-                <div className="h-px bg-slate-100 flex-1"></div>
-              </div>
-
-              {/* Summary / Text Sections */}
-              {(section_type === "summary" ||
-                section_type === "declaration") && (
-                <p className="text-xs text-slate-600 leading-snug text-justify whitespace-pre-wrap">
-                  {section_data.text || section_data}
-                </p>
-              )}
-
-              {/* List based sections */}
-              {!["summary", "skills", "languages", "declaration"].includes(
-                section_type
-              ) && (
                 <div className="space-y-4">
-                  {(Array.isArray(section_data)
-                    ? section_data
-                    : section_data?.items || []
-                  ).map((item: any, idx: number) => (
+                  {items.map((item: any, idx: number) => (
                     <div key={idx} className="group relative">
                       <div className="flex justify-between items-start mb-1">
                         <div>
@@ -155,72 +143,200 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                     </div>
                   ))}
                 </div>
-              )}
+              </section>
+            );
+          };
 
-              {/* Skills / Languages */}
-              {(section_type === "skills" || section_type === "languages") && (
-                <div className="flex flex-wrap gap-2">
-                  {typeof section_data === "object" &&
-                    !Array.isArray(section_data) && (
-                      <div className="w-full space-y-3">
-                        {Object.keys(section_data).map((category, idx) => {
-                          if (category === "items") return null;
-                          const skills = section_data[category];
-                          if (!Array.isArray(skills)) return null;
-                          return (
-                            <div
-                              key={idx}
-                              className="flex gap-4 items-baseline"
-                            >
-                              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 min-w-[100px]">
-                                {category}
-                              </span>
-                              <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-700">
-                                {skills.map((s, i) => (
-                                  <span
-                                    key={i}
-                                    className="flex items-center gap-2"
-                                  >
-                                    {typeof s === "string"
-                                      ? s
-                                      : s.name || s.language}
-                                    {i < skills.length - 1 && (
-                                      <span className="text-slate-200">|</span>
-                                    )}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                  {(Array.isArray(section_data) ||
-                    Array.isArray(section_data?.items)) && (
-                    <div className="flex flex-wrap gap-3">
-                      {(Array.isArray(section_data)
-                        ? section_data
-                        : section_data.items
-                      ).map((item: any, i: number) => (
-                        <span
-                          key={i}
-                          className="text-sm text-slate-700 px-3 py-1 bg-slate-50 rounded-full border border-slate-100"
-                        >
-                          {typeof item === "string"
-                            ? item
-                            : section_type === "languages"
-                            ? `${item.language} (${item.proficiency})`
-                            : item.name || item.skill || item.language}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+          const renderSkillsSection = (section: any) => {
+            if (!section || !section.section_data) return null;
+            return (
+              <section key={section.id} className="break-inside-avoid">
+                <div className="flex items-center gap-4 mb-5">
+                  <h2
+                    className="text-[13px] font-black uppercase tracking-[0.2em] whitespace-nowrap"
+                    style={{ color: themeColor }}
+                  >
+                    Skills
+                  </h2>
+                  <div className="h-px bg-slate-100 flex-1"></div>
                 </div>
-              )}
-            </section>
+                <div className="text-sm text-slate-700">
+                  {(() => {
+                    const data = section.section_data;
+                    const categories =
+                      typeof data === "object" && !Array.isArray(data)
+                        ? Object.keys(data).filter((k) => k !== "items")
+                        : [];
+
+                    if (categories.length > 0) {
+                      return (
+                        <div className="space-y-3">
+                          {categories.map((category, idx) => {
+                            const skills = data[category];
+                            if (!Array.isArray(skills)) return null;
+                            return (
+                              <div key={idx} className="flex gap-4">
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 min-w-[120px] shrink-0">
+                                  {category}
+                                </span>
+                                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                                  {skills.map((s, i) => (
+                                    <React.Fragment key={i}>
+                                      <span>
+                                        {typeof s === "string" ? s : s.name}
+                                      </span>
+                                      {i < skills.length - 1 && (
+                                        <span className="text-slate-200">
+                                          |
+                                        </span>
+                                      )}
+                                    </React.Fragment>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    const items = Array.isArray(data) ? data : data.items || [];
+                    return (
+                      <div className="flex flex-wrap gap-x-2 gap-y-1">
+                        {items.map((item: any, i: number) => (
+                          <React.Fragment key={i}>
+                            <span>
+                              {typeof item === "string" ? item : item.name}
+                            </span>
+                            {i < items.length - 1 && (
+                              <span className="text-slate-200">|</span>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </section>
+            );
+          };
+
+          const experience = sortedSections.find(
+            (s) => s.section_type === "experience"
           );
-        })}
+          const skills = sortedSections.find(
+            (s) => s.section_type === "skills"
+          );
+          const education = sortedSections.find(
+            (s) => s.section_type === "education"
+          );
+          const summary = sortedSections.find(
+            (s) => s.section_type === "summary"
+          );
+
+          return (
+            <>
+              {/* 1. Summary */}
+              {summary && (
+                <section className="break-inside-avoid">
+                  <p className="text-xs text-slate-600 leading-snug text-justify whitespace-pre-wrap">
+                    {summary.section_data.text || summary.section_data}
+                  </p>
+                </section>
+              )}
+
+              {/* 2. Experience */}
+              {experience && renderListSection(experience)}
+
+              {/* 3. Skills */}
+              {skills && renderSkillsSection(skills)}
+
+              {/* 4. Education */}
+              {education && renderListSection(education)}
+
+              {/* 5. Rest of sorted sections */}
+              {sortedSections.map((section: any) => {
+                const { section_type } = section;
+                if (
+                  [
+                    "summary",
+                    "experience",
+                    "skills",
+                    "education",
+                    "personal_info",
+                    "declaration",
+                    "languages",
+                    "hobbies",
+                  ].includes(section_type)
+                )
+                  return null;
+                return renderListSection(section);
+              })}
+            </>
+          );
+        })()}
+
+        {/* Explicit Languages rendering */}
+        {sections.find((s) => s.section_type === "languages") && (
+          <section className="break-inside-avoid">
+            <div className="flex items-center gap-4 mb-5">
+              <h2
+                className="text-[13px] font-black uppercase tracking-[0.2em] whitespace-nowrap"
+                style={{ color: themeColor }}
+              >
+                Languages
+              </h2>
+              <div className="h-px bg-slate-100 flex-1"></div>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+              {(
+                sections.find((s) => s.section_type === "languages")!
+                  .section_data.items || []
+              ).map((item: any, i: number) => (
+                <span key={i} className="flex items-center gap-2">
+                  {typeof item === "string"
+                    ? item
+                    : `${item.language}${
+                        item.proficiency ? ` (${item.proficiency})` : ""
+                      }`}
+                  {i <
+                    sections.find((s) => s.section_type === "languages")!
+                      .section_data.items.length -
+                      1 && <span className="text-slate-200">|</span>}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Explicit Interests (Hobbies) rendering */}
+        {sections.find((s) => s.section_type === "hobbies") && (
+          <section className="break-inside-avoid">
+            <div className="flex items-center gap-4 mb-5">
+              <h2
+                className="text-[13px] font-black uppercase tracking-[0.2em] whitespace-nowrap"
+                style={{ color: themeColor }}
+              >
+                Interests
+              </h2>
+              <div className="h-px bg-slate-100 flex-1"></div>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+              {(
+                sections.find((s) => s.section_type === "hobbies")!.section_data
+                  .items || []
+              ).map((item: any, i: number) => (
+                <span key={i} className="flex items-center gap-2">
+                  {typeof item === "string" ? item : item.name || item.hobby}
+                  {i <
+                    sections.find((s) => s.section_type === "hobbies")!
+                      .section_data.items.length -
+                      1 && <span className="text-slate-200">|</span>}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Explicit Declaration at Bottom */}
         {sections.find((s: any) => s.section_type === "declaration") &&
