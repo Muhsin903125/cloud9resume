@@ -26,12 +26,6 @@ const EnhancedResumeEditor = () => {
       action: () => setActiveTab("edit"),
     },
     {
-      id: "templates",
-      label: "Templates",
-      icon: DownloadIcon,
-      action: () => router.push(`/dashboard/resume/${id}/templates`),
-    },
-    {
       id: "export",
       label: "Export",
       icon: DownloadIcon,

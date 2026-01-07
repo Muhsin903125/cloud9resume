@@ -79,7 +79,7 @@ const ResumeDashboard = () => {
         setShowNewModal(false);
         setNewResumeTitle("");
         toast.success("Resume created");
-        router.push(`/dashboard/resume/${response.data.id}/templates`);
+        router.push(`/dashboard/resume/${response.data.id}/edit`);
       } else {
         toast.error(response.error || "Failed to create");
       }

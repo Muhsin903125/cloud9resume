@@ -287,7 +287,6 @@ function DashboardLayout({
 
       {/* Sidebar - Desktop & Mobile */}
       {!router.pathname.includes("/dashboard/resume/[id]/edit") &&
-        !router.pathname.includes("/dashboard/resume/[id]/templates") &&
         !router.pathname.includes("/dashboard/portfolio/[id]") && (
           <>
             {/* Mobile Toggle Button (Floating) */}
@@ -495,7 +494,14 @@ function DashboardLayout({
         )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 relative md:ml-72">
+      <div
+        className={`flex-1 flex flex-col min-w-0 relative ${
+          !router.pathname.includes("/dashboard/resume/[id]/edit") &&
+          !router.pathname.includes("/dashboard/portfolio/[id]")
+            ? "md:ml-72"
+            : ""
+        }`}
+      >
         <main className="flex-1 w-full">{children}</main>
       </div>
 

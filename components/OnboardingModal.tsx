@@ -48,11 +48,30 @@ export default function OnboardingModal({
     }
   }, [isOpen, user]);
 
-  const handleMethodSelection = (method: "import" | "scratch") => {
+  const handleMethodSelection = async (method: "import" | "scratch") => {
     if (method === "import") {
       setStep("import");
     } else {
-      onComplete();
+      // Create a new resume and redirect to editor
+      try {
+        setLoading(true);
+        const response = await apiClient.post("/resumes", {
+          title: "My Resume",
+        });
+
+        if (response.data && response.data.success && response.data.data) {
+          // Navigate directly to the editor page
+          window.location.href = `/dashboard/resume/${response.data.data.id}/edit`;
+        } else {
+          console.error("Failed to create resume");
+          onComplete();
+        }
+      } catch (error) {
+        console.error("Error creating resume:", error);
+        onComplete();
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -262,7 +281,8 @@ export default function OnboardingModal({
               <div className="max-w-xl mx-auto">
                 <ResumeUploader
                   onUploadSuccess={(data, resumeId) => {
-                    router.push(`/dashboard/resume/${resumeId}/templates`);
+                    // Navigate directly to the editor page
+                    window.location.href = `/dashboard/resume/${resumeId}/edit`;
                   }}
                   onCancel={() => setStep("method")}
                 />
