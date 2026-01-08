@@ -85,6 +85,8 @@ export const ProfessionalAtsTemplate: React.FC<
                             item.degree ||
                             item.school ||
                             item.institution ||
+                            item.name ||
+                            item.role ||
                             item.language}
                         </h3>
                         <span className="text-[11px] font-bold uppercase">
@@ -99,7 +101,10 @@ export const ProfessionalAtsTemplate: React.FC<
                             item.issuer ||
                             item.school ||
                             item.institution ||
-                            item.degree}
+                            item.degree ||
+                            item.organization ||
+                            item.publisher ||
+                            item.awarder}
                         </span>
                         <span>{item.location}</span>
                       </div>

@@ -81,7 +81,9 @@ export const GeometricCreativeTemplate = ({
                         item.title ||
                         item.degree ||
                         item.school ||
-                        item.institution}
+                        item.institution ||
+                        item.name ||
+                        item.role}
                     </h4>
                     <span className="text-[9px] font-black text-slate-400 shrink-0 ml-4">
                       {item.startDate ? `${item.startDate} — ` : ""}
@@ -98,7 +100,11 @@ export const GeometricCreativeTemplate = ({
                     {item.company ||
                       item.issuer ||
                       item.school ||
-                      item.institution}
+                      item.institution ||
+                      item.degree ||
+                      item.organization ||
+                      item.publisher ||
+                      item.awarder}
                     {item.location && (
                       <span className="w-1 h-1 rounded-full bg-slate-200"></span>
                     )}

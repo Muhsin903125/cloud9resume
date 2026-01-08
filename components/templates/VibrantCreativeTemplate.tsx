@@ -51,16 +51,21 @@ export const VibrantCreativeTemplate = ({
               ></div>
 
               <div className="flex flex-col sm:flex-row justify-between sm:items-baseline gap-1 mb-1">
-                <h4 className="text-lg font-bold text-slate-900 group-hover:translate-x-1 transition-transform inline-block leading-tight">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:translate-x-1 transition-transform inline-block leading-tight">
                   {item.position ||
                     item.title ||
                     item.degree ||
                     item.school ||
-                    item.institution}
+                    item.institution ||
+                    item.name ||
+                    item.role}
                 </h4>
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-50 px-2 py-1 rounded whitespace-nowrap">
                   {item.startDate ? `${item.startDate} — ` : ""}
-                  {item.endDate || item.date || item.graduationDate}
+                  {item.endDate ||
+                    item.date ||
+                    item.year ||
+                    item.graduationDate}
                 </span>
               </div>
 
@@ -72,7 +77,10 @@ export const VibrantCreativeTemplate = ({
                   item.issuer ||
                   item.school ||
                   item.institution ||
-                  item.degree}
+                  item.degree ||
+                  item.organization ||
+                  item.publisher ||
+                  item.awarder}
                 {item.location && (
                   <span className="text-slate-300 font-medium normal-case">
                     • {item.location}
@@ -81,7 +89,7 @@ export const VibrantCreativeTemplate = ({
               </div>
 
               {item.description && (
-                <p className="text-[13px] text-slate-500 leading-relaxed max-w-2xl text-justify whitespace-pre-wrap">
+                <p className="text-[11px] text-slate-500 leading-relaxed max-w-2xl text-justify whitespace-pre-wrap">
                   {item.description}
                 </p>
               )}
@@ -91,7 +99,7 @@ export const VibrantCreativeTemplate = ({
                   {item.points.map((pt: string, i: number) => (
                     <li
                       key={i}
-                      className="flex gap-2 text-[13px] text-slate-500 leading-relaxed"
+                      className="flex gap-2 text-[11px] text-slate-500 leading-relaxed"
                     >
                       <span style={{ color: themeColor }} className="mt-1">
                         •
@@ -119,17 +127,37 @@ export const VibrantCreativeTemplate = ({
     return (
       <div key={section.id} className="space-y-3">
         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pb-1 border-b border-slate-200">
-          {section_type === "hobbies" ? "Interests" : section_type.replace("_", " ")}
+          {section_type === "hobbies"
+            ? "Interests"
+            : section_type.replace("_", " ")}
         </h3>
         <div className="space-y-3">
           {items.map((item: any, idx: number) => (
             <div key={idx} className="group">
               <div className="font-bold text-slate-800 text-[11px] leading-tight group-hover:text-slate-900 transition-colors">
-                {item.degree || item.school || item.title || item.name || item.award}
+                {item.degree ||
+                  item.school ||
+                  item.title ||
+                  item.name ||
+                  item.award ||
+                  item.role ||
+                  item.position}
               </div>
-              {(item.date || item.year || item.company) && (
+              {(item.date ||
+                item.year ||
+                item.company ||
+                item.organization ||
+                item.issuer ||
+                item.awarder ||
+                item.publisher) && (
                 <div className="text-slate-400 text-[9px] mt-0.5 font-bold uppercase tracking-wider">
-                  {item.date || item.year || item.company}
+                  {item.date ||
+                    item.year ||
+                    item.company ||
+                    item.organization ||
+                    item.issuer ||
+                    item.awarder ||
+                    item.publisher}
                 </div>
               )}
             </div>
@@ -147,7 +175,9 @@ export const VibrantCreativeTemplate = ({
       <section key={section.id} className="relative break-inside-avoid">
         <div className="flex items-center gap-4 mb-4">
           <h2 className="text-xl font-black uppercase tracking-tight text-slate-900 whitespace-nowrap">
-            {section_type === "hobbies" ? "Interests" : section_type.replace("_", " ")}
+            {section_type === "hobbies"
+              ? "Interests"
+              : section_type.replace("_", " ")}
           </h2>
           <div className="h-0.5 flex-1 bg-slate-100 relative rounded-full">
             <div
@@ -179,7 +209,10 @@ export const VibrantCreativeTemplate = ({
                                 key={i}
                                 className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 border border-slate-100 rounded text-[10px] font-bold text-slate-600 hover:border-slate-200 transition-colors"
                               >
-                                <span className="w-1 h-1 rounded-full" style={{ backgroundColor: themeColor }}></span>
+                                {/* <span
+                                  className="w-1 h-1 rounded-full"
+                                  style={{ backgroundColor: themeColor }}
+                                ></span> */}
                                 {typeof s === "string" ? s : s.name}
                               </span>
                             ))}
@@ -198,7 +231,10 @@ export const VibrantCreativeTemplate = ({
                 key={idx}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-100 rounded-md text-[10px] font-black uppercase tracking-wide text-slate-600 shadow-sm hover:border-slate-200 transition-all hover:translate-y-[-1px]"
               >
-                <span className="w-1 h-1 rounded-full" style={{ backgroundColor: themeColor }}></span>
+                {/* <span
+                  className="w-1 h-1 rounded-full"
+                  style={{ backgroundColor: themeColor }}
+                ></span> */}
                 {typeof s === "string"
                   ? s
                   : section_type === "languages"
@@ -229,9 +265,9 @@ export const VibrantCreativeTemplate = ({
       ></div>
 
       {/* Main Container */}
-      <div className="flex-1 flex lg:flex-row flex-col">
+      <div className="flex-1 flex flex-row">
         {/* Sidebar Space (30%) */}
-        <div className="lg:w-[30%] w-full bg-slate-50 border-r border-slate-100 p-5 flex flex-col gap-6">
+        <div className="w-[30%] bg-slate-50 border-r border-slate-100 p-5 flex flex-col gap-6">
           {/* Photo & Name Card */}
           <div className="text-center lg:text-left">
             {personalInfo.showPhoto !== false && (
@@ -249,7 +285,7 @@ export const VibrantCreativeTemplate = ({
                 )}
               </div>
             )}
-            <h1 className="text-2xl font-black text-slate-900 leading-none mb-3 tracking-tight uppercase">
+            <h1 className="text-xl font-black text-slate-900 leading-none mb-3 tracking-tight uppercase">
               {personalInfo.name || "YOUR NAME"}
             </h1>
             <p
@@ -336,11 +372,21 @@ export const VibrantCreativeTemplate = ({
         <div className="flex-1 p-5 bg-white">
           <div className="space-y-6">
             {(() => {
-              const summary = sortedSections.find((s) => s.section_type === "summary");
-              const experience = sortedSections.find((s) => s.section_type === "experience");
-              const skills = sortedSections.find((s) => s.section_type === "skills");
-              const education = sortedSections.find((s) => s.section_type === "education");
-              const projects = sortedSections.find((s) => s.section_type === "projects");
+              const summary = sortedSections.find(
+                (s) => s.section_type === "summary"
+              );
+              const experience = sortedSections.find(
+                (s) => s.section_type === "experience"
+              );
+              const skills = sortedSections.find(
+                (s) => s.section_type === "skills"
+              );
+              const education = sortedSections.find(
+                (s) => s.section_type === "education"
+              );
+              const projects = sortedSections.find(
+                (s) => s.section_type === "projects"
+              );
 
               return (
                 <>
@@ -390,8 +436,11 @@ export const VibrantCreativeTemplate = ({
 
                   {/* 9. Declaration */}
                   {(() => {
-                    const declSection = sortedSections.find((s) => s.section_type === "declaration");
-                    if (!declSection || !declSection.section_data?.text) return null;
+                    const declSection = sortedSections.find(
+                      (s) => s.section_type === "declaration"
+                    );
+                    if (!declSection || !declSection.section_data?.text)
+                      return null;
                     return (
                       <section className="relative break-inside-avoid mt-4">
                         <div className="flex items-center gap-4 mb-4">

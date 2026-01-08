@@ -146,10 +146,20 @@ export const CreativeTemplate = ({
                     ).map((item: any, idx: number) => (
                       <div key={idx} className="text-sm">
                         <div className="font-bold opacity-100 leading-tight mb-1">
-                          {item.degree || item.school || item.title}
+                          {item.degree ||
+                            item.school ||
+                            item.title ||
+                            item.name ||
+                            item.role}
                         </div>
                         <div className="opacity-70 text-xs font-medium">
-                          {item.date || item.year || item.company}
+                          {item.date ||
+                            item.year ||
+                            item.company ||
+                            item.organization ||
+                            item.issuer ||
+                            item.awarder ||
+                            item.publisher}
                         </div>
                       </div>
                     ))}
@@ -196,7 +206,13 @@ export const CreativeTemplate = ({
 
                       <div className="flex justify-between items-baseline mb-2 gap-4">
                         <h4 className="text-sm font-bold text-gray-900 leading-tight">
-                          {item.position || item.title}
+                          {item.position ||
+                            item.title ||
+                            item.degree ||
+                            item.school ||
+                            item.institution ||
+                            item.name ||
+                            item.role}
                         </h4>
                         <span className="text-xs font-bold text-gray-500 bg-gray-50 px-3 py-1 rounded-full whitespace-nowrap">
                           {item.startDate} {item.endDate && `- ${item.endDate}`}
@@ -207,7 +223,14 @@ export const CreativeTemplate = ({
                         className="text-[10px] font-extrabold uppercase tracking-wider mb-1"
                         style={{ color: themeColor }}
                       >
-                        {item.company || item.issuer || item.school}
+                        {item.company ||
+                          item.issuer ||
+                          item.school ||
+                          item.institution ||
+                          item.degree ||
+                          item.organization ||
+                          item.publisher ||
+                          item.awarder}
                         {item.location && (
                           <span className="text-gray-300 ml-2 font-medium normal-case">
                             {item.location}

@@ -103,6 +103,8 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                               item.degree ||
                               item.school ||
                               item.institution ||
+                              item.name ||
+                              item.role ||
                               item.language}
                           </h3>
                           <div
@@ -113,7 +115,10 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                               item.issuer ||
                               item.school ||
                               item.institution ||
-                              item.degree}
+                              item.degree ||
+                              item.organization ||
+                              item.publisher ||
+                              item.awarder}
                             {item.location && (
                               <span className="text-slate-400 font-normal ml-2">
                                 / {item.location}

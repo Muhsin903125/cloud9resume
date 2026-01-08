@@ -187,10 +187,18 @@ export const ModernTemplate = ({
                           item.institution ||
                           item.position ||
                           item.title ||
+                          item.name ||
+                          item.role ||
                           item.language}
                       </div>
                       <div className="text-slate-400 text-[10px]">
-                        {item.degree || item.company || item.proficiency}
+                        {item.degree ||
+                          item.company ||
+                          item.organization ||
+                          item.issuer ||
+                          item.awarder ||
+                          item.publisher ||
+                          item.proficiency}
                       </div>
                       <div className="text-slate-500 text-[10px] mt-0.5 italic">
                         {item.graduationDate || item.date || item.endDate}
@@ -248,13 +256,26 @@ export const ModernTemplate = ({
                               <div className="flex justify-between items-baseline mb-1 gap-4">
                                 <div className="flex-1">
                                   <h4 className="font-bold text-slate-900 text-[13px]">
-                                    {item.position || item.title}
+                                    {item.position ||
+                                      item.title ||
+                                      item.degree ||
+                                      item.school ||
+                                      item.institution ||
+                                      item.name ||
+                                      item.role}
                                   </h4>
                                   <div
                                     className="font-medium text-[12px] mt-0.5"
                                     style={{ color: themeColor }}
                                   >
-                                    {item.company || item.issuer || item.school}
+                                    {item.company ||
+                                      item.issuer ||
+                                      item.school ||
+                                      item.institution ||
+                                      item.degree ||
+                                      item.organization ||
+                                      item.publisher ||
+                                      item.awarder}
                                     {item.location && (
                                       <span className="text-slate-400 ml-1 font-normal">
                                         • {item.location}

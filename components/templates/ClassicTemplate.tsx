@@ -42,8 +42,11 @@ export const ClassicTemplate = ({
                 <span className="text-gray-900">
                   {item.position ||
                     item.title ||
+                    item.degree ||
                     item.school ||
-                    item.institution}
+                    item.institution ||
+                    item.name ||
+                    item.role}
                 </span>
                 <span className="text-sm font-semibold text-gray-500 whitespace-nowrap ml-4">
                   {item.startDate ? `${item.startDate} — ` : ""}
@@ -51,7 +54,14 @@ export const ClassicTemplate = ({
                 </span>
               </div>
               <div className="italic text-gray-700 text-sm mb-2 font-medium">
-                {item.company || item.issuer || item.degree || item.school}
+                {item.company ||
+                  item.issuer ||
+                  item.school ||
+                  item.institution ||
+                  item.degree ||
+                  item.organization ||
+                  item.publisher ||
+                  item.awarder}
                 {item.location && ` | ${item.location}`}
               </div>
               {item.description && (

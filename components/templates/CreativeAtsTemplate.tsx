@@ -108,6 +108,8 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                               item.degree ||
                               item.school ||
                               item.institution ||
+                              item.name ||
+                              item.role ||
                               item.language}
                           </h3>
                           <div
@@ -118,7 +120,10 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                               item.issuer ||
                               item.school ||
                               item.institution ||
-                              item.degree}
+                              item.degree ||
+                              item.organization ||
+                              item.publisher ||
+                              item.awarder}
                           </div>
                         </div>
                         <div className="text-[9px] font-black bg-gray-900 text-white px-2 py-0.5 rounded-full uppercase tracking-widest whitespace-nowrap">

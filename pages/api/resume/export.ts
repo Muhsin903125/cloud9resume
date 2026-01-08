@@ -5,6 +5,7 @@ import React from "react";
 import { ResumeRenderer } from "../../../components/ResumeRenderer";
 import jwt from "jsonwebtoken";
 import { createClient } from "@supabase/supabase-js";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { PLAN_LIMITS } from "../../../lib/subscription";
 import {
   Document,
@@ -223,13 +224,31 @@ export default async function handler(
       }
     `;
 
-    // Simple watermark CSS
-    const watermarkHtml = hasWatermark
+    // Watermark using CSS running footer - appears at bottom of content on each page
+    const watermarkCss = hasWatermark
       ? `
-      <div style="position: fixed; bottom: 0; right: 0; width: 100%; text-align: right; padding: 20px 40px; opacity: 0.6; font-size: 14px; color: #64748b; pointer-events: none; z-index: 9999; font-family: sans-serif;">
-         Created with <b>Cloud9Profile.com</b>
-      </div>
+      @page {
+        @bottom-right {
+          content: "Created with Cloud9Profile.com";
+          font-size: 8px;
+          color: #94a3b8;
+          font-family: Arial, sans-serif;
+        }
+      }
+      .watermark-footer {
+        position: fixed;
+        bottom: 5mm;
+        right: 10mm;
+        font-size: 9px;
+        color: #94a3b8;
+        font-family: Arial, sans-serif;
+        z-index: 1000;
+      }
     `
+      : "";
+
+    const watermarkHtml = hasWatermark
+      ? `<div class="watermark-footer">Created with <b>Cloud9Profile.com</b></div>`
       : "";
 
     const fullHtml = `
@@ -240,6 +259,7 @@ export default async function handler(
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
             ${fontsCss}
+            ${watermarkCss}
             * { 
               box-sizing: border-box; 
             }
@@ -252,6 +272,13 @@ export default async function handler(
               print-color-adjust: exact;
               background: white;
             }
+            /* Page margin rules for proper watermark spacing */
+            @page {
+              margin-top: ${hasWatermark ? "5mm" : "0"};
+              margin-bottom: ${hasWatermark ? "18mm" : "0"};
+              margin-left: 0;
+              margin-right: 0;
+            }
             /* Remove template fixed heights so content flows naturally across pages */
             #root > div {
               padding: 0 !important;
@@ -259,6 +286,7 @@ export default async function handler(
               width: 100% !important;
               min-height: unset !important;
               height: auto !important;
+              ${hasWatermark ? "padding-bottom: 10mm !important;" : ""}
             }
             /* Ensure sections don't break awkwardly */
             section, .break-inside-avoid {
@@ -293,18 +321,52 @@ export default async function handler(
           await document.fonts.ready;
         });
 
+        // Footer template for watermark - appears on every page
+        const footerTemplate = hasWatermark
+          ? `<div style="width: 100%;text-transform: italic; text-align: right; padding: 5px 20px; font-size: 9px; color: #94a3b8; font-family: Arial, sans-serif;">
+               Created with <b>Cloud9Profile.com</b>
+             </div>`
+          : "";
+
         const pdfBuffer = await page.pdf({
           format: "A4",
           printBackground: true,
           margin: {
-            top: "0mm", // Template handles padding
-            bottom: "0mm",
+            top: "10mm", // Top margin for page breaks
+            bottom: "12mm", // Bottom margin for watermark space
             left: "0mm",
             right: "0mm",
           },
         });
 
         await browser.close();
+
+        // Post-process PDF with pdf-lib to add watermark on each page
+        let finalPdfBytes: Uint8Array = pdfBuffer;
+
+        if (hasWatermark) {
+          const pdfDoc = await PDFDocument.load(pdfBuffer);
+          const pages = pdfDoc.getPages();
+          const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+          const fontSize = 9;
+          const watermarkText = "Created with Cloud9Profile.com";
+
+          for (const page of pages) {
+            const { width, height } = page.getSize();
+            const textWidth = font.widthOfTextAtSize(watermarkText, fontSize);
+
+            // Position at bottom-right with 15mm margin from right and 8mm from bottom
+            page.drawText(watermarkText, {
+              x: width - textWidth - 15 * 2.83465, // 15mm in points
+              y: 8 * 2.83465, // 8mm from bottom in points
+              size: fontSize,
+              font: font,
+              color: rgb(0.58, 0.64, 0.72), // #94a3b8 color
+            });
+          }
+
+          finalPdfBytes = await pdfDoc.save();
+        }
 
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
@@ -313,7 +375,7 @@ export default async function handler(
             resume.title || "resume"
           }_${templateToUse}.pdf`
         );
-        return res.end(Buffer.from(pdfBuffer));
+        return res.end(Buffer.from(finalPdfBytes));
       } catch (err: any) {
         if (browser) await browser.close();
         console.error("PDF Generation Error (Puppeteer):", err);

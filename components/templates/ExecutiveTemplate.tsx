@@ -40,8 +40,11 @@ export const ExecutiveTemplate = ({
                 <h4 className="font-bold text-gray-900 text-base">
                   {item.position ||
                     item.title ||
+                    item.degree ||
                     item.school ||
-                    item.institution}
+                    item.institution ||
+                    item.name ||
+                    item.role}
                 </h4>
                 <span className="text-xs font-bold text-gray-500 whitespace-nowrap pt-1">
                   {item.startDate ? `${item.startDate} – ` : ""}
@@ -52,7 +55,14 @@ export const ExecutiveTemplate = ({
                 className="text-xs font-bold uppercase tracking-wide mb-3 opacity-90"
                 style={{ color: themeColor }}
               >
-                {item.company || item.issuer || item.degree || item.school}
+                {item.company ||
+                  item.issuer ||
+                  item.school ||
+                  item.institution ||
+                  item.degree ||
+                  item.organization ||
+                  item.publisher ||
+                  item.awarder}
                 {item.location && (
                   <span className="text-gray-400 font-medium normal-case ml-2">
                     | {item.location}
