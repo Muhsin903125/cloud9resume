@@ -335,8 +335,6 @@ const ModernTemplate = ({
           </a>
         </section>
       </main>
-
-      
     </div>
   );
 };
@@ -352,9 +350,10 @@ const CustomSectionDisplay = ({ item }: { item: any }) => {
         </h3>
         <div className="h-px flex-1 bg-gray-100"></div>
       </div>
-      <div className="prose prose-lg text-gray-600 max-w-none whitespace-pre-wrap">
-        {item.text}
-      </div>
+      <div
+        className="prose prose-lg text-gray-600 max-w-none whitespace-pre-wrap"
+        dangerouslySetInnerHTML={{ __html: item.text }}
+      />
     </section>
   );
 };
@@ -1555,9 +1554,12 @@ const GridTemplate = ({
               {custom.slice(0, 1).map((item: any, i: number) => (
                 <div key={i}>
                   <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                  <p className="text-sm text-stone-500 line-clamp-4">
-                    {item.description}
-                  </p>
+                  <div
+                    className="text-sm text-stone-500 line-clamp-4 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{
+                      __html: item.description || item.text,
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -1837,9 +1839,12 @@ const GlassTemplate = ({
                     className="bg-gradient-to-r from-white/5 to-transparent backdrop-blur-md border-l-4 border-primary rounded-r-2xl p-8"
                   >
                     <h2 className="text-2xl font-bold mb-4">{item.title}</h2>
-                    <p className="text-white/70 leading-relaxed font-light">
-                      {item.description}
-                    </p>
+                    <div
+                      className="text-white/70 leading-relaxed font-light prose prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: item.description || item.text,
+                      }}
+                    />
                   </div>
                 ))}
               </div>
@@ -1864,9 +1869,14 @@ export const generatePortfolioHTML = (
 
   switch (templateId) {
     case "professional":
+    case "executive":
       TemplateComponent = ProfessionalTemplate;
       break;
     case "creative":
+    case "gradient":
+    case "developer":
+    case "cyberpunk":
+    case "nature":
       TemplateComponent = CreativeTemplate;
       break;
     case "minimalist":
@@ -1874,12 +1884,15 @@ export const generatePortfolioHTML = (
       TemplateComponent = MinimalistTemplate;
       break;
     case "grid":
+    case "card":
       TemplateComponent = GridTemplate;
       break;
     case "glass":
+    case "glassmorphism":
       TemplateComponent = GlassTemplate;
       break;
     case "modern":
+    case "dark":
     default:
       TemplateComponent = ModernTemplate;
       break;
@@ -1932,21 +1945,29 @@ export const PortfolioRenderer = ({
 
   switch (template) {
     case "professional":
+    case "executive":
       TemplateComponent = ProfessionalTemplate;
       break;
     case "minimal":
       TemplateComponent = MinimalistTemplate;
       break;
     case "creative":
+    case "gradient":
+    case "developer":
+    case "cyberpunk":
+    case "nature":
       TemplateComponent = CreativeTemplate;
       break;
     case "grid":
+    case "card":
       TemplateComponent = GridTemplate;
       break;
     case "glass":
+    case "glassmorphism":
       TemplateComponent = GlassTemplate;
       break;
     case "modern":
+    case "dark":
     default:
       TemplateComponent = ModernTemplate;
       break;

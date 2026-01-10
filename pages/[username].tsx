@@ -75,41 +75,54 @@ export default function PortfolioPage({
         description={`Professional portfolio of ${resume.title} - ${resume.job_title}. Built with Cloud9Profile.`}
       />
 
-      <PortfolioRenderer
-        resume={resume}
-        sections={sections}
-        template={templateId}
-        settings={{
-          themeColor: themeColor,
-          visibleSections: portfolio.settings?.visibleSections,
-          isMobile: false, // Default to desktop view for public page
-        }}
-      />
-
-      {/* Premium Footer CTA */}
-      <footer className="bg-slate-900 border-t border-slate-800 py-16 px-4 relative z-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase tracking-widest mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
-            Cloud9Profile
-          </div>
-          <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">
-            Make your portfolio too.
-          </h2>
-          <p className="text-slate-400 mb-8 max-w-lg mx-auto text-lg leading-relaxed">
-            Join thousands of professionals building stunning portfolios in
-            minutes. No coding required.
-          </p>
-          <a
-            href="https://cloud9profile.com"
-            target="_blank" // Assuming external or keeping internal logic consistent if it's the same domain
-            rel="noreferrer"
-            className="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-900 font-bold rounded-full hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
-          >
-            Create Your Portfolio
-          </a>
+      {portfolio.ai_html ? (
+        <div className="fixed inset-0 w-full h-full bg-white z-[9999] overflow-hidden">
+          <iframe
+            srcDoc={portfolio.ai_html}
+            className="w-full h-full border-0"
+            title={customTitle || `${resume.title}'s Portfolio`}
+            sandbox="allow-scripts allow-same-origin"
+          />
         </div>
-      </footer>
+      ) : (
+        <>
+          <PortfolioRenderer
+            resume={resume}
+            sections={sections}
+            template={templateId}
+            settings={{
+              themeColor: themeColor,
+              visibleSections: portfolio.settings?.visibleSections,
+              isMobile: false, // Default to desktop view for public page
+            }}
+          />
+
+          {/* Premium Footer CTA (Only for non-AI templates) */}
+          <footer className="bg-slate-900 border-t border-slate-800 py-16 px-4 relative z-50">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase tracking-widest mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                Cloud9Profile
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">
+                Make your portfolio too.
+              </h2>
+              <p className="text-slate-400 mb-8 max-w-lg mx-auto text-lg leading-relaxed">
+                Join thousands of professionals building stunning portfolios in
+                minutes. No coding required.
+              </p>
+              <a
+                href="https://cloud9profile.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-900 font-bold rounded-full hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
+              >
+                Create Your Portfolio
+              </a>
+            </div>
+          </footer>
+        </>
+      )}
     </>
   );
 }

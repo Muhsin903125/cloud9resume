@@ -36,7 +36,7 @@ export default async function handler(
     // Verify ownership & get current status
     const { data: existing, error: checkError } = await supabase
       .from("portfolios")
-      .select("id, is_active")
+      .select("id, is_active, template_id")
       .eq("id", id)
       .eq("user_id", userId)
       .single();
@@ -61,6 +61,24 @@ export default async function handler(
         .eq("id", userId)
         .single();
 
+      // Check for slug uniqueness if it's being updated
+      if (updates.slug) {
+        const { data: duplicate } = await supabase
+          .from("portfolios")
+          .select("id")
+          .eq("slug", updates.slug)
+          .neq("id", id)
+          .maybeSingle();
+
+        if (duplicate) {
+          return res.status(400).json({
+            success: false,
+            error: "This URL slug is already taken. Please choose another one.",
+            code: "SLUG_TAKEN",
+          });
+        }
+      }
+
       const currentPlan = profile?.plan || "free";
       const currentCredits = profile?.credits || 0;
 
@@ -71,6 +89,24 @@ export default async function handler(
         (updates.is_active === true || updates.is_active === undefined);
 
       if (isPublishing) {
+        // Check if user is trying to publish with a premium template
+        const PREMIUM_TEMPLATES = [
+          "glassmorphism",
+          "gradient",
+          "developer",
+          "executive",
+        ];
+        const templateId = updates.template_id || existing.template_id;
+
+        if (currentPlan === "free" && PREMIUM_TEMPLATES.includes(templateId)) {
+          return res.status(403).json({
+            success: false,
+            error:
+              "Premium templates require a paid plan to publish. Upgrade to Professional or Premium to publish with this template.",
+            code: "PREMIUM_TEMPLATE_REQUIRED",
+          });
+        }
+
         // Free users: allow publishing with 30-day expiration
         // Paid users: unlimited publishing
         const PLAN_LIMITS = {

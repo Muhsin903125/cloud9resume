@@ -247,31 +247,38 @@ function DashboardLayout({
       <Toaster
         position="bottom-right"
         toastOptions={{
+          duration: 4000,
           style: {
-            background: "#1F2937",
-            color: "#fff",
+            background: "#ffffff",
+            color: "#374151",
             fontSize: "14px",
-            padding: "16px",
-            borderRadius: "8px",
+            fontWeight: "500",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            boxShadow:
+              "0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04)",
+            border: "1px solid #E5E7EB",
           },
           success: {
             style: {
-              background: "#1F2937",
-              borderLeft: "4px solid #10B981",
+              background: "#F0FDF4",
+              color: "#166534",
+              border: "1px solid #BBF7D0",
             },
             iconTheme: {
-              primary: "#10B981",
-              secondary: "#fff",
+              primary: "#22C55E",
+              secondary: "#F0FDF4",
             },
           },
           error: {
             style: {
-              background: "#1F2937",
-              borderLeft: "4px solid #EF4444",
+              background: "#FEF2F2",
+              color: "#991B1B",
+              border: "1px solid #FECACA",
             },
             iconTheme: {
               primary: "#EF4444",
-              secondary: "#fff",
+              secondary: "#FEF2F2",
             },
           },
         }}

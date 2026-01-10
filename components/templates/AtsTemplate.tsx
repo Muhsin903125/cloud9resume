@@ -96,8 +96,6 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                             item.degree ||
                             item.school ||
                             item.institution ||
-                            item.name ||
-                            item.role ||
                             item.language}
                         </h3>
                         <span className="text-sm font-normal">
@@ -112,10 +110,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                             item.issuer ||
                             item.school ||
                             item.institution ||
-                            item.degree ||
-                            item.organization ||
-                            item.publisher ||
-                            item.awarder}
+                            item.degree}
                         </span>
                         <span>{item.location}</span>
                       </div>

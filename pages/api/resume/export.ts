@@ -224,33 +224,6 @@ export default async function handler(
       }
     `;
 
-    // Watermark using CSS running footer - appears at bottom of content on each page
-    const watermarkCss = hasWatermark
-      ? `
-      @page {
-        @bottom-right {
-          content: "Created with Cloud9Profile.com";
-          font-size: 8px;
-          color: #94a3b8;
-          font-family: Arial, sans-serif;
-        }
-      }
-      .watermark-footer {
-        position: fixed;
-        bottom: 5mm;
-        right: 10mm;
-        font-size: 9px;
-        color: #94a3b8;
-        font-family: Arial, sans-serif;
-        z-index: 1000;
-      }
-    `
-      : "";
-
-    const watermarkHtml = hasWatermark
-      ? `<div class="watermark-footer">Created with <b>Cloud9Profile.com</b></div>`
-      : "";
-
     const fullHtml = `
       <!DOCTYPE html>
       <html>
@@ -259,7 +232,6 @@ export default async function handler(
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
             ${fontsCss}
-            ${watermarkCss}
             * { 
               box-sizing: border-box; 
             }
@@ -272,10 +244,11 @@ export default async function handler(
               print-color-adjust: exact;
               background: white;
             }
-            /* Page margin rules for proper watermark spacing */
+            /* Page margin rules - applies to each A4 page */
             @page {
-              margin-top: ${hasWatermark ? "5mm" : "0"};
-              margin-bottom: ${hasWatermark ? "18mm" : "0"};
+              size: A4;
+              margin-top: 15mm;
+              margin-bottom: 18mm;
               margin-left: 0;
               margin-right: 0;
             }
@@ -286,7 +259,6 @@ export default async function handler(
               width: 100% !important;
               min-height: unset !important;
               height: auto !important;
-              ${hasWatermark ? "padding-bottom: 10mm !important;" : ""}
             }
             /* Ensure sections don't break awkwardly */
             section, .break-inside-avoid {
@@ -296,7 +268,6 @@ export default async function handler(
         </head>
         <body>
           <div id="root">${htmlContent}</div>
-          ${watermarkHtml}
         </body>
       </html>
     `;
@@ -310,10 +281,10 @@ export default async function handler(
         });
         const page = await browser.newPage();
 
-        // setContent with waitUntil: networkidle0 ensures fonts are loaded
+        // setContent with increased timeout
         await page.setContent(fullHtml, {
-          waitUntil: "networkidle0",
-          timeout: 60000,
+          waitUntil: "domcontentloaded", // Changed from networkidle0 for faster loading
+          timeout: 120000, // Increased to 120 seconds
         });
 
         // Explicitly wait for fonts to be ready
@@ -321,19 +292,12 @@ export default async function handler(
           await document.fonts.ready;
         });
 
-        // Footer template for watermark - appears on every page
-        const footerTemplate = hasWatermark
-          ? `<div style="width: 100%;text-transform: italic; text-align: right; padding: 5px 20px; font-size: 9px; color: #94a3b8; font-family: Arial, sans-serif;">
-               Created with <b>Cloud9Profile.com</b>
-             </div>`
-          : "";
-
         const pdfBuffer = await page.pdf({
           format: "A4",
           printBackground: true,
           margin: {
-            top: "10mm", // Top margin for page breaks
-            bottom: "12mm", // Bottom margin for watermark space
+            top: "0mm",
+            bottom: "0mm",
             left: "0mm",
             right: "0mm",
           },
@@ -372,7 +336,7 @@ export default async function handler(
         res.setHeader(
           "Content-Disposition",
           `attachment; filename=${
-            resume.title || "resume"
+            resume.fullName || "resume"
           }_${templateToUse}.pdf`
         );
         return res.end(Buffer.from(finalPdfBytes));

@@ -80,12 +80,23 @@ export const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({
             >
               {section.section_data?.title || section.section_type}
             </h2>
-            <p style={{ opacity: 0.8 }}>
-              {section.section_data?.text ||
-                section.section_data?.summary ||
-                section.section_data?.content ||
-                "No content"}
-            </p>
+            {section.section_type === "custom" &&
+            section.section_data?.content ? (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: section.section_data.content,
+                }}
+                className="prose prose-sm max-w-none text-current"
+                style={{ color: "inherit" }}
+              />
+            ) : (
+              <p style={{ opacity: 0.8 }}>
+                {section.section_data?.text ||
+                  section.section_data?.summary ||
+                  section.section_data?.content ||
+                  "No content"}
+              </p>
+            )}
           </div>
         ))}
     </div>

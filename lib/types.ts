@@ -60,6 +60,8 @@ export interface Portfolio {
     customUser?: string;
     [key: string]: any;
   };
+  ai_html?: string | null;
+  profile_image_url?: string | null;
   is_active: boolean;
   views?: number;
   created_at: string;

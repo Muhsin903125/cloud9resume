@@ -1,6 +1,6 @@
 import { UserProfile } from "./types";
 
-export type PlanType = "free" | "professional" | "premium" | "enterprise";
+export type PlanType = "free" | "starter" | "pro" | "pro_plus" | "enterprise";
 
 export const PLAN_LIMITS = {
   free: {
@@ -13,7 +13,17 @@ export const PLAN_LIMITS = {
     canPublishPortfolio: true,
     portfolioPublishDays: 30, // Free users get 30-day publishing trial
   },
-  professional: {
+  starter: {
+    resumes: 5,
+    portfolios: 1,
+    cover_letters: 3,
+    canAddExperience: true,
+    hasWatermark: true,
+    canUseAI: true,
+    canPublishPortfolio: true,
+    portfolioPublishDays: 30,
+  },
+  pro: {
     resumes: Infinity,
     portfolios: 5,
     cover_letters: Infinity,
@@ -24,7 +34,7 @@ export const PLAN_LIMITS = {
     portfolioPublishDays: 0, // 0 = unlimited/no expiration
     customDomain: false,
   },
-  premium: {
+  pro_plus: {
     resumes: Infinity,
     portfolios: Infinity,
     cover_letters: Infinity,
@@ -95,10 +105,12 @@ export function canCreateCoverLetter(
 // Helper: Get plan display name
 export function getPlanName(plan: PlanType): string {
   switch (plan) {
-    case "professional":
-      return "Professional";
-    case "premium":
-      return "Premium";
+    case "starter":
+      return "Starter";
+    case "pro":
+      return "Professional"; // "Pro" in code, "Professional" in UI
+    case "pro_plus":
+      return "Premium"; // "Pro Plus" in code, "Premium" in UI
     case "enterprise":
       return "Enterprise";
     default:

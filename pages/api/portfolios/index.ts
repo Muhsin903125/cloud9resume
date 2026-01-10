@@ -71,12 +71,17 @@ export default async function handler(
         .single();
 
       if (profileCheck) {
-        if (["free", "professional", "premium"].includes(profileCheck.plan)) {
+        if (
+          ["free", "starter", "pro", "pro_plus", "enterprise"].includes(
+            profileCheck.plan
+          )
+        ) {
           userPlan = profileCheck.plan;
         } else {
+          // Legacy or ID-based fallback
           const pid = profileCheck.plan_id;
-          if (pid === 2 || pid === 3) userPlan = "professional";
-          else if (pid === 4) userPlan = "premium";
+          if (pid === 2 || pid === 3) userPlan = "pro"; // Was 'professional'
+          else if (pid === 4) userPlan = "pro_plus"; // Was 'premium'
           else if (pid === 5) userPlan = "enterprise";
         }
       }

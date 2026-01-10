@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import { toast } from "react-hot-toast";
 import { SectionEditor } from "../../../../components/portfolio/SectionEditor";
 import { TemplateSelector } from "../../../../components/portfolio/TemplateSelector";
 import { PortfolioPreview } from "../../../../components/portfolio/PortfolioPreview";
+import { ProfileImageUploader } from "../../../../components/portfolio/ProfileImageUploader";
+import { PublishModal } from "../../../../components/portfolio/PublishModal";
 
 interface Section {
   id: string;
@@ -50,10 +53,31 @@ export default function PortfolioEditor() {
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
-  const [message, setMessage] = useState({ type: "", text: "" });
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(
+    "desktop"
+  );
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiGeneratedHtml, setAiGeneratedHtml] = useState<string | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [userPlan, setUserPlan] = useState<
+    "free" | "professional" | "premium" | "enterprise"
+  >("free");
+  const [activeTab, setActiveTab] = useState<"content" | "design" | "settings">(
+    "content"
+  );
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [userCredits, setUserCredits] = useState(0);
+
+  useEffect(() => {
+    // Optional: Logic to switch tabs automatically if needed
+    if (sections.length > 0 && !isGeneratingAI) {
+      // Logic preserved from previous placement
+    }
+  }, [sections.length]);
 
   useEffect(() => {
     fetchResumes();
+    fetchUserPlan();
     if (id && !isNewMode) {
       fetchPortfolio();
     } else {
@@ -77,6 +101,68 @@ export default function PortfolioEditor() {
     }
   };
 
+  const fetchUserPlan = async () => {
+    try {
+      const res = await fetch("/api/credits", {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      const response = await res.json();
+      if (response.success && response.data) {
+        setUserPlan(response.data.stats.plan);
+        setUserCredits(response.data.stats.current);
+      }
+    } catch (error) {
+      console.error("Error fetching user plan:", error);
+    }
+  };
+
+  const generateWithAI = async () => {
+    if (sections.length === 0) {
+      toast.error("Import a resume first to use AI generation");
+      setShowResumeModal(true);
+      return;
+    }
+
+    if (userCredits < 1) {
+      toast.error("You don't have enough credits for AI generation");
+      return;
+    }
+
+    const token = getAuthToken();
+    setIsGeneratingAI(true);
+
+    try {
+      const res = await fetch("/api/portfolio/ai-generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          sections: sections,
+          templateStyle: selectedTemplate,
+          generateHtml: true,
+          profileImageUrl: profileImageUrl,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.data?.html) {
+        setAiGeneratedHtml(data.data.html);
+        toast.success("AI generated your portfolio design!");
+        setShowAIModal(false);
+        fetchUserPlan(); // Refresh credits
+      } else {
+        throw new Error(data.error || "AI generation failed");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "AI generation failed");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const fetchPortfolio = async () => {
     try {
       setLoading(true);
@@ -95,6 +181,12 @@ export default function PortfolioEditor() {
         setIsPublished(p.is_active || false);
         setSelectedTemplate(p.template_id || "modern");
         setSelectedResumeId(p.resume_id || null);
+        if (p.ai_html) {
+          setAiGeneratedHtml(p.ai_html);
+        }
+        if (p.profile_image_url) {
+          setProfileImageUrl(p.profile_image_url);
+        }
       }
 
       const sectionsRes = await fetch(`/api/portfolios/${id}/sections`, {
@@ -107,7 +199,7 @@ export default function PortfolioEditor() {
       }
     } catch (error) {
       console.error("Error fetching portfolio:", error);
-      setMessage({ type: "error", text: "Failed to load portfolio" });
+      toast.error("Failed to load portfolio");
     } finally {
       setLoading(false);
     }
@@ -126,19 +218,174 @@ export default function PortfolioEditor() {
       const data = await res.json();
 
       if (data.success && data.data) {
+        // Transform logic helper
+        // Transform logic helper
+        const transformSection = (s: any) => {
+          const type = s.section_type;
+          const data = s.section_data || {};
+
+          // Core sections supported by SectionEditor
+          // Ensure they have minimal data validity if needed, though usually these persist
+          if (
+            [
+              "personal_info",
+              "summary",
+              "experience",
+              "education",
+              "skills",
+              "projects",
+            ].includes(type)
+          ) {
+            return { type, data };
+          }
+
+          // Map others to Custom
+          let content = "";
+          let title =
+            type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " ");
+
+          // Validation: Check if data exists before formatting
+          if (
+            type === "certifications" &&
+            Array.isArray(data.items) &&
+            data.items.length > 0
+          ) {
+            content =
+              `<ul class="list-disc pl-5 space-y-1">` +
+              data.items
+                .map((i: any) => {
+                  const text = i.title || i.name;
+                  const sub =
+                    i.issuer || i.date
+                      ? ` (${[i.issuer, i.date].filter(Boolean).join(", ")})`
+                      : "";
+                  return `<li>${text}${sub}</li>`;
+                })
+                .join("") +
+              `</ul>`;
+          } else if (
+            type === "languages" &&
+            Array.isArray(data.items) &&
+            data.items.length > 0
+          ) {
+            content =
+              `<ul class="list-disc pl-5 space-y-1">` +
+              data.items
+                .map(
+                  (i: any) =>
+                    `<li><strong>${i.language}</strong>${
+                      i.proficiency ? ` - ${i.proficiency}` : ""
+                    }</li>`
+                )
+                .join("") +
+              `</ul>`;
+          } else if (
+            type === "volunteering" &&
+            Array.isArray(data.items) &&
+            data.items.length > 0
+          ) {
+            content =
+              `<ul class="space-y-3">` +
+              data.items
+                .map(
+                  (i: any) => `<li>
+                      <div class="font-bold">${i.organization}</div>
+                      <div class="text-sm text-gray-600">${i.startDate || ""} ${
+                    i.endDate ? "- " + i.endDate : ""
+                  }</div>
+                      ${
+                        i.description
+                          ? `<div class="text-sm mt-1">${i.description}</div>`
+                          : ""
+                      }
+                   </li>`
+                )
+                .join("") +
+              `</ul>`;
+          } else if (
+            type === "achievements" &&
+            Array.isArray(data.items) &&
+            data.items.length > 0
+          ) {
+            content =
+              `<ul class="list-disc pl-5 space-y-1">` +
+              data.items
+                .map((i: any) => `<li>${i.title || i.name || i}</li>`)
+                .join("") +
+              `</ul>`;
+          } else if (
+            type === "hobbies" &&
+            Array.isArray(data.items) &&
+            data.items.length > 0
+          ) {
+            content =
+              `<div class="flex flex-wrap gap-2">` +
+              data.items
+                .map(
+                  (i: any) =>
+                    `<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">${
+                      i.name || i
+                    }</span>`
+                )
+                .join("") +
+              `</div>`;
+          } else if (type === "declaration" && data.text) {
+            content = `<p class="italic text-gray-600">${data.text}</p>`;
+          } else if (type === "references") {
+            // Only include references if there represent actual items or explicit text, skip "Available upon request" default if empty
+            if (Array.isArray(data.items) && data.items.length > 0) {
+              content =
+                `<ul class="space-y-2">` +
+                data.items
+                  .map(
+                    (i: any) =>
+                      `<li><strong>${i.name}</strong> - ${i.company || ""}</li>`
+                  )
+                  .join("") +
+                `</ul>`;
+            } else {
+              return null; // Skip empty references
+            }
+          } else if (data.text) {
+            content = `<p>${data.text}</p>`;
+          }
+
+          // If content is still empty after checks, return null to filter it out
+          if (!content) return null;
+
+          return {
+            type: "custom",
+            data: {
+              title,
+              content,
+            },
+          };
+        };
+
         if (isNewMode) {
           // For new mode, just set local sections
-          const newSections = data.data.map((s: any, idx: number) => ({
-            id: `temp_${idx}_${Date.now()}`,
-            section_type: s.section_type,
-            section_data: s.section_data,
-            order_index: s.order_index ?? idx,
-            is_visible: s.is_visible ?? true,
-          }));
+          const newSections = data.data
+            .map((s: any, idx: number) => {
+              const transformed = transformSection(s);
+              if (!transformed) return null;
+
+              return {
+                id: `temp_${idx}_${Date.now()}`,
+                section_type: transformed.type,
+                section_data: transformed.data,
+                order_index: s.order_index ?? idx,
+                is_visible: s.is_visible ?? true,
+              };
+            })
+            .filter(Boolean); // Filter out nulls
+
           setSections(newSections);
         } else {
           // For edit mode, save to API
           for (const s of data.data) {
+            const transformed = transformSection(s);
+            if (!transformed) continue; // Skip empty sections
+
             await fetch(`/api/portfolios/${id}/sections`, {
               method: "POST",
               headers: {
@@ -146,8 +393,8 @@ export default function PortfolioEditor() {
                 Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify({
-                section_type: s.section_type,
-                section_data: s.section_data,
+                section_type: transformed.type,
+                section_data: transformed.data,
                 order_index: s.order_index,
                 is_visible: s.is_visible ?? true,
               }),
@@ -156,13 +403,10 @@ export default function PortfolioEditor() {
           // Refetch sections
           await fetchPortfolio();
         }
-        setMessage({
-          type: "success",
-          text: `Imported ${data.data.length} sections from resume`,
-        });
+        toast.success(`Imported ${data.data.length} sections from resume`);
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to import from resume" });
+      toast.error("Failed to import from resume");
     } finally {
       setSaving(false);
     }
@@ -285,11 +529,11 @@ export default function PortfolioEditor() {
           });
         }
 
-        setMessage({ type: "success", text: "Portfolio created!" });
+        toast.success("Portfolio created!");
         router.replace(`/dashboard/portfolio/${portfolioId}/edit`);
       } else {
         // Update existing portfolio
-        await fetch(`/api/portfolios/${id}`, {
+        const updateRes = await fetch(`/api/portfolios/${id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -299,8 +543,15 @@ export default function PortfolioEditor() {
             title: portfolioTitle,
             slug: portfolioSlug,
             template_id: selectedTemplate,
+            ai_html: aiGeneratedHtml || null,
+            profile_image_url: profileImageUrl || null,
           }),
         });
+
+        const updateData = await updateRes.json();
+        if (!updateData.success) {
+          throw new Error(updateData.error || "Failed to save changes");
+        }
 
         // Update sections
         await fetch(`/api/portfolios/${id}/sections`, {
@@ -312,10 +563,10 @@ export default function PortfolioEditor() {
           body: JSON.stringify({ sections }),
         });
 
-        setMessage({ type: "success", text: "Changes saved!" });
+        toast.success("Changes saved!");
       }
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message || "Failed to save" });
+      toast.error(error.message || "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -323,10 +574,7 @@ export default function PortfolioEditor() {
 
   const togglePublish = async () => {
     if (isNewMode) {
-      setMessage({
-        type: "error",
-        text: "Save the portfolio first before publishing",
-      });
+      toast.error("Save the portfolio first before publishing");
       return;
     }
 
@@ -348,15 +596,84 @@ export default function PortfolioEditor() {
       const data = await res.json();
       if (data.success) {
         setIsPublished(newStatus);
-        setMessage({
-          type: "success",
-          text: newStatus ? "Portfolio published!" : "Portfolio unpublished",
-        });
+        toast.success(
+          newStatus ? "Portfolio published!" : "Portfolio unpublished"
+        );
       } else {
         throw new Error(data.error);
       }
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message || "Failed to publish" });
+      toast.error(error.message || "Failed to publish");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handlePublish = async (username: string, replaceExisting?: string) => {
+    const token = getAuthToken();
+
+    // If replacing existing, first we need to archive/delete the old one or swap slugs
+    // But for MVP, let's just assume the backend checkUsername logic handles the "ownership" check
+    // and we just update this portfolio with the new slug and active=true
+
+    if (replaceExisting) {
+      // First unpublish the existing one
+      await fetch(`/api/portfolios/${replaceExisting}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          is_active: false,
+          slug: `${username}-${Date.now()}`,
+        }), // Free up the slug
+      });
+    }
+
+    // Now publish the current one
+    const res = await fetch(`/api/portfolios/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        is_active: true,
+        slug: username,
+      }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      setIsPublished(true);
+      setPortfolioSlug(username);
+      toast.success("Portfolio published successfully!");
+    } else {
+      throw new Error(data.error || "Failed to publish");
+    }
+  };
+
+  const handleUnpublish = async () => {
+    const token = getAuthToken();
+    setPublishing(true);
+    try {
+      const res = await fetch(`/api/portfolios/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ is_active: false }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setIsPublished(false);
+        toast.success("Portfolio unpublished");
+      }
+    } catch (error) {
+      toast.error("Failed to unpublish");
     } finally {
       setPublishing(false);
     }
@@ -376,111 +693,617 @@ export default function PortfolioEditor() {
         <title>{isNewMode ? "New" : "Edit"} Portfolio - Cloud9Profile</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-100">
-        {/* Top Bar */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center gap-4">
+      <div className="min-h-screen bg-gray-100 flex flex-col h-screen">
+        {/* Top Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0 z-20 shadow-sm relative">
+          <div className="flex items-center gap-4 w-1/3">
             <button
               onClick={() => router.push("/dashboard/portfolio")}
-              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
+              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 flex items-center gap-2 text-sm font-medium transition-colors"
             >
-              ← Back
-            </button>
-            <div className="flex flex-col">
-              <input
-                type="text"
-                value={portfolioTitle}
-                onChange={(e) => setPortfolioTitle(e.target.value)}
-                className="text-lg font-bold text-gray-900 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
-                placeholder="Portfolio Title"
-              />
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <span>cloud9profile.com/</span>
-                <input
-                  type="text"
-                  value={portfolioSlug}
-                  onChange={(e) =>
-                    setPortfolioSlug(
-                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-")
-                    )
-                  }
-                  className="bg-transparent border-b border-gray-300 focus:border-blue-500 focus:outline-none px-1 w-32"
-                  placeholder="your-slug"
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
-              </div>
-            </div>
+              </svg>
+              Back
+            </button>
+            <div className="h-6 w-px bg-gray-200 mx-2" />
+            <h1 className="text-lg font-bold text-gray-800 truncate">
+              {portfolioTitle}
+            </h1>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Publish Status */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isPublished ? "bg-green-500" : "bg-gray-300"
-                }`}
-              />
-              <span className="text-sm text-gray-600">
-                {isPublished ? "Published" : "Draft"}
-              </span>
-            </div>
-
+          <div className="flex items-center justify-center w-1/3">
             <button
-              onClick={() => setShowResumeModal(true)}
-              disabled={saving}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+              onClick={generateWithAI}
+              disabled={isGeneratingAI || sections.length === 0}
+              className="group relative inline-flex items-center justify-center px-6 py-2.5 font-semibold text-white transition-all duration-200 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full hover:from-violet-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
             >
-              Import Resume
-            </button>
+              {isGeneratingAI ? (
+                <>
+                  <svg
+                    className="w-5 h-5 mr-2 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  Building...
+                </>
+              ) : (
+                <>
+                  <span className="mr-2 text-lg">✨</span>
+                  Generate with AI
+                </>
+              )}
 
+              {sections.length === 0 && (
+                <div className="absolute top-full mt-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg text-center z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                  Import resume first
+                </div>
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 w-1/3">
             <button
               onClick={saveAllChanges}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
-              {saving ? "Saving..." : isNewMode ? "Create" : "Save"}
+              {saving ? "Saving..." : "Save Draft"}
             </button>
 
             {!isNewMode && (
               <button
-                onClick={() => setShowPublishModal(true)}
+                onClick={() =>
+                  isPublished ? handleUnpublish() : setShowPublishModal(true)
+                }
                 disabled={publishing}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
                   isPublished
-                    ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                    : "bg-green-600 text-white hover:bg-green-700"
+                    ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                    : "bg-gray-900 text-white border-transparent hover:bg-gray-800"
                 }`}
               >
                 {isPublished ? "Unpublish" : "Publish"}
               </button>
             )}
-
-            {!isNewMode && portfolioSlug && (
-              <a
-                href={`/${portfolioSlug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800"
-              >
-                View Site
-              </a>
-            )}
           </div>
         </div>
 
-        {/* Message */}
-        {message.text && (
-          <div
-            className={`mx-6 mt-4 px-4 py-3 rounded-lg text-sm ${
-              message.type === "success"
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-700"
-            }`}
-            onClick={() => setMessage({ type: "", text: "" })}
-          >
-            {message.text}
-          </div>
-        )}
+        {/* Main Editor Area */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Panel - Tabbed Interface */}
+          <div className="w-[600px] bg-white border-r border-gray-200 flex flex-col">
+            {/* Profile Summary Header */}
+            <div className="p-6 pb-2 border-b border-gray-100 flex gap-4 items-center bg-white shrink-0">
+              <ProfileImageUploader
+                imageUrl={profileImageUrl}
+                onImageChange={setProfileImageUrl}
+                portfolioId={(id as string) || ""}
+              />
+              <div className="flex-1 min-w-0">
+                <h2
+                  className="text-xl font-bold text-gray-900 truncate"
+                  title={portfolioTitle}
+                >
+                  {portfolioTitle}
+                </h2>
+                <a
+                  href={`https://cloud9profile.com/${portfolioSlug}`}
+                  target="_blank"
+                  className="text-xs text-blue-600 hover:underline truncate block"
+                >
+                  cloud9profile.com/{portfolioSlug || "..."}
+                </a>
+              </div>
+            </div>
 
+            {/* Tabs Navigation */}
+            <div className="px-6 border-b border-gray-200 flex items-center gap-6 shrink-0 bg-white">
+              {(["content", "design", "settings"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-4 text-sm font-medium border-b-2 transition-colors capitalize ${
+                    activeTab === tab
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Panels */}
+            <div className="flex-1 overflow-y-auto bg-gray-50/30">
+              {/* CONTENT TAB */}
+              {activeTab === "content" && (
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                      Resume Sections
+                    </h3>
+                    <button
+                      onClick={() => setShowAddSection(!showAddSection)}
+                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                      title="Add Section"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {showAddSection && (
+                    <div className="mb-4 p-3 bg-white rounded-xl shadow-sm border border-gray-200 animate-in fade-in slide-in-from-top-2">
+                      <div className="text-xs font-medium text-gray-500 mb-2">
+                        Select section type:
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {SECTION_TYPES.map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => addSection(type.id)}
+                            className="px-3 py-2 text-left text-xs font-medium bg-gray-50 border border-transparent hover:border-blue-200 hover:bg-blue-50 rounded-lg transition-colors text-gray-700"
+                          >
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3 pb-8">
+                    {sections.length === 0 ? (
+                      <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-white">
+                        <p className="text-gray-400 text-sm mb-2">
+                          No sections added yet
+                        </p>
+                        <button
+                          onClick={() => setShowResumeModal(true)}
+                          className="text-blue-600 font-medium hover:underline text-sm"
+                        >
+                          Import from Resume
+                        </button>
+                      </div>
+                    ) : (
+                      sections
+                        .sort((a, b) => {
+                          const isCustomA = a.section_type === "custom";
+                          const isCustomB = b.section_type === "custom";
+                          if (isCustomA && !isCustomB) return 1;
+                          if (!isCustomA && isCustomB) return -1;
+                          return a.order_index - b.order_index;
+                        })
+                        .map((section) => (
+                          <SectionEditor
+                            key={section.id}
+                            section={section}
+                            onUpdate={updateSection}
+                            onDelete={deleteSection}
+                            onToggleVisibility={toggleVisibility}
+                          />
+                        ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* DESIGN TAB */}
+              {activeTab === "design" && (
+                <div className="p-6">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">
+                    Templates & Style
+                  </h3>
+                  <TemplateSelector
+                    selectedTemplate={selectedTemplate}
+                    onSelect={(tid) => {
+                      setSelectedTemplate(tid);
+                      setAiGeneratedHtml(null); // Switch away from AI if template is picked
+                    }}
+                    userPlan={userPlan}
+                    onAIGenerate={() => setShowAIModal(true)}
+                    isGenerating={isGeneratingAI}
+                    resumeData={sections.length > 0}
+                  />
+
+                  {/* AI Generation Modal */}
+                  {showAIModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                      <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        {/* Header Image/Icon Area */}
+                        <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-8 text-center relative">
+                          <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+                          <div className="relative inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl border border-white/30 shadow-xl mb-4 group ring-4 ring-white/10">
+                            <svg
+                              className="w-10 h-10 text-white animate-pulse"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                              />
+                            </svg>
+                          </div>
+                          <h3 className="text-2xl font-black text-white tracking-tight">
+                            AI Magic Generator
+                          </h3>
+                          <p className="text-indigo-100/80 text-sm font-medium mt-1">
+                            Transform data into professional design
+                          </p>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="p-8 space-y-6">
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-indigo-100 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-xl shadow-sm">
+                                  🪙
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    Available Balance
+                                  </p>
+                                  <p className="text-lg font-black text-gray-900">
+                                    {userCredits} Credits
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white border border-indigo-100 flex items-center justify-center text-xl shadow-sm text-indigo-600">
+                                  ✨
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                                    Generation Cost
+                                  </p>
+                                  <p className="text-lg font-black text-indigo-700">
+                                    1 Credit
+                                  </p>
+                                </div>
+                              </div>
+                              {userCredits < 1 && (
+                                <span className="px-3 py-1 bg-red-100 text-red-600 text-[10px] font-black rounded-full uppercase tracking-tighter">
+                                  Insufficient
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            {!isGeneratingAI ? (
+                              <div className="grid grid-cols-2 gap-3">
+                                <button
+                                  onClick={() => setShowAIModal(false)}
+                                  className="px-6 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all active:scale-95"
+                                >
+                                  Maybe Later
+                                </button>
+                                <button
+                                  onClick={generateWithAI}
+                                  disabled={userCredits < 1}
+                                  className={`px-6 py-4 rounded-2xl font-bold text-white shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                                    userCredits < 1
+                                      ? "bg-gray-300 cursor-not-allowed grayscale"
+                                      : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-indigo-200 hover:scale-[1.02]"
+                                  }`}
+                                >
+                                  Run Magic ✨
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                                <div className="relative w-20 h-20">
+                                  <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+                                  <div className="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+                                  <div className="absolute inset-4 bg-indigo-50 rounded-full flex items-center justify-center animate-pulse">
+                                    <span className="text-2xl">🧠</span>
+                                  </div>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-lg font-black text-gray-900 tracking-tight">
+                                    AI is Thinking...
+                                  </p>
+                                  <p className="text-sm text-gray-500 font-medium">
+                                    Crafting your professional experience
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <p className="text-[10px] text-center text-gray-400 font-medium px-4">
+                            This process takes about 5-10 seconds. Please do not
+                            refresh the page while the magic is happening.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SETTINGS TAB */}
+              {activeTab === "settings" && (
+                <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-gray-900 tracking-tight">
+                      Portfolio Settings
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Configure your portfolio identity and public access.
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="group transition-all duration-200">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 group-focus-within:text-blue-600 transition-colors">
+                        Display Title
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="e.g. My Professional Portfolio"
+                          value={portfolioTitle}
+                          onChange={(e) => setPortfolioTitle(e.target.value)}
+                          className="w-full px-5 py-3.5 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all duration-300 text-gray-900 font-medium placeholder:text-gray-300 shadow-sm"
+                        />
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="group transition-all duration-200">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 group-focus-within:text-blue-600 transition-colors">
+                        Custom URL Slug
+                      </label>
+                      <div className="flex items-stretch shadow-sm rounded-2xl overflow-hidden border-2 border-gray-100 group-focus-within:border-blue-500 group-focus-within:ring-4 group-focus-within:ring-blue-500/10 transition-all duration-300 bg-gray-50">
+                        <div className="flex items-center px-4 bg-gray-100/50 text-gray-400 font-semibold text-xs border-r-2 border-gray-100 select-none">
+                          cloud9profile.com/
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="unique-slug"
+                          value={portfolioSlug}
+                          onChange={(e) =>
+                            setPortfolioSlug(
+                              e.target.value
+                                .toLowerCase()
+                                .replace(/[^a-z0-9-]/g, "-")
+                            )
+                          }
+                          className="flex-1 px-5 py-3.5 bg-white outline-none text-gray-900 font-bold placeholder:text-gray-200 tracking-wide"
+                        />
+                      </div>
+                      <p className="mt-2 text-[10px] text-gray-400 flex items-center gap-1.5 px-1 bg-blue-50/0 group-hover:bg-blue-50/50 py-1 rounded-lg transition-colors">
+                        <svg
+                          className="w-3.5 h-3.5 text-blue-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        Your unique portfolio link. Only lowercase letters,
+                        numbers, and dashes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Panel - Preview */}
+          <div className="flex-1 bg-gray-200 overflow-y-auto flex flex-col custom-scrollbar">
+            <style jsx global>{`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background-color: #cbd5e1;
+                border-radius: 4px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background-color: #94a3b8;
+              }
+            `}</style>
+            {/* Viewport Toggle */}
+            <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Preview:</span>
+                <button
+                  onClick={() => setPreviewMode("desktop")}
+                  className={`p-2 rounded-lg transition-all flex items-center gap-1.5 ${
+                    previewMode === "desktop"
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-500 hover:bg-gray-100"
+                  }`}
+                  title="Desktop preview"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span className="text-xs font-medium">Desktop</span>
+                </button>
+                <button
+                  onClick={() => setPreviewMode("mobile")}
+                  className={`p-2 rounded-lg transition-all flex items-center gap-1.5 ${
+                    previewMode === "mobile"
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-500 hover:bg-gray-100"
+                  }`}
+                  title="Mobile preview"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span className="text-xs font-medium">Mobile</span>
+                </button>
+              </div>
+
+              {/* AI Design indicator */}
+              {aiGeneratedHtml && (
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 text-xs font-medium rounded-full flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" />
+                    </svg>
+                    AI Design
+                  </span>
+                  <button
+                    onClick={() => setAiGeneratedHtml(null)}
+                    className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Preview Container */}
+            <div className="flex-1 p-6 flex justify-center overflow-auto">
+              <div
+                className={`bg-white rounded-xl shadow-lg overflow-hidden custom-scrollbar  overflow-y-auto transition-all duration-300 ${
+                  previewMode === "mobile"
+                    ? "w-[375px] max-w-[375px]"
+                    : "w-full max-w-4xl"
+                }`}
+                style={{
+                  minHeight: previewMode === "mobile" ? "667px" : "600px",
+                }}
+              >
+                {/* Mobile Frame */}
+                {previewMode === "mobile" && (
+                  <div className="bg-gray-900 h-6 flex items-center justify-center">
+                    <div className="w-16 h-1 bg-gray-700 rounded-full"></div>
+                  </div>
+                )}
+
+                {/* AI Generated HTML Preview */}
+                {aiGeneratedHtml ? (
+                  <iframe
+                    srcDoc={aiGeneratedHtml}
+                    className="w-full h-full border-0"
+                    style={{
+                      minHeight: previewMode === "mobile" ? "641px" : "600px",
+                    }}
+                    title="AI Generated Portfolio"
+                    sandbox="allow-scripts allow-same-origin"
+                  />
+                ) : (
+                  <div
+                    className={
+                      previewMode === "mobile" ? "overflow-y-auto" : ""
+                    }
+                    style={{
+                      maxHeight:
+                        previewMode === "mobile"
+                          ? "calc(667px - 24px)"
+                          : "auto",
+                    }}
+                  >
+                    <PortfolioPreview
+                      sections={sections}
+                      templateId={selectedTemplate}
+                      portfolioSettings={{
+                        name: portfolioTitle,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Resume Picker Modal */}
         {showResumeModal && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -540,129 +1363,15 @@ export default function PortfolioEditor() {
           </div>
         )}
 
-        {/* Publish Confirmation Modal */}
-        {showPublishModal && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-2">
-                {isPublished ? "Unpublish Portfolio?" : "Publish Portfolio?"}
-              </h2>
-              <p className="text-gray-600 mb-6">
-                {isPublished
-                  ? "Your portfolio will no longer be visible at the public URL."
-                  : `Your portfolio will be live at cloud9profile.com/${
-                      portfolioSlug || "[slug]"
-                    }`}
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowPublishModal(false)}
-                  className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={togglePublish}
-                  className={`flex-1 py-2 rounded-lg text-white ${
-                    isPublished
-                      ? "bg-amber-600 hover:bg-amber-700"
-                      : "bg-green-600 hover:bg-green-700"
-                  }`}
-                >
-                  {isPublished ? "Unpublish" : "Publish"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main Editor */}
-        <div className="flex h-[calc(100vh-65px)]">
-          {/* Left Panel - Editor */}
-          <div className="w-[45%] bg-white border-r border-gray-200 overflow-y-auto p-6">
-            {/* Template Selector */}
-            <div className="mb-6">
-              <TemplateSelector
-                selectedTemplate={selectedTemplate}
-                onSelect={setSelectedTemplate}
-              />
-            </div>
-
-            <div className="border-t border-gray-200 pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-gray-700">
-                  Sections
-                </h3>
-                <button
-                  onClick={() => setShowAddSection(!showAddSection)}
-                  className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg"
-                >
-                  + Add Section
-                </button>
-              </div>
-
-              {showAddSection && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-xs font-medium text-gray-500 mb-2">
-                    Choose section type:
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {SECTION_TYPES.map((type) => (
-                      <button
-                        key={type.id}
-                        onClick={() => addSection(type.id)}
-                        className="px-3 py-2 text-left text-sm bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50"
-                      >
-                        {type.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {sections.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <p className="mb-2">No sections yet</p>
-                    <button
-                      onClick={() => setShowResumeModal(true)}
-                      className="text-blue-600 hover:underline text-sm"
-                    >
-                      Import from your resume
-                    </button>
-                  </div>
-                ) : (
-                  sections
-                    .sort((a, b) => a.order_index - b.order_index)
-                    .map((section) => (
-                      <SectionEditor
-                        key={section.id}
-                        section={section}
-                        onUpdate={updateSection}
-                        onDelete={deleteSection}
-                        onToggleVisibility={toggleVisibility}
-                      />
-                    ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Panel - Preview */}
-          <div className="flex-1 bg-gray-200 overflow-y-auto">
-            <div className="p-6">
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden max-w-2xl mx-auto min-h-[600px]">
-                <PortfolioPreview
-                  sections={sections}
-                  templateId={selectedTemplate}
-                  portfolioSettings={{
-                    name: portfolioTitle,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* New Publish Modal */}
+        <PublishModal
+          isOpen={showPublishModal}
+          onClose={() => setShowPublishModal(false)}
+          onPublish={handlePublish}
+          currentSlug={portfolioSlug}
+          portfolioId={(id as string) || ""}
+          userPlan={userPlan}
+        />
       </div>
     </>
   );
