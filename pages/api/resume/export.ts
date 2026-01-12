@@ -6,7 +6,7 @@ import { ResumeRenderer } from "../../../components/ResumeRenderer";
 import jwt from "jsonwebtoken";
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import { PLAN_LIMITS } from "../../../lib/subscription";
+import { PLAN_LIMITS, CREDIT_COSTS } from "../../../lib/subscription";
 import {
   Document,
   Packer,
@@ -47,46 +47,39 @@ export default async function handler(
       if (userId) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("downloads_used, downloads_limit, plan_id, plan")
+          .select("credits, plan")
           .eq("id", userId)
           .single();
 
         if (profile) {
-          // Determine Plan
-          let userPlan = "free";
-          if (
-            profile.plan &&
-            ["free", "professional", "premium"].includes(profile.plan)
-          ) {
-            userPlan = profile.plan;
-          } else {
-            const pid = profile.plan_id;
-            if (pid === 2 || pid === 3) userPlan = "professional";
-            else if (pid === 4) userPlan = "premium";
-            else if (pid === 5) userPlan = "enterprise";
-          }
-
+          const userPlan = profile.plan || "free";
           const planLimits =
             PLAN_LIMITS[userPlan as keyof typeof PLAN_LIMITS] ||
             PLAN_LIMITS.free;
           hasWatermark = planLimits.hasWatermark;
 
-          // Check download limit (if not unlimited i.e. -1)
-          if (
-            profile.downloads_limit !== -1 &&
-            profile.downloads_used >= profile.downloads_limit
-          ) {
+          const downloadCost = CREDIT_COSTS.resume_download_pdf;
+
+          // Check if user has sufficient credits
+          if ((profile.credits || 0) < downloadCost) {
             return res.status(403).json({
-              error:
-                "Monthly download limit reached. Upgrade to Pro for unlimited downloads.",
+              error: `Insufficient credits. Download costs ${downloadCost} credits.`,
             });
           }
 
-          // Increment usage
-          await supabase
-            .from("profiles")
-            .update({ downloads_used: (profile.downloads_used || 0) + 1 })
-            .eq("id", userId);
+          // Deduct credits
+          await supabase.rpc("deduct_credits", {
+            p_user_id: userId,
+            p_amount: downloadCost,
+          });
+
+          // Log credit usage
+          await supabase.from("credit_usage").insert({
+            user_id: userId,
+            credits_used: downloadCost,
+            action: "resume_download_pdf",
+            description: `Resume Download (${format.toUpperCase()})`,
+          });
         }
       }
     } catch (e) {

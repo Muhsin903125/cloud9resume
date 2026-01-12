@@ -7,7 +7,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const ATS_CHECK_COST = 5;
+import { CREDIT_COSTS } from "../../../lib/subscription";
+
+const ATS_CHECK_COST = CREDIT_COSTS.ats_analysis;
 
 // Helper to extract user ID (duplicating utils for isolation/speed,
 // normally we'd export this from a middleware)

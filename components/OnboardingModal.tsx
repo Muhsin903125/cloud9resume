@@ -111,7 +111,7 @@ export default function OnboardingModal({
           </div>
 
           {/* Header */}
-          <div className="relative px-8 py-8 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700">
+          <div className="relative px-6 py-6 sm:px-8 sm:py-8 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700">
             {/* Back Button */}
             {step === "import" && (
               <button
@@ -146,7 +146,7 @@ export default function OnboardingModal({
             </div>
 
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+              <h2 className="text-xl sm:text-3xl font-bold text-white mb-2 tracking-tight">
                 {step === "method" && "Welcome to Cloud9Profile"}
                 {step === "import" && "Import Your Resume"}
               </h2>
@@ -160,7 +160,7 @@ export default function OnboardingModal({
           </div>
 
           {/* Content */}
-          <div className="p-8">
+          <div className="p-4 sm:p-8">
             {/* Step 1: Method Selection */}
             {step === "method" && (
               <div className="space-y-6">
@@ -172,49 +172,75 @@ export default function OnboardingModal({
                       What You'll Get Access To
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center group">
-                      <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <DocumentTextIcon className="w-6 h-6" />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                    <button
+                      onClick={() => {
+                        onComplete();
+                        router.push("/dashboard/resume");
+                      }}
+                      className="text-center group p-2 rounded-xl hover:bg-white transition-all"
+                    >
+                      <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <DocumentTextIcon className="w-5 h-5 md:w-6 md:h-6" />
                       </div>
-                      <p className="text-xs font-semibold text-gray-800">
+                      <p className="text-[10px] md:text-xs font-semibold text-gray-800">
                         Resume Builder
                       </p>
-                      <p className="text-[10px] text-gray-500">
+                      <p className="hidden md:block text-[10px] text-gray-500">
                         ATS-optimized templates
                       </p>
-                    </div>
-                    <div className="text-center group">
-                      <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <BriefcaseIcon className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        onComplete();
+                        router.push("/dashboard/portfolio");
+                      }}
+                      className="text-center group p-2 rounded-xl hover:bg-white transition-all"
+                    >
+                      <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <BriefcaseIcon className="w-5 h-5 md:w-6 md:h-6" />
                       </div>
-                      <p className="text-xs font-semibold text-gray-800">
+                      <p className="text-[10px] md:text-xs font-semibold text-gray-800">
                         Portfolio Builder
                       </p>
-                      <p className="text-[10px] text-gray-500">
+                      <p className="hidden md:block text-[10px] text-gray-500">
                         Showcase your work
                       </p>
-                    </div>
-                    <div className="text-center group">
-                      <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <EnvelopeIcon className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        onComplete();
+                        router.push("/dashboard/cover-letters");
+                      }}
+                      className="text-center group p-2 rounded-xl hover:bg-white transition-all"
+                    >
+                      <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <EnvelopeIcon className="w-5 h-5 md:w-6 md:h-6" />
                       </div>
-                      <p className="text-xs font-semibold text-gray-800">
+                      <p className="text-[10px] md:text-xs font-semibold text-gray-800">
                         Cover Letters
                       </p>
-                      <p className="text-[10px] text-gray-500">
+                      <p className="hidden md:block text-[10px] text-gray-500">
                         AI-powered writing
                       </p>
-                    </div>
-                    <div className="text-center group">
-                      <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <ChartBarIcon className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        onComplete();
+                        router.push("/dashboard/ats");
+                      }}
+                      className="text-center group p-2 rounded-xl hover:bg-white transition-all"
+                    >
+                      <div className="w-12 h-12 md:w-14 md:h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <ChartBarIcon className="w-5 h-5 md:w-6 md:h-6" />
                       </div>
-                      <p className="text-xs font-semibold text-gray-800">
+                      <p className="text-[10px] md:text-xs font-semibold text-gray-800">
                         ATS Score Check
                       </p>
-                      <p className="text-[10px] text-gray-500">Beat the bots</p>
-                    </div>
+                      <p className="hidden md:block text-[10px] text-gray-500">
+                        Beat the bots
+                      </p>
+                    </button>
                   </div>
                 </div>
 

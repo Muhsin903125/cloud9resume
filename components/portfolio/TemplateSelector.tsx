@@ -4,6 +4,7 @@ import {
   CheckIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
+import { PlanType } from "../../lib/subscription";
 
 export interface PortfolioTemplate {
   id: string;
@@ -120,7 +121,7 @@ export const PORTFOLIO_TEMPLATES: PortfolioTemplate[] = [
 interface TemplateSelectorProps {
   selectedTemplate: string;
   onSelect: (templateId: string) => void;
-  userPlan?: "free" | "professional" | "premium" | "enterprise";
+  userPlan?: PlanType;
   onAIGenerate: () => void;
   isGenerating: boolean;
   resumeData: boolean;

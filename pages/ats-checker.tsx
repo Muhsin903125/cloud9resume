@@ -1,6 +1,5 @@
 import { NextPage } from "next";
 import { useState, useRef } from "react";
-import Head from "next/head";
 import Link from "next/link";
 import { getAssetUrl } from "../lib/common-functions";
 import SEO from "../components/SEO";
@@ -27,18 +26,6 @@ interface ATSResult {
   weaknesses: string[];
   recommendations: string[];
 }
-
-const colors = {
-  primary: "#0f172a", // slate-900
-  secondary: "#64748b", // slate-500
-  tertiary: "#94a3b8", // slate-400
-  accent: "#2563eb", // blue-600
-  success: "#10b981",
-  error: "#ef4444",
-  warning: "#f59e0b",
-  light: "#f8fafc", // slate-50
-  border: "#e2e8f0", // slate-200
-};
 
 const PublicATSChecker: NextPage = () => {
   const [resumeText, setResumeText] = useState("");
@@ -186,12 +173,6 @@ const PublicATSChecker: NextPage = () => {
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return colors.success;
-    if (score >= 60) return colors.warning;
-    return colors.error;
-  };
-
   const getScoreLabel = (score: number) => {
     if (score >= 80) return "Excellent";
     if (score >= 60) return "Good";
@@ -201,733 +182,584 @@ const PublicATSChecker: NextPage = () => {
 
   return (
     <>
-      <Head>
-        <title>ATS Resume Checker - Cloud9Profile</title>
-        <meta
-          name="description"
-          content="Free ATS resume checker. Analyze keyword match, formatting, and get recommendations."
-        />
-      </Head>
+      <SEO
+        title="ATS Resume Checker - Cloud9Profile"
+        description="Free ATS resume checker. Analyze keyword match, formatting, and get recommendations."
+        canonical="https://cloud9profile.com/ats-checker"
+      />
 
-      <div className="min-h-screen bg-slate-50 pt-24 font-sans">
-        {/* Hero / Tool Section */}
-        <section className="bg-slate-900 text-white py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-                ATS Resume Checker
-              </h1>
-              <p className="text-xl text-slate-400">
-                Check how your resume parses against job descriptions. Used by
-                over 10,000 job seekers.
-              </p>
-            </div>
+      <div className="min-h-screen bg-[#0f172a] text-white font-sans selection:bg-blue-500/30 overflow-x-hidden">
+        {/* Decorative Background Elements */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse" />
+        </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-xl text-slate-900">
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: results ? "1fr 300px" : "1fr",
-                  gap: "40px",
-                }}
-              >
-                {/* Left Column - Input */}
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "24px",
-                  }}
-                >
-                  {/* File Upload */}
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        marginBottom: "12px",
-                        color: colors.primary,
-                      }}
-                    >
-                      Upload resume
-                    </label>
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDragging(true);
-                      }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsDragging(false);
-                        const file = e.dataTransfer.files[0];
-                        if (file) handleFileUpload(file);
-                      }}
-                      style={{
-                        border: `2px dashed ${
-                          isDragging ? colors.accent : colors.border
-                        }`,
-                        borderRadius: "8px",
-                        padding: "32px",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        background: isDragging
-                          ? "rgba(59, 130, 246, 0.05)"
-                          : colors.light,
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) =>
-                          e.target.files && handleFileUpload(e.target.files[0])
-                        }
-                        style={{ display: "none" }}
-                        disabled={isUploading}
-                      />
-                      <div
-                        onClick={() =>
-                          !isUploading && fileInputRef.current?.click()
-                        }
-                      >
-                        {isUploading ? (
-                          <>
-                            <div
-                              style={{ fontSize: "20px", marginBottom: "12px" }}
-                            >
-                              ⏳
-                            </div>
-                            <p
-                              style={{
-                                margin: "0",
-                                fontSize: "14px",
-                                color: colors.secondary,
-                              }}
-                            >
-                              Processing...
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <div
-                              style={{ fontSize: "24px", marginBottom: "8px" }}
-                            >
-                              📄
-                            </div>
-                            <p
-                              style={{
-                                margin: "0 0 4px 0",
-                                fontSize: "14px",
-                                fontWeight: "500",
-                                color: colors.primary,
-                              }}
-                            >
-                              Drag & drop or click to upload
-                            </p>
-                            <p
-                              style={{
-                                margin: "0",
-                                fontSize: "12px",
-                                color: colors.tertiary,
-                              }}
-                            >
-                              PDF, DOC, DOCX up to 10MB
-                            </p>
-                          </>
-                        )}
-                        {fileName && (
-                          <p
-                            style={{
-                              margin: "8px 0 0 0",
-                              fontSize: "12px",
-                              color: colors.success,
-                            }}
-                          >
-                            ✓ {fileName}
-                          </p>
-                        )}
+        <div className="relative z-10 pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12 sm:mb-16 px-4">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-black bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 mb-6 tracking-tight leading-[1.1] pt-2 pb-2">
+              ATS Resume Checker
+            </h1>
+            <p className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Optimize your resume for applicant tracking systems with
+              AI-powered insights and keyword matching.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Input Section */}
+            <div
+              className={`${
+                results ? "lg:col-span-12 xl:col-span-8" : "lg:col-span-12"
+              } space-y-6`}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Resume Upload/Paste */}
+                <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 hover:border-blue-500/30 transition-all duration-500 group shadow-2xl flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <span className="text-blue-400">01</span>
                       </div>
-                    </div>
+                      Your Resume
+                    </h3>
+                    {resumeText.length > 0 && (
+                      <span className="text-xs text-slate-500 font-mono">
+                        {resumeText.length} chars
+                      </span>
+                    )}
                   </div>
 
-                  {/* Resume Text */}
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: "12px",
-                      }}
-                    >
-                      <label
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: colors.primary,
-                        }}
-                      >
-                        Resume text
-                      </label>
-                      {resumeText.length > 0 && (
-                        <span
-                          style={{ fontSize: "12px", color: colors.tertiary }}
-                        >
-                          {resumeText.length} characters
-                        </span>
-                      )}
-                    </div>
-                    <textarea
-                      value={resumeText}
-                      onChange={(e) => setResumeText(e.target.value)}
-                      placeholder="Paste your resume here..."
-                      style={{
-                        width: "100%",
-                        height: "160px",
-                        padding: "12px",
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: "6px",
-                        fontSize: "13px",
-                        lineHeight: "1.5",
-                        fontFamily: "inherit",
-                        resize: "none",
-                        boxSizing: "border-box",
-                      }}
-                      disabled={isUploading}
-                    />
-                  </div>
-
-                  {/* Job Description */}
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: "12px",
-                      }}
-                    >
-                      <label
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: colors.primary,
-                        }}
-                      >
-                        Job description
-                      </label>
-                      {jobDescription.length > 0 && (
-                        <span
-                          style={{ fontSize: "12px", color: colors.tertiary }}
-                        >
-                          {jobDescription.length} characters
-                        </span>
-                      )}
-                    </div>
-                    <textarea
-                      value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
-                      placeholder="Paste the job description..."
-                      style={{
-                        width: "100%",
-                        height: "120px",
-                        padding: "12px",
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: "6px",
-                        fontSize: "13px",
-                        lineHeight: "1.5",
-                        fontFamily: "inherit",
-                        resize: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-
-                  {/* Messages */}
-                  {error && (
-                    <div
-                      style={{
-                        padding: "12px",
-                        borderRadius: "6px",
-                        fontSize: "13px",
-                        color: colors.error,
-                        background: "rgba(239, 68, 68, 0.1)",
-                        border: `1px solid ${colors.error}`,
-                      }}
-                    >
-                      {error}
-                    </div>
-                  )}
-
-                  {emailSuccess && (
-                    <div
-                      style={{
-                        padding: "12px",
-                        borderRadius: "6px",
-                        fontSize: "13px",
-                        color: colors.success,
-                        background: "rgba(16, 185, 129, 0.1)",
-                        border: `1px solid ${colors.success}`,
-                      }}
-                    >
-                      ✓ Report sent to your email
-                    </div>
-                  )}
-
-                  {/* Analyze Button */}
-                  <button
-                    onClick={handleAnalyze}
-                    disabled={
-                      isAnalyzing ||
-                      !resumeText.trim() ||
-                      !jobDescription.trim()
-                    }
-                    style={{
-                      padding: "12px 24px",
-                      background:
-                        isAnalyzing ||
-                        !resumeText.trim() ||
-                        !jobDescription.trim()
-                          ? colors.border
-                          : colors.accent,
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor:
-                        isAnalyzing ||
-                        !resumeText.trim() ||
-                        !jobDescription.trim()
-                          ? "not-allowed"
-                          : "pointer",
-                      transition: "background 0.2s",
-                    }}
-                  >
-                    {isAnalyzing ? "⏳ Analyzing..." : "✨ Analyze"}
-                  </button>
-                </div>
-
-                {/* Right Column - Results */}
-                {results && (
                   <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "20px",
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragging(true);
                     }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragging(false);
+                      const file = e.dataTransfer.files[0];
+                      if (file) handleFileUpload(file);
+                    }}
+                    className={`relative mb-6 rounded-2xl border-2 border-dashed transition-all duration-300 ${
+                      isDragging
+                        ? "border-blue-500 bg-blue-500/5"
+                        : "border-white/5 bg-black/20 hover:border-white/10"
+                    } p-6 text-center cursor-pointer`}
+                    onClick={() =>
+                      !isUploading && fileInputRef.current?.click()
+                    }
                   >
-                    {/* Score Card */}
-                    <div
-                      style={{
-                        background: "white",
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: "8px",
-                        padding: "20px",
-                        textAlign: "center",
-                      }}
-                    >
-                      <div style={{ marginBottom: "16px" }}>
-                        <div
-                          style={{
-                            width: "80px",
-                            height: "80px",
-                            borderRadius: "50%",
-                            margin: "0 auto 12px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: `${getScoreColor(results.score)}15`,
-                            border: `3px solid ${getScoreColor(results.score)}`,
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: "28px",
-                              fontWeight: "700",
-                              color: getScoreColor(results.score),
-                            }}
-                          >
-                            {results.score}
-                          </span>
-                        </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) =>
+                        e.target.files && handleFileUpload(e.target.files[0])
+                      }
+                      className="hidden"
+                    />
+                    {isUploading ? (
+                      <div className="flex flex-col items-center py-4">
+                        <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
+                        <p className="text-sm text-slate-400">
+                          Processing Document...
+                        </p>
                       </div>
-                      <h3
-                        style={{
-                          margin: "0 0 4px 0",
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: colors.primary,
-                        }}
-                      >
-                        {getScoreLabel(results.score)}
-                      </h3>
-                      <p
-                        style={{
-                          margin: "0",
-                          fontSize: "12px",
-                          color: colors.tertiary,
-                        }}
-                      >
-                        {results.matchPercentage}% match
-                      </p>
-                    </div>
-
-                    {/* Quick Stats */}
-                    <div
-                      style={{
-                        background: "white",
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: "8px",
-                        padding: "16px",
-                        fontSize: "13px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          marginBottom: "12px",
-                          paddingBottom: "12px",
-                          borderBottom: `1px solid ${colors.border}`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            marginBottom: "4px",
-                          }}
-                        >
-                          <span style={{ color: colors.tertiary }}>
-                            Keywords
-                          </span>
-                          <span
-                            style={{ fontWeight: "600", color: colors.primary }}
+                    ) : (
+                      <div className="py-2">
+                        <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:bg-blue-500/10 transition-all">
+                          <svg
+                            className="w-8 h-8 text-slate-400 group-hover:text-blue-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
                           >
-                            {results.matchedKeywords.length}/
-                            {results.keywordStats.totalJDKeywords}
-                          </span>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
+                          </svg>
                         </div>
-                        <div
-                          style={{
-                            background: colors.border,
-                            height: "4px",
-                            borderRadius: "2px",
-                            overflow: "hidden",
-                          }}
-                        >
-                          <div
-                            style={{
-                              background: colors.accent,
-                              height: "100%",
-                              width: `${results.keywordStats.matchPercentage}%`,
-                              transition: "width 0.3s",
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span style={{ color: colors.tertiary }}>
-                            Sections
-                          </span>
-                          <span
-                            style={{ fontWeight: "600", color: colors.primary }}
-                          >
-                            {
-                              Object.values(results.sections).filter(Boolean)
-                                .length
-                            }
-                            /5
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Email Button */}
-                    <button
-                      onClick={() => setShowEmailForm(!showEmailForm)}
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        background: colors.accent,
-                        color: "white",
-                        border: "none",
-                        borderRadius: "6px",
-                        fontSize: "13px",
-                        fontWeight: "500",
-                        cursor: "pointer",
-                      }}
-                    >
-                      📧 Email report
-                    </button>
-
-                    {showEmailForm && (
-                      <div
-                        style={{
-                          background: "white",
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: "8px",
-                          padding: "12px",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          value={emailData.name}
-                          onChange={(e) =>
-                            setEmailData({ ...emailData, name: e.target.value })
-                          }
-                          placeholder="Your name"
-                          style={{
-                            padding: "8px",
-                            border: `1px solid ${colors.border}`,
-                            borderRadius: "4px",
-                            fontSize: "13px",
-                            boxSizing: "border-box",
-                          }}
-                        />
-                        <input
-                          type="email"
-                          value={emailData.email}
-                          onChange={(e) =>
-                            setEmailData({
-                              ...emailData,
-                              email: e.target.value,
-                            })
-                          }
-                          placeholder="Email"
-                          style={{
-                            padding: "8px",
-                            border: `1px solid ${colors.border}`,
-                            borderRadius: "4px",
-                            fontSize: "13px",
-                            boxSizing: "border-box",
-                          }}
-                        />
-                        <button
-                          onClick={handleSendEmail}
-                          disabled={emailSending}
-                          style={{
-                            padding: "8px",
-                            background: emailSending
-                              ? colors.border
-                              : colors.accent,
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            cursor: emailSending ? "not-allowed" : "pointer",
-                          }}
-                        >
-                          {emailSending ? "Sending..." : "Send"}
-                        </button>
+                        <p className="text-sm font-semibold text-white mb-1 leading-tight">
+                          {fileName || "Drag & drop or click"}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          PDF, DOCX up to 10MB
+                        </p>
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Detailed Results Section - Only visible if results exist */}
-        {results && (
-          <section className="py-20 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-3xl font-bold mb-10 text-center">
-                Detailed Analysis
-              </h2>
+                  <textarea
+                    value={resumeText}
+                    onChange={(e) => setResumeText(e.target.value)}
+                    placeholder="Or paste your resume text here..."
+                    className="w-full grow min-h-[300px] bg-black/20 border border-white/5 rounded-2xl p-6 text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none transition-all font-mono leading-relaxed"
+                  />
+                </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-                  gap: "24px",
-                }}
-              >
-                {/* Matched Keywords */}
-                {results.matchedKeywords.length > 0 && (
-                  <div
-                    style={{
-                      background: "white",
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: "8px",
-                      padding: "20px",
-                    }}
-                  >
-                    <h3
-                      style={{
-                        margin: "0 0 12px 0",
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: colors.success,
-                      }}
-                    >
-                      ✓ Matched Keywords
+                {/* Job Description */}
+                <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 hover:border-purple-500/30 transition-all duration-500 group shadow-2xl flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                        <span className="text-purple-400">02</span>
+                      </div>
+                      Job Description
                     </h3>
-                    <div
-                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                    >
-                      {results.matchedKeywords.map((keyword, i) => (
-                        <span
-                          key={i}
-                          style={{
-                            fontSize: "12px",
-                            padding: "4px 8px",
-                            background: `${colors.success}15`,
-                            color: colors.success,
-                            borderRadius: "4px",
-                          }}
-                        >
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
+                    {jobDescription.length > 0 && (
+                      <span className="text-xs text-slate-500 font-mono">
+                        {jobDescription.length} chars
+                      </span>
+                    )}
                   </div>
-                )}
 
-                {/* Missing Keywords */}
-                {results.missingKeywords.length > 0 && (
-                  <div
-                    style={{
-                      background: "white",
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: "8px",
-                      padding: "20px",
-                    }}
-                  >
-                    <h3
-                      style={{
-                        margin: "0 0 12px 0",
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: colors.error,
-                      }}
-                    >
-                      ⚠ Missing Keywords
-                    </h3>
-                    <div
-                      style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                    >
-                      {results.missingKeywords.map((keyword, i) => (
-                        <span
-                          key={i}
-                          style={{
-                            fontSize: "12px",
-                            padding: "4px 8px",
-                            background: `${colors.error}15`,
-                            color: colors.error,
-                            borderRadius: "4px",
-                          }}
-                        >
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Educational Content */}
-        {!results && (
-          <>
-            <section className="py-24 bg-white">
-              <div className="max-w-3xl mx-auto px-4">
-                <h2 className="text-3xl font-bold mb-6 text-slate-900">
-                  What is an Applicant Tracking System (ATS)?
-                </h2>
-                <div className="prose prose-lg text-slate-500">
-                  <p>
-                    An ATS is software used by employers to scan, rank, and
-                    filter resumes before they are ever seen by a human
-                    recruiter. 75% of resumes are rejected by these automated
-                    systems because they aren't formatted correctly or lack the
-                    right keywords.
+                  <p className="text-xs text-slate-500 mb-6 bg-purple-500/5 px-4 py-3 rounded-xl border border-purple-500/10 italic leading-relaxed">
+                    Paste the full job description to compare relevant skills
+                    and keywords.
                   </p>
-                  <ul className="list-disc pl-5 space-y-2 mt-4">
-                    <li>
-                      <strong>Parsing:</strong> The ATS strips your resume's
-                      formatting to extract data.
-                    </li>
-                    <li>
-                      <strong>Keywords:</strong> It searches for specific skills
-                      and terms matching the job description.
-                    </li>
-                    <li>
-                      <strong>Ranking:</strong> Candidates are ranked by a
-                      "match score." Only top scorers get an interview.
-                    </li>
+
+                  <textarea
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    placeholder="Paste the target job description..."
+                    className="w-full grow min-h-[300px] bg-black/20 border border-white/5 rounded-2xl p-6 text-sm text-slate-400 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none transition-all font-mono leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* Action Bar */}
+              <div className="flex items-center justify-center pt-8">
+                <button
+                  onClick={handleAnalyze}
+                  disabled={
+                    isAnalyzing || !resumeText.trim() || !jobDescription.trim()
+                  }
+                  className="group relative px-12 py-5 bg-blue-600 rounded-2xl overflow-hidden shadow-2xl shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center gap-3 font-black text-lg tracking-wide uppercase">
+                    {isAnalyzing ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        AI Analysis...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-6 h-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
+                        </svg>
+                        Start AI Analysis
+                      </>
+                    )}
+                  </div>
+                </button>
+              </div>
+
+              {error && (
+                <div className="mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm text-center font-medium">
+                  ⚠️ {error}
+                </div>
+              )}
+            </div>
+
+            {/* Results Sidebar - If results exist */}
+            {results && (
+              <div className="lg:col-span-12 xl:col-span-4 space-y-6">
+                {/* Score Card */}
+                <div className="bg-slate-900 shadow-2xl border border-white/10 rounded-3xl p-8 relative overflow-hidden group">
+                  <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/20 rounded-full blur-3xl group-hover:bg-blue-600/30 transition-all duration-500" />
+
+                  <div className="relative z-10 text-center">
+                    <div className="relative inline-block mb-6">
+                      <svg className="w-32 h-32 sm:w-40 sm:h-40 transform -rotate-90">
+                        <circle
+                          strokeWidth="8"
+                          stroke="currentColor"
+                          fill="transparent"
+                          r="60"
+                          cx="64"
+                          cy="64"
+                          className="text-white/5 sm:r-[70] sm:cx-[80] sm:cy-[80]"
+                        />
+                        <circle
+                          strokeWidth="8"
+                          strokeDasharray={440}
+                          strokeDashoffset={440 - (440 * results.score) / 100}
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="transparent"
+                          r="60"
+                          cx="64"
+                          cy="64"
+                          className="text-blue-500 transition-all duration-1000 ease-out sm:r-[70] sm:cx-[80] sm:cy-[80]"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl sm:text-4xl font-black text-white">
+                          {results.score}
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-widest">
+                          Score
+                        </span>
+                      </div>
+                    </div>
+
+                    <h4 className="text-2xl font-black text-white mb-2">
+                      {getScoreLabel(results.score)}
+                    </h4>
+                    <p className="text-slate-400 text-sm leading-relaxed mb-8 text-center mx-auto">
+                      Your resume has a{" "}
+                      <span className="text-blue-400 font-bold">
+                        {results.matchPercentage}%
+                      </span>{" "}
+                      keyword match rate.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-4 mb-8 text-left">
+                      <div className="bg-white/5 rounded-2xl p-4 border border-white/5 hover:bg-white/10 transition-all">
+                        <div className="text-xs text-slate-500 font-bold uppercase mb-1">
+                          Keywords
+                        </div>
+                        <div className="text-lg font-black text-white">
+                          {results.matchedKeywords.length}/
+                          {results.keywordStats.totalJDKeywords}
+                        </div>
+                      </div>
+                      <div className="bg-white/5 rounded-2xl p-4 border border-white/5 hover:bg-white/10 transition-all">
+                        <div className="text-xs text-slate-500 font-bold uppercase mb-1">
+                          Sections
+                        </div>
+                        <div className="text-lg font-black text-white">
+                          {
+                            Object.values(results.sections).filter(Boolean)
+                              .length
+                          }
+                          /5
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setShowEmailForm(!showEmailForm)}
+                      className="w-full py-4 bg-white hover:bg-slate-200 text-slate-900 rounded-2xl font-black text-sm uppercase transition-all flex items-center justify-center gap-2"
+                    >
+                      <svg
+                        className="w-5 h-5 font-black"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
+                      Email Report
+                    </button>
+                  </div>
+                </div>
+
+                {/* Email Form Popover */}
+                {showEmailForm && (
+                  <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl animate-in slide-in-from-top-4 duration-300">
+                    <div className="space-y-4">
+                      <input
+                        type="text"
+                        value={emailData.name}
+                        onChange={(e) =>
+                          setEmailData({ ...emailData, name: e.target.value })
+                        }
+                        placeholder="Your full name"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all"
+                      />
+                      <input
+                        type="email"
+                        value={emailData.email}
+                        onChange={(e) =>
+                          setEmailData({ ...emailData, email: e.target.value })
+                        }
+                        placeholder="Email address"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all"
+                      />
+                      <button
+                        onClick={handleSendEmail}
+                        disabled={emailSending}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                      >
+                        {emailSending ? "Sending..." : "Send Report"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Analysis View - Matched/Missing Keywords */}
+          {results && (
+            <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-bottom-8 duration-1000">
+              <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 shadow-2xl">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-3 bg-green-500/10 rounded-2xl text-green-500">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-black">Matched Keywords</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {results.matchedKeywords.length > 0 ? (
+                    results.matchedKeywords.map((kw, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs font-bold transition-all hover:bg-green-500/20"
+                      >
+                        {kw}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-sm italic">
+                      No keyword matches found yet.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 shadow-2xl">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-3 bg-red-500/10 rounded-2xl text-red-500">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-black">Missing Keywords</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {results.missingKeywords.length > 0 ? (
+                    results.missingKeywords.map((kw, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs font-bold transition-all hover:bg-red-500/20"
+                      >
+                        {kw}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-sm italic">
+                      Excellent work! No major missing keywords.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+                <div className="bg-slate-900/50 border border-white/10 rounded-3xl p-8 hover:bg-slate-900 transition-all duration-300 focus-within:bg-slate-900">
+                  <h4 className="text-blue-400 font-bold uppercase tracking-widest text-[10px] mb-6">
+                    Strengths
+                  </h4>
+                  <ul className="space-y-4">
+                    {results.strengths.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex gap-3 text-sm text-slate-400 leading-relaxed text-left"
+                      >
+                        <span className="text-blue-500 mt-1 flex-shrink-0">
+                          ✦
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-slate-900/50 border border-white/10 rounded-3xl p-8 hover:bg-slate-900 transition-all duration-300 focus-within:bg-slate-900 text-left">
+                  <h4 className="text-red-400 font-bold uppercase tracking-widest text-[10px] mb-6">
+                    Focus Areas
+                  </h4>
+                  <ul className="space-y-4">
+                    {results.weaknesses.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex gap-3 text-sm text-slate-400 leading-relaxed text-left"
+                      >
+                        <span className="text-red-500 mt-1 flex-shrink-0">
+                          ✦
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-slate-900/50 border border-white/10 rounded-3xl p-8 hover:bg-slate-900 transition-all duration-300 focus-within:bg-slate-900 text-left">
+                  <h4 className="text-purple-400 font-bold uppercase tracking-widest text-[10px] mb-6">
+                    Next Steps
+                  </h4>
+                  <ul className="space-y-4">
+                    {results.recommendations.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex gap-3 text-sm text-slate-400 leading-relaxed text-left"
+                      >
+                        <span className="text-purple-500 mt-1 flex-shrink-0">
+                          ✦
+                        </span>
+                        {item}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
-            </section>
+            </div>
+          )}
+        </div>
 
-            <section className="py-24 bg-slate-50">
-              <div className="max-w-4xl mx-auto px-4">
-                <h2 className="text-3xl font-bold mb-12 text-center text-slate-900">
-                  How to Beat the ATS
+        {/* Educational Content */}
+        {!results && (
+          <div className="mt-20 space-y-32 mb-20">
+            <section className="relative overflow-hidden pt-20">
+              <div className="max-w-4xl mx-auto px-4 text-center">
+                <h2 className="text-4xl font-black mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                  What is an Applicant Tracking System?
                 </h2>
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
-                  {/* Tips List */}
-                  <div className="grid gap-8">
-                    {[
-                      {
-                        title: "Use Standard Headings",
-                        desc: "Stick to standard section titles like 'Experience', 'Education', and 'Skills' so the bot knows where to look.",
-                      },
-                      {
-                        title: "Avoid Graphics & Columns",
-                        desc: "Complex layouts confuse the parser. Keep it simple with a clean, single-column text layout.",
-                      },
-                      {
-                        title: "Mirror the Job Description",
-                        desc: "Use the exact wording found in the job posting. If they ask for 'Project Management', don't write 'Managed Projects'.",
-                      },
-                      {
-                        title: "Save as PDF or Word",
-                        desc: "These are the most readable formats. Avoid images (JPG/PNG) as most ATS cannot read text from images.",
-                      },
-                    ].map((tip, i) => (
-                      <div key={i} className="flex gap-4">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
-                          {i + 1}
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-lg mb-2 text-slate-900">
-                            {tip.title}
-                          </h3>
-                          <p className="text-slate-500">{tip.desc}</p>
-                        </div>
+                <div className="bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-[40px] p-12 shadow-3xl">
+                  <p className="text-lg text-slate-400 leading-relaxed mb-12">
+                    75% of resumes are rejected by automated systems before they
+                    reach human eyes. The ATS is your first gatekeeper.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                    <div className="space-y-4">
+                      <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400 text-xl font-black">
+                        01
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Image */}
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200">
-                    <img
-                      src={getAssetUrl("/ats-checker-preview.png")}
-                      alt="ATS Scanning Process"
-                      className="w-full h-auto object-cover"
-                    />
+                      <h4 className="font-bold text-white uppercase text-xs tracking-widest">
+                        Parsing
+                      </h4>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                        The system strips formatting to extract core data from
+                        your document.
+                      </p>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-400 text-xl font-black">
+                        02
+                      </div>
+                      <h4 className="font-bold text-white uppercase text-xs tracking-widest">
+                        Keywords
+                      </h4>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                        It matches your skills against specific terms in the job
+                        description.
+                      </p>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="w-12 h-12 bg-pink-500/10 rounded-2xl flex items-center justify-center text-pink-400 text-xl font-black">
+                        03
+                      </div>
+                      <h4 className="font-bold text-white uppercase text-xs tracking-widest">
+                        Ranking
+                      </h4>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                        Candidates are ranked by a match score. High scorers get
+                        the interview.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </section>
-          </>
+
+            <section className="bg-slate-900/30 py-32">
+              <div className="max-w-7xl mx-auto px-4">
+                <div className="flex flex-col lg:flex-row items-center gap-20">
+                  <div className="lg:w-1/2">
+                    <h2 className="text-4xl font-black mb-12 text-white">
+                      How to Beat the System
+                    </h2>
+                    <div className="grid gap-6">
+                      {[
+                        {
+                          title: "Standard Headings",
+                          desc: "Use 'Experience', 'Education', and 'Skills' to avoid confusing the bot.",
+                        },
+                        {
+                          title: "Single Column Layout",
+                          desc: "Complex grids and graphics are the #1 cause of parsing failures.",
+                        },
+                        {
+                          title: "Exact Match Keywords",
+                          desc: "Use 'Project Management' if that's what's in the JD, precisely.",
+                        },
+                        {
+                          title: "Professional Formats",
+                          desc: "PDF is best, but ensure it's text-based and not a scanned image.",
+                        },
+                      ].map((tip, i) => (
+                        <div
+                          key={i}
+                          className="group p-6 bg-white/5 border border-white/5 rounded-3xl transition-all hover:bg-white/10 hover:translate-x-2"
+                        >
+                          <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-3">
+                            <span className="w-2 h-2 rounded-full bg-blue-500" />
+                            {tip.title}
+                          </h3>
+                          <p className="text-sm text-slate-500 leading-relaxed">
+                            {tip.desc}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="lg:w-1/2 relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[40px] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                    <div className="relative bg-slate-900 rounded-[40px] overflow-hidden border border-white/10">
+                      <img
+                        src={getAssetUrl("/ats-checker-preview.png")}
+                        alt="ATS Professional Scanning"
+                        className="w-full h-auto opacity-80 group-hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         )}
       </div>
     </>

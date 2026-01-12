@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { google } from "googleapis";
 import { generateToken } from "../../../lib/backend/utils/tokenService";
+import { WELCOME_BONUS } from "../../../lib/subscription";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -79,7 +80,7 @@ export default async function handler(
           name,
           login_provider: "google",
           plan_id: 1, // Free plan
-          credits: 10, // Default Free Plan Credits
+          credits: WELCOME_BONUS, // Default Free Plan Credits
           onboarding_completed: false,
           email_verified: true,
           created_at: new Date().toISOString(),
@@ -101,7 +102,7 @@ export default async function handler(
     // Log the initial credit allocation
     await supabaseAdmin.from("credit_usage").insert({
       user_id: newProfile.id,
-      credits_used: -10, // Negative for addition
+      credits_used: -WELCOME_BONUS, // Negative for addition
       action: "welcome_bonus",
       description: "Welcome Bonus Credits",
     });
@@ -112,6 +113,18 @@ export default async function handler(
       newProfile.email,
       "free" // Default plan
     );
+
+    // Send Registration Email (Non-blocking)
+    try {
+      const { emailSender } = await import(
+        "../../../lib/backend/utils/emailSender"
+      );
+      emailSender
+        .sendRegistrationEmail(newProfile.email, name, "free", WELCOME_BONUS)
+        .catch((err) => console.error("Failed to send signup email:", err));
+    } catch (e) {
+      console.error("Signup email error:", e);
+    }
 
     return res.status(201).json({
       success: true,

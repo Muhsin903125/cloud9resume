@@ -7,7 +7,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const AUTO_APPLY_COST = 10; // Additional cost for auto-applying
+import { CREDIT_COSTS } from "../../../lib/subscription";
+
+const AUTO_APPLY_COST = CREDIT_COSTS.ats_auto_apply; // Additional cost for auto-applying
 
 // Helper to extract user ID
 function extractUserId(req: NextApiRequest): string | null {

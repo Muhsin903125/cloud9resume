@@ -22,6 +22,10 @@ import {
 } from "./Icons";
 import { toast } from "react-hot-toast";
 import PlanSelectionModal from "./PlanSelectionModal";
+import { CREDIT_COSTS } from "@/lib/subscription";
+import { CreditConfirmModal } from "./modals/CreditConfirmModal";
+import { apiClient } from "@/lib/apiClient";
+import Head from "next/head";
 
 interface ResumePreviewModalProps {
   isOpen: boolean;
@@ -164,6 +168,28 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [showConfirmDownload, setShowConfirmDownload] = useState(false);
+  const [balance, setBalance] = useState(0);
+  const [pendingFormat, setPendingFormat] = useState<"pdf" | "docx">("pdf");
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchBalance();
+    }
+  }, [isOpen]);
+
+  const fetchBalance = async () => {
+    try {
+      const { data } = await apiClient.get("/credits");
+      if (data?.success) {
+        setBalance(data.data.stats.current);
+      }
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
+  };
+
+  const downloadCost = CREDIT_COSTS.resume_download_pdf;
 
   // Check if user has a paid plan
   const isPaidPlan = user?.plan && !["free", "starter"].includes(user.plan);
@@ -264,19 +290,23 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
     setActiveTab(tab);
   };
 
-  const handleDownload = async (format: "pdf" | "docx" = "pdf") => {
+  const handleDownloadClick = (format: "pdf" | "docx" = "pdf") => {
     if (!onSave) return;
-
-    // Close the download menu
     setShowDownloadMenu(false);
 
-    // Check if DOCX is allowed for this plan
     if (format === "docx" && !isPaidPlan) {
       setShowUpgradeModal(true);
       toast.error("DOCX export is available for Pro and Enterprise plans.");
       return;
     }
 
+    setPendingFormat(format);
+    setShowConfirmDownload(true);
+  };
+
+  const confirmDownload = async () => {
+    setShowConfirmDownload(false);
+    const format = pendingFormat;
     setIsSaving(true);
     try {
       await handleSave();
@@ -797,7 +827,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
               </div>
 
               <button
-                onClick={() => handleDownload("pdf")}
+                onClick={() => handleDownloadClick("pdf")}
                 disabled={isSaving}
                 className="px-6 py-2 bg-gray-900 hover:bg-black text-white rounded-lg font-bold shadow-lg shadow-gray-900/10 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
               >
@@ -847,6 +877,16 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
           // Optionally retry download or just close
           setShowUpgradeModal(false);
         }}
+      />
+      <CreditConfirmModal
+        isOpen={showConfirmDownload}
+        onClose={() => setShowConfirmDownload(false)}
+        onConfirm={confirmDownload}
+        title="Download Resume"
+        description={`Your resume will be generated in ${pendingFormat.toUpperCase()} format. This action costs ${downloadCost} credit.`}
+        cost={downloadCost}
+        balance={balance}
+        isLoading={isSaving}
       />
     </SharedModal>
   );

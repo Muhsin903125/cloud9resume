@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { supabase } from "../../../lib/backend/supabaseClient";
+import { CREDIT_COSTS, PLAN_LIMITS } from "../../../lib/subscription";
 import jwt from "jsonwebtoken";
 
 function extractUserIdFromToken(req: NextApiRequest): string | null {
@@ -109,23 +110,18 @@ export default async function handler(
 
         // Free users: allow publishing with 30-day expiration
         // Paid users: unlimited publishing
-        const PLAN_LIMITS = {
-          free: { publishDays: 30, cost: 5 },
-          professional: { publishDays: 0, cost: 5 }, // 0 = unlimited
-          premium: { publishDays: 0, cost: 5 },
-          enterprise: { publishDays: 0, cost: 0 }, // enterprise is free
-        };
-
         const planLimits =
           PLAN_LIMITS[currentPlan as keyof typeof PLAN_LIMITS] ||
           PLAN_LIMITS.free;
-        cost = planLimits.cost;
+        cost = CREDIT_COSTS.portfolio_publish;
         actionDescription = "Publish Portfolio";
 
         // Set expiration date for free users
-        if (planLimits.publishDays > 0) {
+        if (planLimits.portfolioPublishDays > 0) {
           const expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + planLimits.publishDays);
+          expiresAt.setDate(
+            expiresAt.getDate() + planLimits.portfolioPublishDays
+          );
           updates.published_at = new Date().toISOString();
           updates.expires_at = expiresAt.toISOString();
         } else {
@@ -134,7 +130,7 @@ export default async function handler(
           updates.expires_at = null;
         }
       } else if (isUpdatingPublished) {
-        cost = 1; // Update cost
+        cost = CREDIT_COSTS.portfolio_update; // Update cost
         actionDescription = "Update Published Portfolio";
       }
 

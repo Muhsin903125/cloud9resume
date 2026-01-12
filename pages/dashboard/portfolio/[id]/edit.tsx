@@ -7,6 +7,8 @@ import { TemplateSelector } from "../../../../components/portfolio/TemplateSelec
 import { PortfolioPreview } from "../../../../components/portfolio/PortfolioPreview";
 import { ProfileImageUploader } from "../../../../components/portfolio/ProfileImageUploader";
 import { PublishModal } from "../../../../components/portfolio/PublishModal";
+import { CreditConfirmModal } from "../../../../components/modals/CreditConfirmModal";
+import { CREDIT_COSTS, PlanType } from "../../../../lib/subscription";
 
 interface Section {
   id: string;
@@ -59,14 +61,13 @@ export default function PortfolioEditor() {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiGeneratedHtml, setAiGeneratedHtml] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-  const [userPlan, setUserPlan] = useState<
-    "free" | "professional" | "premium" | "enterprise"
-  >("free");
+  const [userPlan, setUserPlan] = useState<PlanType>("free");
   const [activeTab, setActiveTab] = useState<"content" | "design" | "settings">(
     "content"
   );
   const [showAIModal, setShowAIModal] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
+  const [showConfirmAI, setShowConfirmAI] = useState(false);
 
   useEffect(() => {
     // Optional: Logic to switch tabs automatically if needed
@@ -116,17 +117,17 @@ export default function PortfolioEditor() {
     }
   };
 
-  const generateWithAI = async () => {
+  const handleGenerateClick = () => {
     if (sections.length === 0) {
       toast.error("Import a resume first to use AI generation");
       setShowResumeModal(true);
       return;
     }
+    setShowConfirmAI(true);
+  };
 
-    if (userCredits < 1) {
-      toast.error("You don't have enough credits for AI generation");
-      return;
-    }
+  const generateWithAI = async () => {
+    setShowConfirmAI(false);
 
     const token = getAuthToken();
     setIsGeneratingAI(true);
@@ -724,7 +725,7 @@ export default function PortfolioEditor() {
 
           <div className="flex items-center justify-center w-1/3">
             <button
-              onClick={generateWithAI}
+              onClick={handleGenerateClick}
               disabled={isGeneratingAI || sections.length === 0}
               className="group relative inline-flex items-center justify-center px-6 py-2.5 font-semibold text-white transition-all duration-200 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full hover:from-violet-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
             >
@@ -1371,6 +1372,16 @@ export default function PortfolioEditor() {
           currentSlug={portfolioSlug}
           portfolioId={(id as string) || ""}
           userPlan={userPlan}
+        />
+
+        <CreditConfirmModal
+          isOpen={showConfirmAI}
+          onClose={() => setShowConfirmAI(false)}
+          onConfirm={generateWithAI}
+          title="AI Hero Design Generation"
+          description="Our AI will analyze your resume content and generate a professionally styled hero section for your portfolio."
+          cost={CREDIT_COSTS.portfolio_ai_generation}
+          balance={userCredits}
         />
       </div>
     </>

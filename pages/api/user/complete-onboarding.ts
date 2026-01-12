@@ -61,55 +61,6 @@ export default async function handler(
     // Log this action if needed (optional)
     // No bonus credits in simplified onboarding
 
-    // Fetch user details for email (since standard update might not return all fields depending on version/mock)
-    // We used .select() above, usually it returns the updated rows.
-    const updatedProfile = data && data[0];
-    if (updatedProfile) {
-      console.log(
-        "[Onboarding] Profile updated, attempting to send welcome email to:",
-        updatedProfile.email
-      );
-      // Send Welcome Email (Non-blocking)
-      try {
-        const email = updatedProfile.email;
-        const name = updatedProfile.name;
-        // Determine plan name based on ID or experience level
-        const planId = updatedProfile.plan_id;
-        let planName = "free"; // All users start with free plan
-
-        const credits = updatedProfile.credits;
-
-        console.log("[Onboarding] Email details:", {
-          email,
-          name,
-          planName,
-          credits,
-        });
-
-        if (email && name) {
-          // Use sendRegistrationEmail to include plan details and credits
-          emailSender
-            .sendRegistrationEmail(email, name, planName, credits)
-            .then(() =>
-              console.log("[Onboarding] Registration email sent successfully")
-            )
-            .catch((err: any) => {
-              console.error("Failed to send registration email:", err);
-            });
-        } else {
-          console.warn(
-            "[Onboarding] Missing email or name, cannot send welcome email"
-          );
-        }
-      } catch (e) {
-        console.error("Failed to send welcome email (execution error):", e);
-      }
-    } else {
-      console.warn(
-        "[Onboarding] No updated profile data returned, skipping welcome email"
-      );
-    }
-
     return res.status(200).json({ success: true, data });
   } catch (error: any) {
     console.error("Onboarding logic error:", error);

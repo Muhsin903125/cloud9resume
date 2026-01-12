@@ -17,6 +17,15 @@ function extractUserIdFromToken(req: NextApiRequest): string | null {
   }
 }
 
+import { createClient } from "@supabase/supabase-js";
+import { CREDIT_COSTS } from "../../../lib/subscription";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+const GENERATE_COST = CREDIT_COSTS.portfolio_ai_generation;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -29,6 +38,21 @@ export default async function handler(
     const userId = extractUserIdFromToken(req);
     if (!userId) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+
+    // Check user credits
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("credits")
+      .eq("id", userId)
+      .single();
+
+    if (!profile || (profile.credits || 0) < GENERATE_COST) {
+      return res.status(402).json({
+        success: false,
+        error: "Insufficient credits",
+        message: `This action requires ${GENERATE_COST} credits.`,
+      });
     }
 
     const {
@@ -102,6 +126,20 @@ Return ONLY the raw HTML code. Do not include markdown code blocks or any explan
         htmlContent = htmlContent.substring(doctypeIndex);
       }
     }
+
+    // Deduct credits
+    await supabaseAdmin.rpc("deduct_credits", {
+      p_user_id: userId,
+      p_amount: GENERATE_COST,
+    });
+
+    // Log credit usage
+    await supabaseAdmin.from("credit_usage").insert({
+      user_id: userId,
+      credits_used: GENERATE_COST,
+      action: "portfolio_ai_generation",
+      description: "AI Portfolio Generation",
+    });
 
     return res.status(200).json({
       success: true,

@@ -316,7 +316,7 @@ const DashboardPage: NextPage = () => {
         </div>
 
         {/* Content */}
-        <main className="max-w-6xl  px-8 py-8 pb-24 relative z-10">
+        <main className="max-w-6xl px-4 sm:px-8 py-8 pb-24 relative z-10 mx-auto">
           {/* Portfolio Expiration Warning */}
           {stats.portfolioExpiresAt && (
             <motion.div
@@ -371,22 +371,22 @@ const DashboardPage: NextPage = () => {
             >
               <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold mb-1">
+                  <h2 className="text-lg sm:text-xl font-bold mb-1">
                     Upgrade to Professional
                   </h2>
                   <p className="text-blue-100 text-sm">
                     Get unlimited resumes, portfolios, and AI credits.
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold bg-white/20 px-3 py-1 rounded-full uppercase tracking-wider">
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <span className="text-[10px] sm:text-xs font-semibold bg-white/20 px-3 py-1 rounded-full uppercase tracking-wider">
                     50% Off First Month
                   </span>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowPlanModal(true)}
-                    className="bg-white text-gray-600 hover:bg-blue-50 border-none font-bold shadow-md px-4 py-2.5 rounded-lg text-sm transition-colors"
+                    className="w-full sm:w-auto bg-white text-gray-600 hover:bg-blue-50 border-none font-bold shadow-md px-4 py-2.5 rounded-lg text-sm transition-colors"
                   >
                     Claim Offer - $6.49
                   </motion.button>
@@ -455,7 +455,7 @@ const DashboardPage: NextPage = () => {
                 },
               },
             }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8"
           >
             {[
               {
@@ -536,7 +536,7 @@ const DashboardPage: NextPage = () => {
                       <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide">
                         {stat.label}
                       </p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">
+                      <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
                         {isDataLoading ? "..." : stat.value}
                         {stat.limit && typeof stat.limit === "number" && (
                           <span className="text-sm font-medium text-gray-400 ml-1">
@@ -551,7 +551,7 @@ const DashboardPage: NextPage = () => {
                       </p>
                     </div>
                     <div
-                      className={`p-2.5 rounded-xl transition-all group-hover:scale-110 ${
+                      className={`p-2 sm:p-2.5 rounded-xl transition-all group-hover:scale-110 ${
                         stat.color === "blue"
                           ? "bg-blue-100 text-blue-600"
                           : stat.color === "purple"

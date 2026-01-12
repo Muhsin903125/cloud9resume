@@ -62,6 +62,8 @@ export const PLAN_LIMITS = {
   },
 };
 
+export const WELCOME_BONUS = 25;
+
 export const CREDIT_COSTS = {
   resume_download_pdf: 1,
   portfolio_publish: 5,
@@ -69,7 +71,9 @@ export const CREDIT_COSTS = {
   ai_generation: 2,
   ai_fix: 1,
   cover_letter_generation: 5,
-  ats_scan: 3,
+  ats_analysis: 5,
+  ats_auto_apply: 5,
+  portfolio_ai_generation: 10,
 };
 
 // Helper: Check if user can create more resources
