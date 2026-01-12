@@ -19,6 +19,7 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../lib/authUtils";
 import { canCreateResource, PlanType } from "../../lib/subscription";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import PlanUpgradeModal from "../../components/PlanUpgradeModal";
 
 const TEMPLATES = [
   { id: "modern", name: "Modern", color: "bg-blue-500" },
@@ -44,6 +45,7 @@ const PortfolioDashboardPage: NextPage = () => {
     open: boolean;
     id: string | null;
   }>({ open: false, id: null });
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -74,10 +76,7 @@ const PortfolioDashboardPage: NextPage = () => {
         "portfolios"
       )
     ) {
-      toast.error(
-        `You've reached the limit of portfolios for the ${user.plan} plan. Please upgrade.`
-      );
-      router.push("/plans");
+      setShowUpgradeModal(true);
       return;
     }
     // Go directly to unified editor in new mode
@@ -294,6 +293,12 @@ const PortfolioDashboardPage: NextPage = () => {
           message="Are you sure you want to delete this portfolio? This cannot be undone."
           confirmText="Delete"
           isDestructive={true}
+        />
+        <PlanUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          currentPlan={(user?.plan || "free") as string}
+          errorMessage="You've reached the portfolio limit for your current plan. Upgrade to a pro plan to create more portfolios and keep your career growing."
         />
       </div>
     </>

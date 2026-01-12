@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "../../lib/authUtils";
 import { apiClient } from "../../lib/apiClient";
 import { toast } from "react-hot-toast";
-import PlanSelectionModal from "../../components/PlanSelectionModal";
+import PlanUpgradeModal from "../../components/PlanUpgradeModal";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -453,9 +453,10 @@ export default function ProfilePage() {
       )}
 
       {/* Plan Selection Modal */}
-      <PlanSelectionModal
+      <PlanUpgradeModal
         isOpen={showPlanModal}
         onClose={() => setShowPlanModal(false)}
+        currentPlan={plan}
       />
     </div>
   );

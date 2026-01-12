@@ -21,7 +21,7 @@ import {
   ChevronDownIcon,
 } from "./Icons";
 import { toast } from "react-hot-toast";
-import PlanSelectionModal from "./PlanSelectionModal";
+import PlanUpgradeModal from "./PlanUpgradeModal";
 import { CREDIT_COSTS } from "@/lib/subscription";
 import { CreditConfirmModal } from "./modals/CreditConfirmModal";
 import { apiClient } from "@/lib/apiClient";
@@ -867,16 +867,11 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
         </div>
       )}
 
-      <PlanSelectionModal
+      <PlanUpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        onSuccess={() => {
-          toast.success(
-            "Upgrade successful! You can now download unlimited resumes."
-          );
-          // Optionally retry download or just close
-          setShowUpgradeModal(false);
-        }}
+        currentPlan="free"
+        errorMessage="You've reached your credit limit or are trying to access a premium feature. Upgrade your plan to unlock DOCX exports and unlimited downloads."
       />
       <CreditConfirmModal
         isOpen={showConfirmDownload}

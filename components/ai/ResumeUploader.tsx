@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { USER_AUTH_TOKEN_KEY } from "@/lib/token-keys";
-import PlanSelectionModal from "../PlanSelectionModal";
+import PlanUpgradeModal from "../PlanUpgradeModal";
 
 interface ResumeUploaderProps {
   onUploadSuccess: (data: any, resumeId: string) => void;
@@ -252,13 +252,11 @@ export const ResumeUploader: React.FC<ResumeUploaderProps> = ({
         )}
       </AnimatePresence>
 
-      <PlanSelectionModal
+      <PlanUpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        onSuccess={() => {
-          toast.success("Credits added! Please try uploading again.");
-          setShowUpgradeModal(false);
-        }}
+        currentPlan="free"
+        errorMessage="You've reached your credit limit or plan constraints for AI resume parsing. Upgrade to a pro plan to increase your limits and unlock high-accuracy AI extraction."
       />
     </div>
   );

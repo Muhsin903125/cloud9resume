@@ -204,7 +204,7 @@ const DashboardPage: NextPage = () => {
     {
       title: "Manage Credits",
       description: "View and refill credits",
-      href: "/plans",
+      onClick: () => setShowPlanModal(true),
       icon: DocumentIcon,
     },
   ];
@@ -599,39 +599,54 @@ const DashboardPage: NextPage = () => {
                 }}
                 className="grid sm:grid-cols-2 gap-4"
               >
-                {quickActions.map((action, index) => (
-                  <Link key={index} href={action.href} passHref>
-                    <motion.div
-                      variants={{
-                        hidden: { opacity: 0, scale: 0.95 },
-                        visible: { opacity: 1, scale: 1 },
-                      }}
-                      whileHover={{
-                        scale: 1.02,
-                        y: -2,
-                        transition: { duration: 0.2 },
-                      }}
-                      whileTap={{ scale: 0.98 }}
-                      className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 transition-all cursor-pointer h-full"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
-                          <action.icon size={20} />
+                {quickActions.map((action, index) => {
+                  const ItemWrapper = ({
+                    children,
+                  }: {
+                    children: React.ReactNode;
+                  }) =>
+                    action.href ? (
+                      <Link href={action.href} passHref>
+                        {children}
+                      </Link>
+                    ) : (
+                      <div onClick={action.onClick}>{children}</div>
+                    );
+
+                  return (
+                    <ItemWrapper key={index}>
+                      <motion.div
+                        variants={{
+                          hidden: { opacity: 0, scale: 0.95 },
+                          visible: { opacity: 1, scale: 1 },
+                        }}
+                        whileHover={{
+                          scale: 1.02,
+                          y: -2,
+                          transition: { duration: 0.2 },
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                        className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 transition-all cursor-pointer h-full"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                            <action.icon size={20} />
+                          </div>
+                          <ArrowRightIcon
+                            size={16}
+                            className="text-gray-300 group-hover:text-blue-500 transition-colors"
+                          />
                         </div>
-                        <ArrowRightIcon
-                          size={16}
-                          className="text-gray-300 group-hover:text-blue-500 transition-colors"
-                        />
-                      </div>
-                      <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                        {action.title}
-                      </h3>
-                      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                        {action.description}
-                      </p>
-                    </motion.div>
-                  </Link>
-                ))}
+                        <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                          {action.title}
+                        </h3>
+                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                          {action.description}
+                        </p>
+                      </motion.div>
+                    </ItemWrapper>
+                  );
+                })}
               </motion.div>
             </div>
 

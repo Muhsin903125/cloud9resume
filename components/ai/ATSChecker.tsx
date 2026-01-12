@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { CREDIT_COSTS } from "@/lib/subscription";
 import { CreditConfirmModal } from "../modals/CreditConfirmModal";
-import PlanSelectionModal from "../PlanSelectionModal";
+import PlanUpgradeModal from "../PlanUpgradeModal";
 import { apiClient } from "@/lib/apiClient";
 import toast from "react-hot-toast";
 
@@ -546,13 +546,11 @@ export const ATSChecker: React.FC<ATSCheckerProps> = ({
         balance={balance}
       />
 
-      <PlanSelectionModal
+      <PlanUpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        onSuccess={() => {
-          toast.success("Credits added! You can now optimize your resume.");
-          setShowUpgradeModal(false);
-        }}
+        currentPlan="free"
+        errorMessage="You've reached your credit limit. Upgrade your plan to get more credits and access advanced AI optimization features."
       />
     </>
   );

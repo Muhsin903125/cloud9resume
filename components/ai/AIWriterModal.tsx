@@ -3,7 +3,7 @@ import SharedModal from "../SharedModal";
 import { apiClient } from "@/lib/apiClient";
 import { toast } from "react-hot-toast";
 import { SparklesIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
-import PlanSelectionModal from "../PlanSelectionModal";
+import PlanUpgradeModal from "../PlanUpgradeModal";
 
 interface AIWriterModalProps {
   isOpen: boolean;
@@ -177,13 +177,11 @@ export const AIWriterModal: React.FC<AIWriterModalProps> = ({
         )}
       </div>
 
-      <PlanSelectionModal
+      <PlanUpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        onSuccess={() => {
-          toast.success("Credits added!");
-          setShowUpgradeModal(false);
-        }}
+        currentPlan="free"
+        errorMessage="You've reached your credit limit. Upgrade your plan to get more credits and unlock unlimited AI writing power."
       />
     </SharedModal>
   );

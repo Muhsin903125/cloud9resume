@@ -20,6 +20,7 @@ interface PlanUpgradeModalProps {
   currentPlan: string;
   triggeredBy?: "limit_reached" | "upgrade_prompt" | "manual";
   limitedFeature?: string;
+  errorMessage?: string;
 }
 
 export default function PlanUpgradeModal({
@@ -28,6 +29,7 @@ export default function PlanUpgradeModal({
   currentPlan,
   triggeredBy,
   limitedFeature,
+  errorMessage,
 }: PlanUpgradeModalProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [plans, setPlans] = useState<any[]>([]);
@@ -116,6 +118,22 @@ export default function PlanUpgradeModal({
           </p>
         </div>
 
+        {errorMessage && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="p-1.5 bg-red-500/20 rounded-lg">
+              <SparklesIcon className="w-4 h-4 text-red-400" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-0.5">
+                Action Required
+              </p>
+              <p className="text-sm text-red-200/80 font-medium leading-relaxed">
+                {errorMessage}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4 mb-6">
           {availablePlans.map((plan) => (
             <div
@@ -164,14 +182,14 @@ export default function PlanUpgradeModal({
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-400 mt-1 leading-snug">
-                        <p> <span className="line-through decoration-slate-600 text-slate-500 mr-1">
-                            ${plan.price}
-                          </span>for first month,</p>
                         <p>
-                          then{" "}
-                         
-                          ${plan.price}/mo
+                          {" "}
+                          <span className="line-through decoration-slate-600 text-slate-500 mr-1">
+                            ${plan.price}
+                          </span>
+                          for first month,
                         </p>
+                        <p>then ${plan.price}/mo</p>
                       </div>
                     </div>
                   ) : (
