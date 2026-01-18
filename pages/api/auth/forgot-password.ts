@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -67,20 +67,18 @@ export default async function handler(
     if (updateError) {
       console.error(
         "[ForgotPassword] Failed to save reset token:",
-        updateError
+        updateError,
       );
-      // DEBUG: Return actual error to user to verify if DB migration ran
       return res.status(500).json({
-        error: "Database Error",
+        error: "Internal server error",
         message:
-          "Failed to save reset token. Did you run the migration? " +
-          updateError.message,
+          "An error occurred while processing your request. Please try again later.",
       });
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:3000`;
     const directLink = `${appUrl}/reset-password?token=${token}&type=recovery&email=${encodeURIComponent(
-      email
+      email,
     )}`;
 
     console.log("[ForgotPassword] Sending link to:", email);

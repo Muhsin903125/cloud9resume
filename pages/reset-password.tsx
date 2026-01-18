@@ -53,11 +53,6 @@ const ResetPasswordPage: NextPage = () => {
       if (foundToken) {
         setToken(foundToken);
         setTokenValid(true);
-        console.log("Password reset token found:", {
-          tokenType,
-        });
-      } else {
-        console.log("No valid token found in URL");
       }
 
       setCheckingToken(false);
@@ -100,7 +95,6 @@ const ResetPasswordPage: NextPage = () => {
       setConfirmPassword("");
     } catch (err) {
       setError("An error occurred. Please try again.");
-      console.error("Reset password error:", err);
     } finally {
       setIsLoading(false);
     }

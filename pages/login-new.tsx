@@ -25,8 +25,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Step 1: Authenticate user with Supabase or your auth provider
-      console.log("🔐 Step 1: Authenticating user...");
+      // Step 1: Authenticate user
       const authResponse = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -34,14 +33,9 @@ export default function LoginPage() {
       });
 
       const authData = await authResponse.json();
-      console.log("🔐 Auth Response:", {
-        status: authResponse.status,
-        authData,
-      });
 
       if (!authResponse.ok || !authData.success) {
         const errorMsg = authData.error || authData.message || "Login failed";
-        console.error("❌ Auth failed:", errorMsg);
         setError(errorMsg);
         return;
       }
@@ -49,15 +43,11 @@ export default function LoginPage() {
       const userId = authData.user?.id;
 
       if (!userId) {
-        console.error("❌ No userId in auth response");
         setError("Invalid authentication response - no user ID");
         return;
       }
 
-      console.log("✅ Auth successful, userId:", userId);
-
       // Step 2: Generate access token
-      console.log("🔐 Step 2: Generating access token...");
       const tokenResponse = await fetch("/api/auth/generate-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,44 +58,24 @@ export default function LoginPage() {
       });
 
       const tokenData = await tokenResponse.json();
-      console.log("🔐 Token Response:", {
-        status: tokenResponse.status,
-        tokenData,
-      });
 
       if (!tokenResponse.ok || !tokenData.success) {
         const errorMsg = tokenData.error || "Failed to generate access token";
-        console.error("❌ Token generation failed:", errorMsg);
         setError(errorMsg);
         return;
       }
 
-      console.log("✅ Token generated successfully");
-
       // Step 3: Store token and user data in localStorage
-      console.log("🔐 Step 3: Storing auth data in localStorage...");
       storeAuthData(tokenData.accessToken, userId, email, tokenData.expiresIn);
 
-      // Verify storage
-      const storedToken = localStorage.getItem(USER_AUTH_TOKEN_KEY);
-      const storedUserId = localStorage.getItem(USER_ID_KEY);
-      console.log("✅ Auth data stored:", {
-        hasToken: !!storedToken,
-        tokenLength: storedToken?.length,
-        userId: storedUserId,
-      });
-
       // Step 4: Redirect to original requested page or dashboard
-      console.log("🔐 Step 4: Redirecting...");
       const returnUrl = getReturnUrl(router.query);
-      console.log("📍 Redirect URL:", returnUrl);
       await router.push(returnUrl);
     } catch (err) {
-      console.error("❌ Login error:", err);
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred during login. Please try again."
+          : "An error occurred during login. Please try again.",
       );
     } finally {
       setLoading(false);

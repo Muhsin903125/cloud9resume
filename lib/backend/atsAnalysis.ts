@@ -29,7 +29,7 @@ export interface ATSAnalysisResult {
  * Detect resume sections
  */
 export const detectSections = (
-  text: string
+  text: string,
 ): {
   hasContactInfo: boolean;
   hasEducation: boolean;
@@ -41,20 +41,20 @@ export const detectSections = (
 
   return {
     hasContactInfo: /(\d{10}|phone|email|@|contact|linkedin|github)/.test(
-      lowerText
+      lowerText,
     ),
     hasEducation:
       /(bachelor|master|phd|degree|university|college|education)/.test(
-        lowerText
+        lowerText,
       ),
     hasExperience:
       /(experience|worked|worked at|employment|position|role)/.test(lowerText),
     hasSkills: /(skill|proficient|expertise|technical|tools|framework)/.test(
-      lowerText
+      lowerText,
     ),
     hasProjects:
       /(project|developed|created|built|github|portfolio|deployed)/.test(
-        lowerText
+        lowerText,
       ),
   };
 };
@@ -64,7 +64,7 @@ export const detectSections = (
  */
 export const analyzeKeywordMatch = (
   resumeKeywords: string[],
-  jdKeywords: string[]
+  jdKeywords: string[],
 ): {
   matched: string[];
   missing: string[];
@@ -76,7 +76,7 @@ export const analyzeKeywordMatch = (
 
   const matched = Array.from(jdSet).filter((keyword) => resumeSet.has(keyword));
   const missing = Array.from(jdSet).filter(
-    (keyword) => !resumeSet.has(keyword)
+    (keyword) => !resumeSet.has(keyword),
   );
 
   const matchPercentage =
@@ -101,7 +101,7 @@ export const analyzeKeywordMatch = (
 export const generateInsights = (
   analysis: ATSAnalysisResult,
   resumeText: string,
-  jdText: string
+  jdText: string,
 ): {
   insights: string[];
   strengths: string[];
@@ -122,7 +122,7 @@ export const generateInsights = (
     recommendations.push(
       `Add ${analysis.missingKeywords
         .slice(0, 3)
-        .join(", ")} to strengthen your resume`
+        .join(", ")} to strengthen your resume`,
     );
   } else {
     insights.push("Limited keyword alignment with job requirements");
@@ -133,14 +133,14 @@ export const generateInsights = (
   if (!analysis.sections.hasContactInfo) {
     weaknesses.push("Missing or unclear contact information");
     recommendations.push(
-      "Add clear contact information at the top of your resume"
+      "Add clear contact information at the top of your resume",
     );
   }
 
   if (!analysis.sections.hasSkills) {
     weaknesses.push("No dedicated skills section");
     recommendations.push(
-      "Include a clear skills section with relevant technologies"
+      "Include a clear skills section with relevant technologies",
     );
   }
 
@@ -153,7 +153,7 @@ export const generateInsights = (
   if (resumeText.length < 200) {
     weaknesses.push("Resume appears too short");
     recommendations.push(
-      "Expand your resume with more details and accomplishments"
+      "Expand your resume with more details and accomplishments",
     );
   } else if (resumeText.length > 3000) {
     insights.push("Resume has good detail level");
@@ -163,7 +163,7 @@ export const generateInsights = (
   if (analysis.missingKeywords.length > 0) {
     const topMissing = analysis.missingKeywords.slice(0, 5);
     recommendations.push(
-      `Consider adding these keywords: ${topMissing.join(", ")}`
+      `Consider adding these keywords: ${topMissing.join(", ")}`,
     );
   }
 
@@ -200,14 +200,14 @@ export const calculateATSScore = (analysis: ATSAnalysisResult): number => {
 export const generateHTMLReport = (
   analysis: ATSAnalysisResult,
   userEmail: string,
-  jobTitle?: string
+  jobTitle?: string,
 ): string => {
   const scoreColor =
     analysis.score >= 80
       ? "#22c55e"
       : analysis.score >= 60
-      ? "#f59e0b"
-      : "#ef4444";
+        ? "#f59e0b"
+        : "#ef4444";
 
   return `
     <!DOCTYPE html>
@@ -269,8 +269,8 @@ export const generateHTMLReport = (
             analysis.score >= 80
               ? "✅ Excellent"
               : analysis.score >= 60
-              ? "⚠️ Good"
-              : "❌ Needs Improvement"
+                ? "⚠️ Good"
+                : "❌ Needs Improvement"
           }</div>
         </div>
 
@@ -279,8 +279,8 @@ export const generateHTMLReport = (
           <p>Match Rate: <strong>${
             analysis.keywordStats.matchPercentage
           }%</strong> (${analysis.keywordStats.matchedCount}/${
-    analysis.keywordStats.totalJDKeywords
-  } keywords)</p>
+            analysis.keywordStats.totalJDKeywords
+          } keywords)</p>
         </div>
 
         ${
@@ -368,7 +368,7 @@ export const generateHTMLReport = (
         }
 
         <center>
-          <a href="http://localhost:3000/ats-checker" class="button">View Detailed Report</a>
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL || "https://cloud9profile.com"}/ats-checker" class="button">View Detailed Report</a>
         </center>
 
         <div class="footer">

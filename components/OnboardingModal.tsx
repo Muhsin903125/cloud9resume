@@ -41,7 +41,7 @@ export default function OnboardingModal({
             userId: user.id,
           });
         } catch (error) {
-          console.error("Onboarding error:", error);
+          // Silent fail for onboarding completion
         }
       };
       completeOnboarding();
@@ -59,24 +59,16 @@ export default function OnboardingModal({
           title: "My Resume",
         });
 
-        console.log("Resume creation response:", response);
-
         // Handle different response formats
         const resumeId = response.data?.data?.id || response.data?.id;
 
         if (resumeId) {
-          console.log("Redirecting to:", `/dashboard/resume/${resumeId}/edit`);
           // Navigate directly to the editor page
           window.location.href = `/dashboard/resume/${resumeId}/edit`;
         } else {
-          console.error(
-            "Failed to create resume - no ID in response:",
-            response
-          );
           onComplete();
         }
       } catch (error) {
-        console.error("Error creating resume:", error);
         onComplete();
       } finally {
         setLoading(false);

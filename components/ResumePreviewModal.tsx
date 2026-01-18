@@ -57,7 +57,7 @@ const MiniTemplatePreview = ({
   ].includes(templateId);
   const isSidebarRight = ["tech", "bold"].includes(templateId);
   const isGrid = ["grid", "compact", "dense", "geometric-creative"].includes(
-    templateId
+    templateId,
   );
 
   const accentStyle = { backgroundColor: color };
@@ -217,7 +217,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
           setTemplate(settings.template_id || r.template_id || "ats");
           setThemeColor(r.theme_color || "#3b82f6");
           setSecondaryColor(
-            settings.secondary_color || r.theme_color || "#3b82f6"
+            settings.secondary_color || r.theme_color || "#3b82f6",
           );
           setFont(settings.font || "inter");
           setHiddenSectionIds(settings.hidden_sections || []);
@@ -271,7 +271,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
     currentColor = themeColor,
     currentSections = localSections,
     currentHidden = hiddenSectionIds,
-    currentFont = font
+    currentFont = font,
   ) => {
     if (!onSave) return;
 
@@ -314,16 +314,16 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
       // Ensure personal_info is always included in export
       const exportSections = (() => {
         const hasPersonalInfo = previewSections.some(
-          (s) => s.section_type === "personal_info"
+          (s) => s.section_type === "personal_info",
         );
         if (!hasPersonalInfo) {
           // Try to get personal_info from resume sections or localSections
           const personalInfoSection =
             resume.sections?.find(
-              (s: any) => s.section_type === "personal_info"
+              (s: any) => s.section_type === "personal_info",
             ) ||
             resume.resume_sections?.find(
-              (s: any) => s.section_type === "personal_info"
+              (s: any) => s.section_type === "personal_info",
             ) ||
             localSections.find((s) => s.section_type === "personal_info");
           if (personalInfoSection) {
@@ -373,7 +373,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
       a.href = url;
       a.download = `${(resume.title || "resume").replace(
         /[^a-z0-9]/gi,
-        "_"
+        "_",
       )}.${format}`;
       document.body.appendChild(a);
       a.click();
@@ -385,7 +385,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
       console.error(error);
       if (!String(error).includes("limit reached")) {
         toast.error(
-          `Failed to generate ${format.toUpperCase()}. Please try again.`
+          `Failed to generate ${format.toUpperCase()}. Please try again.`,
         );
       }
     } finally {
@@ -440,7 +440,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
   };
 
   const previewSections = localSections.filter(
-    (s) => !hiddenSectionIds.includes(s.section_type)
+    (s) => !hiddenSectionIds.includes(s.section_type),
   );
 
   const categories = [
@@ -459,7 +459,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
           id: t.id,
           name: t.name,
           description: t.description,
-        })
+        }),
       ),
     },
   ];
@@ -621,7 +621,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
                           themeColor,
                           localSections,
                           hiddenSectionIds,
-                          val
+                          val,
                         );
                       }}
                       className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -693,14 +693,13 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
                     values={localSections}
                     onReorder={(newOrder) => {
                       setLocalSections(newOrder);
-                      console.log("newOrder", newOrder);
                       handleSave(template, themeColor, newOrder);
                     }}
                     className="space-y-2"
                   >
                     {localSections.map((section, index) => {
                       const isHidden = hiddenSectionIds.includes(
-                        section.section_type
+                        section.section_type,
                       );
                       return (
                         <Reorder.Item
