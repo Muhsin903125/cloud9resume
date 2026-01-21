@@ -65,6 +65,7 @@ export const detectSections = (
 export const analyzeKeywordMatch = (
   resumeKeywords: string[],
   jdKeywords: string[],
+  technicalKeywords: string[] = [], // Pass technical keywords for weighting
 ): {
   matched: string[];
   missing: string[];
@@ -73,18 +74,36 @@ export const analyzeKeywordMatch = (
 } => {
   const resumeSet = new Set(resumeKeywords.map((k) => k.toLowerCase()));
   const jdSet = new Set(jdKeywords.map((k) => k.toLowerCase()));
+  const techSet = new Set(technicalKeywords.map((k) => k.toLowerCase()));
 
   const matched = Array.from(jdSet).filter((keyword) => resumeSet.has(keyword));
   const missing = Array.from(jdSet).filter(
     (keyword) => !resumeSet.has(keyword),
   );
 
+  // Weighted Scoring Logic
+  let weightedScore = 0;
+  let totalWeight = 0;
+
+  jdSet.forEach((keyword) => {
+    const isTech = techSet.has(keyword);
+    const weight = isTech ? 1.5 : 0.8; // Hard skills weighted 1.5x, soft skills 0.8x
+
+    totalWeight += weight;
+    if (resumeSet.has(keyword)) {
+      weightedScore += weight;
+    }
+  });
+
   const matchPercentage =
     jdSet.size > 0 ? (matched.length / jdSet.size) * 100 : 0;
 
-  // Calculate score (0-100)
-  let score = matchPercentage;
-  if (matched.length > 0) score += 5; // Bonus if any keywords match
+  // Final score based on weights
+  let score = totalWeight > 0 ? (weightedScore / totalWeight) * 100 : 0;
+
+  // Bonus for any matches
+  if (matched.length > 0) score += 2;
+
   score = Math.min(100, Math.max(0, score));
 
   return {
