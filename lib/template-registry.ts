@@ -139,7 +139,44 @@ export const TEMPLATE_REGISTRY: TemplateContract[] = [
     previewUrl: "/templates/tech-preview.png",
   },
 
+  {
+    id: "two-column-pro",
+    name: "Two-Column Pro",
+    component: "TwoColumnProTemplate",
+    isAtsSafe: true,
+    category: "MODERN",
+    version: "1.0.0",
+    previewUrl: "/templates/modern-preview.png",
+  },
+
   // Creative Templates
+  {
+    id: "accent-sidebar",
+    name: "Accent Sidebar",
+    component: "AccentSidebarTemplate",
+    isAtsSafe: false,
+    category: "CREATIVE",
+    version: "1.0.0",
+    previewUrl: "/templates/accent-sidebar-preview.png",
+  },
+  {
+    id: "infographic",
+    name: "Infographic",
+    component: "InfographicTemplate",
+    isAtsSafe: false,
+    category: "CREATIVE",
+    version: "1.0.0",
+    previewUrl: "/templates/creative-preview.png", // Placeholder
+  },
+  {
+    id: "monochrome",
+    name: "Monochrome",
+    component: "MonochromeTemplate",
+    isAtsSafe: true,
+    category: "CREATIVE", // Styled as creative for visual impact
+    version: "1.0.0",
+    previewUrl: "/templates/classic-preview.png", // Placeholder
+  },
   {
     id: "vibrant-creative",
     name: "Vibrant Creative",
