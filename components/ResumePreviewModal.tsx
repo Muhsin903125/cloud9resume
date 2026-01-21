@@ -449,7 +449,6 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
       items: TEMPLATE_REGISTRY.filter((t) => t.category === "ATS").map((t) => ({
         id: t.id,
         name: t.name,
-        description: t.description,
       })),
     },
     {
@@ -458,7 +457,6 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
         (t) => ({
           id: t.id,
           name: t.name,
-          description: t.description,
         }),
       ),
     },

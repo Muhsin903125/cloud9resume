@@ -155,9 +155,6 @@ const TemplateSelectionPage = () => {
                         <CheckCircleIcon className="w-4 h-4 text-blue-600" />
                       )}
                     </div>
-                    <p className="text-[10px] text-gray-500 line-clamp-2">
-                      {template.description}
-                    </p>
                   </div>
 
                   {/* Hover/Selected Badge */}

@@ -53,10 +53,11 @@ const DashboardPage: NextPage = () => {
       setDisplayName(name);
 
       // Sync credits from user profile (same source as sidebar)
-      if (user.profile?.credits !== undefined) {
+      const profileCredits = user.profile?.credits;
+      if (profileCredits !== undefined) {
         setStats((prev) => ({
           ...prev,
-          creditsRemaining: user.profile.credits,
+          creditsRemaining: profileCredits,
         }));
       }
     }
