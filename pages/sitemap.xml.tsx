@@ -4,47 +4,45 @@ import { supabase } from "../lib/supabaseClient";
 const EXTERNAL_DATA_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://cloud9profile.com";
 
+const now = new Date().toISOString();
+
 function generateSiteMap(profiles: any[]) {
+  const staticPages = [
+    { url: "", priority: "1.0", changefreq: "daily" },
+    { url: "/login", priority: "0.8", changefreq: "monthly" },
+    { url: "/signup", priority: "0.9", changefreq: "monthly" },
+    { url: "/plans", priority: "0.8", changefreq: "weekly" },
+    { url: "/resume", priority: "0.9", changefreq: "weekly" },
+    { url: "/portfolio", priority: "0.9", changefreq: "weekly" },
+    { url: "/ats-checker", priority: "0.9", changefreq: "weekly" },
+    { url: "/about", priority: "0.7", changefreq: "monthly" },
+    { url: "/contact", priority: "0.7", changefreq: "monthly" },
+    { url: "/privacy", priority: "0.5", changefreq: "monthly" },
+    { url: "/terms", priority: "0.5", changefreq: "monthly" },
+  ];
+
   return `<?xml version="1.0" encoding="UTF-8"?>
    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-     <url>
-       <loc>${EXTERNAL_DATA_URL}</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/login</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/signup</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/plans</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/resume</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/portfolio</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/ats-checker</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/about</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/contact</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/privacy</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/terms</loc>
-     </url>
+     ${staticPages
+       .map(({ url, priority, changefreq }) => {
+         return `
+       <url>
+         <loc>${EXTERNAL_DATA_URL}${url}</loc>
+         <lastmod>${now}</lastmod>
+         <changefreq>${changefreq}</changefreq>
+         <priority>${priority}</priority>
+       </url>
+     `;
+       })
+       .join("")}
      ${profiles
        .map(({ username }) => {
          return `
        <url>
            <loc>${`${EXTERNAL_DATA_URL}/${username}`}</loc>
+           <lastmod>${now}</lastmod>
+           <changefreq>weekly</changefreq>
+           <priority>0.6</priority>
        </url>
      `;
        })

@@ -35,6 +35,10 @@ const AboutPage: NextPage = () => {
         description="Empowering freshers and professionals with free, AI-powered career tools. Learn about our mission to democratize career success."
         keywords={["about us", "career tools", "mission", "freshers"]}
         structuredData={structuredData}
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "About", item: "/about" },
+        ]}
       />
 
       {/* Reduced top padding */}

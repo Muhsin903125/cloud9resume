@@ -33,20 +33,35 @@ const HomePage: NextPage = () => {
   // Structured Data for the Application
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "Cloud9Profile",
-    applicationCategory: "BusinessApplication",
-    operatingSystem: "Web",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "1250",
-    },
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        name: "Cloud9Profile",
+        url: "https://cloud9profile.com",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: "4.8",
+          ratingCount: "1250",
+        },
+      },
+      {
+        "@type": "Organization",
+        name: "Cloud9Profile",
+        url: "https://cloud9profile.com",
+        logo: "https://cloud9profile.com/logo.png",
+        sameAs: [
+          "https://twitter.com/cloud9profile",
+          "https://www.linkedin.com/company/cloud9profile",
+        ],
+      },
+    ],
   };
   // Mouse tracking for interactive effects
   const mouseX = useMotionValue(0);
@@ -76,8 +91,9 @@ const HomePage: NextPage = () => {
   return (
     <div className="min-h-screen bg-transparent text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 relative overflow-hidden">
       <SEO
-        title="Build ATS-Friendly Resumes & Professional Profiles | Cloud9Profile"
+        title="Build ATS-Friendly Resumes & Professional Profiles"
         description="Create text-selectable, ATS-readable resumes and professional portfolio websites. Optimize your job search with our free ATS checker and AI-powered builder."
+        structuredData={structuredData}
       />
 
       {/* Interactive Background Cursor Blob */}
@@ -643,7 +659,7 @@ const HomePage: NextPage = () => {
               <div className="relative rounded-2xl shadow-xl border border-white/40 overflow-hidden glass-panel">
                 <img
                   src={getAssetUrl("/resume-vs-portfolio.png")}
-                  alt="Old Resume vs New Portfolio"
+                  alt="Comparison highlighting the transition from a traditional ATS resume to a modern, professional digital portfolio"
                   className="w-full h-auto object-cover"
                 />
               </div>

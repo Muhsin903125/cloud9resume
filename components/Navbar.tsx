@@ -66,7 +66,7 @@ export default function Navbar() {
               >
                 <img
                   src={getAssetUrl("/logo.png")}
-                  alt="Cloud9Profile Logo"
+                  alt="Cloud9Profile - AI Resume Builder & Portfolio Creator"
                   style={{
                     height: "40px",
                     width: "auto",
@@ -88,8 +88,8 @@ export default function Navbar() {
                     useWhiteText
                       ? "text-slate-200 hover:text-white"
                       : router.pathname === item.href
-                      ? "text-blue-600"
-                      : "text-gray-600 hover:text-blue-600"
+                        ? "text-blue-600"
+                        : "text-gray-600 hover:text-blue-600"
                   }`}
                 >
                   {item.name}
@@ -163,6 +163,7 @@ export default function Navbar() {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
               className={`focus:outline-none p-2 rounded-md transition-colors ${
                 useWhiteText
                   ? "text-white hover:bg-white/10"

@@ -193,9 +193,13 @@ const PublicATSChecker: NextPage = () => {
   return (
     <>
       <SEO
-        title="ATS Resume Checker - Cloud9Profile"
-        description="Free ATS resume checker. Analyze keyword match, formatting, and get recommendations."
+        title="Free ATS Resume Checker & Scanner"
+        description="Check your resume's ATS compatibility for free. Get instant feedback on keyword matching, formatting, and structural integrity to land more interviews."
         canonical="https://cloud9profile.com/ats-checker"
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "ATS Checker", item: "/ats-checker" },
+        ]}
       />
 
       {/* Force White Theme Injection */}
@@ -671,7 +675,7 @@ const PublicATSChecker: NextPage = () => {
               <div className="absolute inset-0 bg-blue-600/5 blur-[80px] rounded-full" />
               <img
                 src={getAssetUrl("/ats-checker-preview.png")}
-                alt="System Preview"
+                alt="ATS Resume Checker Analysis and Keyword Match Preview"
                 className="relative rounded-[32px] shadow-xl border border-slate-200"
               />
             </div>

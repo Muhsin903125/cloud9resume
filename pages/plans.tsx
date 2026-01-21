@@ -110,9 +110,13 @@ const PlansPage: NextPage = () => {
   return (
     <>
       <SEO
-        title="Plans - Cloud9Profile"
-        description="Choose the perfect plan for your career growth."
-        keywords={["pricing", "plans"]}
+        title="Pricing & Credits"
+        description="Explore affordable plans for AI resume building, ATS checking, and personal portfolio hosting. Get started for free today."
+        keywords={["pricing", "plans", "credits", "AI resume cost"]}
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "Plans", item: "/plans" },
+        ]}
       />
 
       <div className="min-h-screen bg-slate-900 text-slate-50 overflow-hidden relative selection:bg-blue-500/30">

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
+import Head from "next/head";
+
 interface FAQItem {
   question: string;
   answer: string;
@@ -15,10 +17,29 @@ interface FAQProps {
 export default function FAQ({ items, theme = "light" }: FAQProps) {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   const isDark = theme === "dark";
 
   return (
     <div className="max-w-3xl mx-auto my-4 md:my-16 px-4 md:px-0">
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      </Head>
       {/* <h2
         className={`text-3xl font-semibold mb-12 text-center ${
           isDark ? "text-white" : "text-gray-900"
@@ -57,8 +78,8 @@ export default function FAQ({ items, theme = "light" }: FAQProps) {
                       ? "rotate-180 text-blue-400"
                       : "rotate-180 text-blue-600"
                     : isDark
-                    ? "text-slate-500"
-                    : "text-slate-400"
+                      ? "text-slate-500"
+                      : "text-slate-400"
                 }`}
               />
             </button>

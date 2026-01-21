@@ -32,15 +32,20 @@ const PortfolioPage: NextPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <SEO
-        title="Personal Portfolio Website Builder | Cloud9Profile"
-        description="Turn your resume into a stunning personal website in one click. No coding required. Custom domains, SEO optimized, and mobile responsive."
+        title="Personal Portfolio Builder - Your Resume as a Website"
+        description="Instantly turn your resume into a professional personal website. No coding required. Custom domains, SEO optimized, and built to impress recruiters."
         keywords={[
           "portfolio builder",
           "personal website",
           "portfolio maker",
           "resume to website",
+          "developer portfolio",
         ]}
         structuredData={structuredData}
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "Portfolio Builder", item: "/portfolio" },
+        ]}
       />
 
       <div className="pt-24">

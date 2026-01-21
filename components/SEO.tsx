@@ -12,18 +12,19 @@ interface SEOProps {
   twitterHandle?: string;
   noIndex?: boolean;
   structuredData?: Record<string, any>;
+  breadcrumbs?: { name: string; item: string }[];
 }
 
 const SEO = ({
-  title = "Cloud9Profile - ATS-Friendly Resume & Professional Portfolio Builder",
-  description = "Create professional, ATS-friendly resumes and stunning portfolios with AI assistance. Optimize for job success with Cloud9Profile.",
+  title = "Cloud9Profile | AI-Powered Resume & Portfolio Builder",
+  description = "Build a professional, ATS-friendly resume and portfolio in minutes with AI. Stand out to recruiters with Cloud9Profile's expert tools.",
   keywords = [
     "resume builder",
     "portfolio builder",
-    "CV maker",
-    "ATS resume",
-    "job search",
-    "professional portfolio",
+    "ATS friendly resume",
+    "AI resume maker",
+    "online portfolio",
+    "free resume checker",
   ],
   canonical,
   ogType = "website",
@@ -31,12 +32,28 @@ const SEO = ({
   twitterHandle = "@cloud9profile",
   noIndex = false,
   structuredData,
+  breadcrumbs,
 }: SEOProps) => {
   const router = useRouter();
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://cloud9profile.com";
   const fullUrl = `${siteUrl}${router.asPath}`;
   const finalCanonical = canonical || fullUrl;
+
+  const breadcrumbData = breadcrumbs
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: breadcrumbs.map((crumb, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: crumb.name,
+          item: crumb.item.startsWith("http")
+            ? crumb.item
+            : `${siteUrl}${crumb.item}`,
+        })),
+      }
+    : null;
 
   return (
     <Head>
@@ -72,6 +89,16 @@ const SEO = ({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData),
+          }}
+        />
+      )}
+
+      {/* Breadcrumb Data */}
+      {breadcrumbData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(breadcrumbData),
           }}
         />
       )}

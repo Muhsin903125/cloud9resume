@@ -19,7 +19,7 @@ const ContactPage: NextPage = () => {
   };
 
   const [formState, setFormState] = useState<"idle" | "submitting" | "success">(
-    "idle"
+    "idle",
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,6 +70,10 @@ const ContactPage: NextPage = () => {
         description="Get in touch with the Cloud9Profile team. We're here to help you with your resume, portfolio, and career questions."
         keywords={["contact us", "support", "help", "customer service"]}
         structuredData={structuredData}
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "Contact", item: "/contact" },
+        ]}
       />
 
       <div className="pt-24 pb-16">

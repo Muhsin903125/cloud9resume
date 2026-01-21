@@ -1,7 +1,11 @@
 import { NextPage } from "next";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { BoltIcon, CheckBadgeIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import {
+  BoltIcon,
+  CheckBadgeIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 import SEO from "../components/SEO";
 import { getAssetUrl } from "../lib/common-functions";
 import FAQ from "@/components/FAQ";
@@ -31,10 +35,20 @@ const ResumePage: NextPage = () => {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
       <SEO
-        title="AI Resume Builder | Cloud9Profile"
-        description="Create a job-winning resume in minutes with our AI-powered builder. ATS-friendly templates, expert suggestions, and instant formatting."
-        keywords={["resume builder", "AI resume", "CV maker", "ATS resume"]}
+        title="AI Resume Builder - Create Your ATS-Friendly CV"
+        description="Build a high-scoring ATS resume in minutes with AI. Professional templates, real-time optimization, and expert career tools to help you land more interviews."
+        keywords={[
+          "resume builder",
+          "AI resume",
+          "CV maker",
+          "ATS resume",
+          "free resume builder",
+        ]}
         structuredData={structuredData}
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "Resume Builder", item: "/resume" },
+        ]}
       />
 
       <div className="pt-24">
