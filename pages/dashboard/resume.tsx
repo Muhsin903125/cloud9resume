@@ -62,7 +62,7 @@ const ResumeDashboard = () => {
       !canCreateResource(
         (user.plan || "free") as PlanType,
         resumes.length,
-        "resumes"
+        "resumes",
       )
     ) {
       toast.error(`Resume limit reached. Please upgrade your plan.`);
@@ -115,7 +115,7 @@ const ResumeDashboard = () => {
       if (response.success && response.data) {
         setPreviewResume(response.data);
         setPreviewSections(
-          response.data.sections || response.data.resume_sections || []
+          response.data.sections || response.data.resume_sections || [],
         );
         setShowPreview(true);
       } else {
@@ -131,7 +131,7 @@ const ResumeDashboard = () => {
   const handlePreferencesSave = async (
     template: string,
     color: string,
-    settings: any
+    settings: any,
   ) => {
     if (!previewResume?.id) return false;
     try {
@@ -143,7 +143,7 @@ const ResumeDashboard = () => {
           theme_color: color,
           resume_sections: settings,
         },
-        { "x-user-id": userId || "" }
+        { "x-user-id": userId || "" },
       );
 
       setPreviewResume((prev: any) => ({
@@ -155,8 +155,8 @@ const ResumeDashboard = () => {
         prev.map((r) =>
           r.id === previewResume.id
             ? { ...r, template_id: template, theme_color: color }
-            : r
-        )
+            : r,
+        ),
       );
       toast.success("Saved");
       return true;
@@ -170,7 +170,7 @@ const ResumeDashboard = () => {
     (r) =>
       r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (r.job_title &&
-        r.job_title.toLowerCase().includes(searchQuery.toLowerCase()))
+        r.job_title.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   return (
@@ -216,7 +216,7 @@ const ResumeDashboard = () => {
                   <span className="hidden sm:inline">Import</span>
                 </button>
                 <button
-                  onClick={() => setShowNewModal(true)}
+                  onClick={() => router.push("/dashboard/resume/create")}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   <PlusIcon size={12} color="white" />
@@ -259,7 +259,7 @@ const ResumeDashboard = () => {
                     Import
                   </button>
                   <button
-                    onClick={() => setShowNewModal(true)}
+                    onClick={() => router.push("/dashboard/resume/create")}
                     className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                   >
                     <PlusIcon size={14} color="white" />

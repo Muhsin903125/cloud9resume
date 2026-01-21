@@ -7,15 +7,14 @@ import Button from "../../components/Button";
 import { useAuth } from "../../lib/authUtils";
 import {
   DocumentIcon,
-  SaveIcon,
-  ActivityIcon,
-  TemplateIcon,
   PortfolioIcon,
-  AIIcon,
   AnalyticsIcon,
+  ActivityIcon,
   ArrowRightIcon,
+  MailIcon,
+  PlusIcon,
 } from "../../components/Icons";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { apiClient } from "../../lib/apiClient";
 import PlanUpgradeModal from "../../components/PlanUpgradeModal";
 import OnboardingModal from "../../components/OnboardingModal";
@@ -25,7 +24,7 @@ import { formatDistanceToNow } from "date-fns";
 
 const DashboardPage: NextPage = () => {
   const router = useRouter();
-  const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [displayName, setDisplayName] = useState<string>("User");
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -44,7 +43,6 @@ const DashboardPage: NextPage = () => {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [showPlanModal, setShowPlanModal] = useState(false);
 
-  // Get display name from user data
   useEffect(() => {
     if (user) {
       const name =
@@ -52,13 +50,18 @@ const DashboardPage: NextPage = () => {
         user.profile?.first_name ||
         user.email?.split("@")[0] ||
         "User";
-
       setDisplayName(name);
+
+      // Sync credits from user profile (same source as sidebar)
+      if (user.profile?.credits !== undefined) {
+        setStats((prev) => ({
+          ...prev,
+          creditsRemaining: user.profile.credits,
+        }));
+      }
     }
   }, [user]);
 
-  // Handle payment success from Dodo
-  // Handle payment success from Dodo with polling
   useEffect(() => {
     if (
       router.query.status === "success" ||
@@ -66,27 +69,12 @@ const DashboardPage: NextPage = () => {
     ) {
       toast.success("Payment successful! Updating account...");
       router.replace("/dashboard", undefined, { shallow: true });
-
-      // Poll for updates (webhook delay)
-      fetchDashboardData(); // Immediate
-
-      // Retry sequence to catch webhook update
-      const t1 = setTimeout(() => fetchDashboardData(true), 2000);
-      const t2 = setTimeout(() => fetchDashboardData(true), 5000);
-      const t3 = setTimeout(() => {
-        fetchDashboardData(true);
-        toast.success("Account synced!");
-      }, 9000);
-
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-      };
+      fetchDashboardData();
+      setTimeout(() => fetchDashboardData(true), 2000);
+      setTimeout(() => fetchDashboardData(true), 5000);
     }
   }, [router.query.status, router.query.payment]);
 
-  // Fetch real data
   useEffect(() => {
     if (isAuthenticated) {
       if (user && user.profile && user.profile.onboarding_completed === false) {
@@ -100,23 +88,17 @@ const DashboardPage: NextPage = () => {
     if (!silent) setIsDataLoading(true);
     try {
       const result = await apiClient.get("/dashboard");
-
       if (result.data && (result.data as any).success) {
         const payload = (result.data as any).data;
-        setStats(payload.stats);
-
-        // Format activities for display
+        setStats({
+          ...payload.stats,
+          creditsRemaining: payload.stats.creditsRemaining,
+        });
         const activityList = payload.recentActivities.map((act: any) => ({
           ...act,
           timestamp: formatTimestamp(new Date(act.timestamp)),
         }));
-
         setRecentActivities(activityList);
-      } else {
-        console.error(
-          "Dashboard data fetch failed:",
-          result.error || result.message
-        );
       }
     } catch (error) {
       console.error("Dashboard data fetch error", error);
@@ -126,124 +108,31 @@ const DashboardPage: NextPage = () => {
   };
 
   const formatTimestamp = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+    return formatDistanceToNow(date, { addSuffix: true });
   };
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/login");
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-gray-900"></div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!isAuthenticated) {
+  if (isLoading || !isAuthenticated) {
     return null;
-  }
-
-  const recentActivity = [
-    {
-      id: 1,
-      type: "resume",
-      title: "Software Engineer Resume",
-      action: "Updated",
-      timestamp: "2 hours ago",
-    },
-    {
-      id: 2,
-      type: "ats",
-      title: "Marketing Manager Resume",
-      action: "ATS Checked",
-      timestamp: "1 day ago",
-    },
-    {
-      id: 3,
-      type: "portfolio",
-      title: "Design Portfolio",
-      action: "Created",
-      timestamp: "3 days ago",
-    },
-  ];
-
-  const quickActions = [
-    {
-      title: "Create Resume",
-      description: "Build a professional resume",
-      href: "/dashboard/resume",
-      icon: DocumentIcon,
-    },
-    {
-      title: "Build Portfolio",
-      description: "Showcase your projects",
-      href: "/dashboard/portfolio",
-      icon: PortfolioIcon,
-    },
-    {
-      title: "ATS Check",
-      description: "Optimize for tracking systems",
-      href: "/dashboard/ats",
-      icon: AnalyticsIcon,
-    },
-    {
-      title: "Manage Credits",
-      description: "View and refill credits",
-      onClick: () => setShowPlanModal(true),
-      icon: DocumentIcon,
-    },
-  ];
-
-  // Add admin panel for admin users
-  if (user?.is_admin) {
-    quickActions.push({
-      title: "Admin Panel",
-      description: "Manage users, coupons & system",
-      href: "/admin",
-      icon: (props: any) => (
-        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-        </svg>
-      ),
-    });
   }
 
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "resume":
-        return <DocumentIcon size={20} />;
+        return <DocumentIcon size={16} />;
       case "portfolio":
-        return <PortfolioIcon size={20} />;
+        return <PortfolioIcon size={16} />;
       case "ats":
-        return <AnalyticsIcon size={20} />;
+        return <AnalyticsIcon size={16} />;
+      case "cover_letter":
+        return <MailIcon size={16} />;
       default:
-        return <ActivityIcon size={20} />;
+        return <ActivityIcon size={16} />;
     }
   };
 
@@ -251,466 +140,314 @@ const DashboardPage: NextPage = () => {
     <>
       <Head>
         <title>Dashboard - Cloud9Profile</title>
-        <meta
-          name="description"
-          content="Manage your resumes, portfolios, and career tools"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900 relative overflow-hidden">
-        {/* Animated SVG Background */}
+      <div className="min-h-screen bg-gray-50/50 font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900 overflow-hidden relative">
+        {/* Animated Background Vectors */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-          {/* Floating SVG Shapes */}
-          <motion.svg
-            className="absolute top-[15%] right-[20%] opacity-10"
-            width="120"
-            height="120"
-            animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <circle cx="60" cy="60" r="40" fill="#3B82F6" />
-            <circle cx="60" cy="60" r="25" fill="#60A5FA" />
-          </motion.svg>
-
-          <motion.svg
-            className="absolute bottom-[30%] right-[30%] opacity-10"
-            width="80"
-            height="80"
-            animate={{ y: [0, 15, 0], rotate: [0, -15, 0] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <rect x="20" y="20" width="40" height="40" fill="#A78BFA" rx="8" />
-          </motion.svg>
-
-          <motion.svg
-            className="absolute top-[60%] left-[10%] opacity-10"
-            width="100"
-            height="100"
-            animate={{ y: [0, -25, 0], x: [0, 10, 0] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <polygon points="50,10 90,90 10,90" fill="#EC4899" />
-          </motion.svg>
-
-          <motion.svg
-            className="absolute top-[25%] left-[25%] opacity-10"
-            width="90"
-            height="90"
-            animate={{ y: [0, 20, 0], rotate: [0, 360, 0] }}
+          {/* Top Right Blue Blob */}
+          <motion.div
+            className="absolute -top-[10%] -right-[10%] w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.1, 1], x: [0, 20, 0], y: [0, -20, 0] }}
             transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <path d="M45,5 L85,45 L45,85 L5,45 Z" fill="#10B981" />
-          </motion.svg>
-
-          <motion.svg
-            className="absolute bottom-[15%] right-[15%] opacity-10"
-            width="70"
-            height="70"
-            animate={{ y: [0, -18, 0], x: [0, -10, 0] }}
-            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <circle cx="35" cy="35" r="30" fill="#F59E0B" opacity="0.7" />
-            <circle cx="35" cy="35" r="15" fill="#FBBF24" />
-          </motion.svg>
+          />
+          {/* Bottom Left Purple Blob */}
+          <motion.div
+            className="absolute bottom-[10%] -left-[10%] w-[600px] h-[600px] bg-purple-400/20 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.2, 1], x: [0, -30, 0], y: [0, 30, 0] }}
+            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Center Amber Accent */}
+          <motion.div
+            className="absolute top-[30%] left-[30%] w-[300px] h-[300px] bg-amber-300/10 rounded-full blur-3xl"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
         </div>
 
-        {/* Content */}
-        <main className="max-w-6xl px-4 sm:px-8 py-8 pb-24 relative z-10 mx-auto">
-          {/* Portfolio Expiration Warning */}
-          {stats.portfolioExpiresAt && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
-            >
-              <div className="p-2 bg-amber-100 rounded-full text-amber-600 flex-shrink-0">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-amber-900">
-                  Portfolio Expiring Soon
-                </h3>
-                <p className="text-sm text-amber-700 mt-1">
-                  Your portfolio publishing trial expires{" "}
-                  {formatDistanceToNow(new Date(stats.portfolioExpiresAt), {
-                    addSuffix: true,
-                  })}
-                  . Upgrade to Professional to keep it live forever.
-                </p>
-              </div>
-              <Button
-                variant="primary"
-                size="small"
-                onClick={() => setShowPlanModal(true)}
-                className="whitespace-nowrap bg-amber-600 hover:bg-amber-700 border-transparent"
-              >
-                Upgrade Now
-              </Button>
-            </motion.div>
-          )}
-
-          {/* Free Plan Upgrade Banner */}
-          {stats.plan === "free" && !stats.portfolioExpiresAt && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8 relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg"
-            >
-              <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold mb-1">
-                    Upgrade to Professional
-                  </h2>
-                  <p className="text-blue-100 text-sm">
-                    Get unlimited resumes, portfolios, and AI credits.
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <span className="text-[10px] sm:text-xs font-semibold bg-white/20 px-3 py-1 rounded-full uppercase tracking-wider">
-                    50% Off First Month
-                  </span>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowPlanModal(true)}
-                    className="w-full sm:w-auto bg-white text-gray-600 hover:bg-blue-50 border-none font-bold shadow-md px-4 py-2.5 rounded-lg text-sm transition-colors"
-                  >
-                    Claim Offer - $6.49
-                  </motion.button>
-                </div>
-              </div>
-              {/* Decorative background circles */}
-              <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl"></div>
-            </motion.div>
-          )}
-
-          {/* Credits Banner */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8 p-4 bg-white border border-gray-200 rounded-xl shadow-sm"
-          >
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">
-                    Available Credits
-                  </p>
-                  <p className="text-xl font-bold text-gray-900 leading-none mt-0.5">
-                    {isDataLoading ? "..." : stats.creditsRemaining}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="secondary"
-                size="small"
-                className="text-xs h-8 px-3"
-                onClick={() => setShowPlanModal(true)}
-              >
-                Add Credits
-              </Button>
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 relative z-10">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                Welcome back, {displayName}
+              </h1>
+              <p className="text-gray-500 mt-1 font-medium">
+                Here's what's happening with your career profile today.
+              </p>
             </div>
-          </motion.div>
 
-          {/* Stats Grid - Clickable Cards */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.1,
-                },
-              },
-            }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8"
-          >
-            {[
-              {
-                label: "Resumes",
-                value: stats.resumesCreated,
-                icon: DocumentIcon,
-                href: "/dashboard/resume",
-                color: "blue",
-                limit: PLAN_LIMITS[stats.plan]?.resumes,
-              },
-              {
-                label: "Portfolios",
-                value: stats.portfoliosCreated,
-                icon: PortfolioIcon,
-                href: "/dashboard/portfolio",
-                color: "purple",
-                limit: PLAN_LIMITS[stats.plan]?.portfolios,
-              },
-              {
-                label: "ATS Scans",
-                value: stats.atsScores,
-                icon: AnalyticsIcon,
-                href: "/dashboard/ats",
-                color: "green",
-              },
-              {
-                label: "Total Views",
-                value: stats.portfolioViews,
-                icon: (props: any) => (
-                  <svg
-                    {...props}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+            {/* Premium Status Bar */}
+            <div className="flex items-center gap-4 bg-white/80 backdrop-blur-md border border-white/50 p-2 pr-3 rounded-2xl shadow-lg shadow-blue-500/5 ring-1 ring-black/5">
+              <div className="px-4 py-2 bg-gradient-to-br from-blue-50 to-white rounded-xl border border-blue-100/50 flex flex-col items-center min-w-[80px]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                  Credits
+                </span>
+                <span className="text-xl font-bold text-blue-600 leading-none mt-0.5">
+                  {isDataLoading ? (
+                    <span className="text-gray-300 animate-pulse">...</span>
+                  ) : (
+                    stats.creditsRemaining
+                  )}
+                </span>
+              </div>
+
+              <div className="h-8 w-px bg-gray-200"></div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Current Plan
+                  </span>
+                  <span className="text-sm font-bold text-gray-900 capitalize">
+                    {stats.plan.replace("_", " ")}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  {stats.plan === "free" && (
+                    <span className="text-[9px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full uppercase tracking-wide animate-pulse">
+                      50% Off First Month
+                    </span>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="small"
+                    className="h-8 px-4 text-xs font-bold rounded-xl bg-gray-900 hover:bg-gray-800 shadow-lg shadow-gray-900/20 transition-all hover:scale-105 active:scale-95"
+                    onClick={() => setShowPlanModal(true)}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
-                ),
-                href: "/dashboard/history",
-                color: "orange",
-              },
-            ].map((stat, idx) => (
-              <Link key={idx} href={stat.href} passHref>
-                <motion.div
-                  variants={{
-                    hidden: { opacity: 0, y: 20 },
-                    visible: { opacity: 1, y: 0 },
-                  }}
-                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                  className={`group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all cursor-pointer relative overflow-hidden`}
-                >
-                  {/* Subtle Background Gradient on Hover */}
-                  <div
-                    className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                      stat.color === "blue"
-                        ? "bg-gradient-to-br from-blue-50 to-white"
-                        : stat.color === "purple"
-                        ? "bg-gradient-to-br from-purple-50 to-white"
-                        : stat.color === "green"
-                        ? "bg-gradient-to-br from-green-50 to-white"
-                        : "bg-gradient-to-br from-orange-50 to-white"
-                    }`}
-                  ></div>
+                    Upgrade
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                  <div className="flex items-start justify-between relative z-10">
-                    <div>
-                      <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide">
-                        {stat.label}
-                      </p>
-                      <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
-                        {isDataLoading ? "..." : stat.value}
-                        {stat.limit && typeof stat.limit === "number" && (
-                          <span className="text-sm font-medium text-gray-400 ml-1">
-                            / {stat.limit}
-                          </span>
-                        )}
-                        {stat.limit === Infinity && (
-                          <span className="text-xs font-medium text-gray-400 ml-2 bg-gray-100 px-2 py-0.5 rounded-full">
-                            UNLIMITED
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <div
-                      className={`p-2 sm:p-2.5 rounded-xl transition-all group-hover:scale-110 ${
-                        stat.color === "blue"
-                          ? "bg-blue-100 text-blue-600"
-                          : stat.color === "purple"
-                          ? "bg-purple-100 text-purple-600"
-                          : stat.color === "green"
-                          ? "bg-green-100 text-green-600"
-                          : "bg-orange-100 text-orange-600"
-                      }`}
-                    >
-                      <stat.icon size={22} />
-                    </div>
-                  </div>
-
-                  {/* View Link */}
-                  <div className="mt-3 flex items-center text-xs font-medium text-gray-400 group-hover:text-blue-600 transition-colors relative z-10">
-                    <span>View all</span>
-                    <ArrowRightIcon
-                      size={12}
-                      className="ml-1 group-hover:translate-x-1 transition-transform"
-                    />
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
-          </motion.div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Quick Actions */}
-            <div className="lg:col-span-2 space-y-4">
-              <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                Quick Actions
-              </h2>
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: {
-                      staggerChildren: 0.1,
-                      delayChildren: 0.4,
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Main Stats Column */}
+            <div className="lg:col-span-8 space-y-8">
+              {/* Stats Cards */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest pl-1">
+                    Overview
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    {
+                      label: "Resumes",
+                      count: stats.resumesCreated,
+                      icon: DocumentIcon,
+                      href: "/dashboard/resume",
+                      color: "text-blue-600",
+                      bg: "bg-blue-50",
+                      border: "group-hover:border-blue-200",
                     },
-                  },
-                }}
-                className="grid sm:grid-cols-2 gap-4"
-              >
-                {quickActions.map((action, index) => {
-                  const ItemWrapper = ({
-                    children,
-                  }: {
-                    children: React.ReactNode;
-                  }) =>
-                    action.href ? (
-                      <Link href={action.href} passHref>
-                        {children}
-                      </Link>
-                    ) : (
-                      <div onClick={action.onClick}>{children}</div>
-                    );
-
-                  return (
-                    <ItemWrapper key={index}>
+                    {
+                      label: "Portfolios",
+                      count: stats.portfoliosCreated,
+                      icon: PortfolioIcon,
+                      href: "/dashboard/portfolio",
+                      color: "text-purple-600",
+                      bg: "bg-purple-50",
+                      border: "group-hover:border-purple-200",
+                    },
+                    {
+                      label: "Cover Letters",
+                      count: stats.atsScores,
+                      icon: MailIcon,
+                      href: "/dashboard/cover-letters",
+                      color: "text-emerald-600",
+                      bg: "bg-emerald-50",
+                      border: "group-hover:border-emerald-200",
+                    },
+                  ].map((item, i) => (
+                    <Link href={item.href} key={i}>
                       <motion.div
-                        variants={{
-                          hidden: { opacity: 0, scale: 0.95 },
-                          visible: { opacity: 1, scale: 1 },
-                        }}
-                        whileHover={{
-                          scale: 1.02,
-                          y: -2,
-                          transition: { duration: 0.2 },
-                        }}
-                        whileTap={{ scale: 0.98 }}
-                        className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 transition-all cursor-pointer h-full"
+                        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                        className={`group bg-white rounded-2xl p-5 border border-transparent shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden ring-1 ring-gray-100 ${item.border}`}
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                        <div className="flex justify-between items-start mb-4">
+                          <div
+                            className={`p-3 rounded-xl ${item.bg} ${item.color}`}
+                          >
+                            <item.icon size={22} />
+                          </div>
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-gray-50 p-1.5 rounded-lg text-gray-400">
+                            <ArrowRightIcon size={14} />
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-3xl font-bold text-gray-900 mb-1">
+                            {item.count}
+                          </p>
+                          <p className="text-sm font-medium text-gray-500">
+                            {item.label}
+                          </p>
+                        </div>
+                        {/* Decorative gradient blur */}
+                        <div
+                          className={`absolute -bottom-4 -right-4 w-16 h-16 ${item.bg} rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition-opacity`}
+                        ></div>
+                      </motion.div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+
+              {/* Quick Actions */}
+              <section>
+                <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest pl-1 mb-4">
+                  Create New
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    {
+                      title: "Resume",
+                      icon: PlusIcon,
+                      href: "/dashboard/resume/create",
+                      color: "blue",
+                    },
+                    {
+                      title: "Portfolio",
+                      icon: PlusIcon,
+                      href: "/dashboard/portfolio",
+                      color: "purple",
+                    },
+                    {
+                      title: "ATS Check",
+                      icon: AnalyticsIcon,
+                      href: "/dashboard/ats",
+                      color: "orange",
+                    },
+                    {
+                      title: "Add Credits",
+                      icon: PlusIcon,
+                      onClick: () => setShowPlanModal(true),
+                      color: "gray",
+                    },
+                  ].map((action, i) => (
+                    <motion.div
+                      key={i}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={action.onClick}
+                      className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col items-center justify-center gap-3 text-center group ring-1 ring-gray-50"
+                    >
+                      {action.href ? (
+                        <Link
+                          href={action.href}
+                          className="w-full h-full flex flex-col items-center justify-center gap-3"
+                        >
+                          <div
+                            className={`p-3 rounded-full bg-${action.color}-50 text-${action.color}-500 group-hover:bg-${action.color}-100 transition-colors`}
+                          >
                             <action.icon size={20} />
                           </div>
-                          <ArrowRightIcon
-                            size={16}
-                            className="text-gray-300 group-hover:text-blue-500 transition-colors"
-                          />
-                        </div>
-                        <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                          {action.title}
-                        </h3>
-                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                          {action.description}
-                        </p>
-                      </motion.div>
-                    </ItemWrapper>
-                  );
-                })}
-              </motion.div>
-            </div>
+                          <span className="font-semibold text-sm text-gray-700">
+                            {action.title}
+                          </span>
+                        </Link>
+                      ) : (
+                        <>
+                          <div
+                            className={`p-3 rounded-full bg-${action.color}-50 text-${action.color}-500 group-hover:bg-${action.color}-100 transition-colors`}
+                          >
+                            <action.icon size={20} />
+                          </div>
+                          <span className="font-semibold text-sm text-gray-700">
+                            {action.title}
+                          </span>
+                        </>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
 
-            {/* Recent Activity */}
-            <div className="space-y-4">
-              <h2 className="text-base font-bold text-gray-900">
-                Recent Activity
-              </h2>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col"
-              >
-                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[400px]">
-                  {isDataLoading ? (
-                    <div className="p-8 text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                      <p className="text-xs text-gray-400">
-                        Loading activity...
+              {/* Portfolio Expiration Banner */}
+              {stats.portfolioExpiresAt && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20"
+                >
+                  <div className="relative z-10 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg mb-1">
+                        Portfolio Trial Ending
+                      </h3>
+                      <p className="text-amber-100 text-sm">
+                        Expires{" "}
+                        {formatDistanceToNow(
+                          new Date(stats.portfolioExpiresAt),
+                          { addSuffix: true },
+                        )}
+                        . Upgrade to stay online.
                       </p>
                     </div>
+                    <Button
+                      variant="secondary"
+                      size="small"
+                      onClick={() => setShowPlanModal(true)}
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+                    >
+                      Upgrade Now
+                    </Button>
+                  </div>
+                  <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                  <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Right Sidebar: Activity */}
+            <div className="lg:col-span-4">
+              <div className="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-gray-100 h-full">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-bold text-gray-900">Recent Activity</h2>
+                  <Link
+                    href="/dashboard/history"
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 uppercase tracking-wide"
+                  >
+                    View All
+                  </Link>
+                </div>
+
+                <div className="space-y-6 relative">
+                  {/* Vertical Line */}
+                  <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gray-100"></div>
+
+                  {isDataLoading ? (
+                    <div className="text-center py-8 text-gray-400 text-sm">
+                      Loading activity...
+                    </div>
                   ) : recentActivities.length > 0 ? (
-                    recentActivities.slice(0, 4).map((activity) => (
-                      <motion.div
-                        key={activity.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-2.5 hover:bg-gray-50/50 transition-colors"
-                      >
-                        <div className="flex gap-2">
-                          <div className="p-1  rounded text-gray-500 flex-shrink-0">
-                            {getActivityIcon(activity.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-gray-900 truncate">
-                              {activity.title}
-                            </p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[9px] font-medium px-1 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 uppercase tracking-wide">
-                                {activity.action}
-                              </span>
-                              <span className="text-[9px] text-gray-400">
-                                {activity.timestamp}
-                              </span>
-                            </div>
+                    recentActivities.slice(0, 5).map((act, i) => (
+                      <div key={i} className="relative pl-10 group">
+                        <div className="absolute left-[9px] top-1.5 w-3.5 h-3.5 rounded-full bg-white border-2 border-blue-500 z-10 group-hover:scale-110 group-hover:border-blue-600 transition-all shadow-sm"></div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {act.title}
+                          </span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5 rounded">
+                              {act.action}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {act.timestamp}
+                            </span>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     ))
                   ) : (
-                    <div className="p-8 text-center text-gray-400 text-sm">
-                      No recent activity found.
+                    <div className="text-center py-8 text-gray-400 text-sm italic">
+                      No recent activity
                     </div>
                   )}
                 </div>
-                <Link href="/dashboard/history" passHref>
-                  <div className="p-3 bg-gray-50 text-center border-t border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer mt-auto">
-                    <p className="text-xs font-medium text-gray-600">
-                      View full history
-                    </p>
-                  </div>
-                </Link>
-              </motion.div>
+              </div>
             </div>
           </div>
         </main>
@@ -726,7 +463,6 @@ const DashboardPage: NextPage = () => {
         isOpen={showOnboarding}
         onComplete={() => {
           setShowOnboarding(false);
-          // Reload to refresh user state (plan, credits, onboarding status)
           window.location.reload();
         }}
       />

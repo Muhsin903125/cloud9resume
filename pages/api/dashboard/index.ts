@@ -24,7 +24,7 @@ interface DashboardResponse {
 }
 
 async function extractUserIdFromToken(
-  req: NextApiRequest
+  req: NextApiRequest,
 ): Promise<string | null> {
   try {
     let token = "";
@@ -65,7 +65,7 @@ async function extractUserIdFromToken(
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<DashboardResponse>
+  res: NextApiResponse<DashboardResponse>,
 ) {
   if (req.method !== "GET") {
     return res
@@ -111,7 +111,7 @@ export default async function handler(
     } else {
       console.error(
         "[Dashboard API] Profile fetch error:",
-        profileError?.message
+        profileError?.message,
       );
       // Don't fallback to users. If profile missing here, something is wrong with migration
       // or user really doesn't exist.
@@ -126,7 +126,7 @@ export default async function handler(
 
     // Filter in JS to safely handle NULL statuses which .neq excludes
     const validResumes = (resumes || []).filter(
-      (r) => r.status !== "deleted" && r.status !== "archived"
+      (r) => r.status !== "deleted" && r.status !== "archived",
     );
 
     if (resumesError)
@@ -138,7 +138,7 @@ export default async function handler(
     const { data: portfolios, error: portError } = await supabase
       .from("portfolios")
       .select(
-        "id, title, is_active, created_at, updated_at, view_count, expires_at"
+        "id, title, is_active, created_at, updated_at, view_count, expires_at",
       )
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
@@ -147,17 +147,32 @@ export default async function handler(
       console.error("[Dashboard API] Portfolios fetch error:", portError);
     console.log("[Dashboard API] Portfolios found:", portfolios?.length || 0);
 
+    // 4. Fetch Cover Letters
+    const { data: coverLetters, error: clError } = await supabase
+      .from("cover_letters")
+      .select("id, title, created_at, updated_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+
+    if (clError)
+      console.error("[Dashboard API] Cover letters fetch error:", clError);
+    console.log(
+      "[Dashboard API] Cover letters found:",
+      coverLetters?.length || 0,
+    );
+
     const fetchedResumes = validResumes || [];
     const fetchedPortfolios = portfolios || [];
+    const fetchedCoverLetters = coverLetters || [];
 
     const totalViews = (portfolios as any[] | []).reduce(
       (acc, curr) => acc + (curr.view_count || 0),
-      0
+      0,
     );
 
     // Find nearest expiration date
     const portfolioExpiresAt = fetchedPortfolios.find(
-      (p) => p.is_active && p.expires_at
+      (p) => p.is_active && p.expires_at,
     )?.expires_at;
 
     // Combine Activities
@@ -176,10 +191,17 @@ export default async function handler(
         action: p.updated_at ? "Updated" : "Created",
         timestamp: p.updated_at || p.created_at,
       })),
+      ...fetchedCoverLetters.slice(0, 4).map((c: any) => ({
+        id: `cl-${c.id}`,
+        type: "cover_letter",
+        title: c.title,
+        action: c.updated_at ? "Updated" : "Created",
+        timestamp: c.updated_at || c.created_at,
+      })),
     ]
       .sort(
         (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       )
       .slice(0, 4);
 
@@ -189,7 +211,7 @@ export default async function handler(
         stats: {
           resumesCreated: fetchedResumes.length,
           portfoliosCreated: fetchedPortfolios.length,
-          atsScores: 0,
+          atsScores: fetchedCoverLetters.length, // Replace atsScores with coverLettersCount
           portfolioViews: totalViews,
           creditsRemaining: credits,
           plan: plan,

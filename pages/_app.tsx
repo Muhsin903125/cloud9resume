@@ -126,7 +126,7 @@ export default function App({ Component, pageProps }: AppProps) {
           userPlan={user?.plan || "free"}
           onLogout={logout}
           isResumeEditor={router.pathname.includes(
-            "/dashboard/resume/[id]/edit"
+            "/dashboard/resume/[id]/edit",
           )}
         >
           <Component {...pageProps} />
@@ -348,8 +348,8 @@ function DashboardLayout({
                 </div>
 
                 {/* Navigation */}
-                <div className="flex-grow flex flex-col py-6 px-3 gap-1 overflow-y-auto">
-                  <nav className="space-y-1">
+                <div className="flex-grow flex flex-col py-4 px-3 gap-1 overflow-y-auto custom-scrollbar">
+                  <nav className="space-y-0.5">
                     {navigationItems.map((item) => {
                       const isActive = router.pathname === item.href;
                       return (
@@ -357,7 +357,7 @@ function DashboardLayout({
                           key={item.name}
                           href={item.href}
                           onClick={() => setIsMenuOpen(false)}
-                          className={`group relative flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                          className={`group relative flex items-center px-4 py-2 text-[13px] font-medium rounded-xl transition-all duration-200 ${
                             isActive
                               ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
                               : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"
@@ -393,19 +393,19 @@ function DashboardLayout({
                 </div>
 
                 {/* Credit & Plan Usage Section */}
-                <div className="flex-shrink-0 px-4 pb-3">
-                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-100/50 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <div className="flex-shrink-0 px-3 pb-2">
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-3 border border-blue-100/50 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                         My Plan
                       </span>
-                      <span className="text-xs font-bold text-blue-600 bg-white px-2.5 py-1 rounded-full border border-blue-200 uppercase shadow-sm">
+                      <span className="text-[10px] font-bold text-blue-600 bg-white px-2 py-0.5 rounded-full border border-blue-200 uppercase shadow-sm">
                         {userPlan}
                       </span>
                     </div>
 
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs mb-1.5">
+                    <div className="mb-2">
+                      <div className="flex justify-between text-[10px] mb-1">
                         <span className="text-gray-600 font-medium">
                           Credits
                         </span>
@@ -413,13 +413,13 @@ function DashboardLayout({
                           {userCredits}
                         </span>
                       </div>
-                      <div className="w-full bg-white rounded-full h-2 overflow-hidden border border-blue-100">
+                      <div className="w-full bg-white rounded-full h-1.5 overflow-hidden border border-blue-100">
                         <div
-                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 rounded-full transition-all duration-500"
                           style={{
                             width: `${Math.min(
                               (userCredits / 100) * 100,
-                              100
+                              100,
                             )}%`,
                           }}
                         />
@@ -429,9 +429,9 @@ function DashboardLayout({
                     {userPlan === "free" && (
                       <button
                         onClick={() => setShowPlanModal(true)}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold py-2.5 px-3 rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-95 group"
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] font-bold py-2 px-3 rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-95 group"
                       >
-                        <SparklesIcon className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                        <SparklesIcon className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
                         Upgrade to Pro
                       </button>
                     )}
