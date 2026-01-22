@@ -1,4 +1,5 @@
 import type { AppProps } from "next/app";
+import { Inter } from "next/font/google"; // Import Inter font
 import { getAssetUrl } from "../lib/common-functions";
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -32,6 +33,14 @@ import {
 } from "@heroicons/react/24/outline";
 import Loader from "../components/Loader";
 import CookieBanner from "@/components/common/CookieBanner";
+
+// Check if Inter font is already used in globals.css or should be applied here.
+// Assuming globals.css uses --font-inter, we will set the variable.
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 // ... imports remain the same
 
@@ -133,7 +142,7 @@ export default function App({ Component, pageProps }: AppProps) {
     }
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen bg-gray-50 ${inter.variable} font-sans`}>
         {isLoading && <Loader />}
         <DashboardLayout
           userName={userName}
@@ -154,13 +163,13 @@ export default function App({ Component, pageProps }: AppProps) {
 
   // For non-dashboard pages (landing, login, signup, etc.)
   return (
-    <>
+    <div className={`${inter.variable} font-sans`}>
       <Toaster />
       {!isNoLayoutPage && <Navbar />}
       <Component {...pageProps} />
       {!isNoLayoutPage && <Footer />}
       <CookieBanner />
-    </>
+    </div>
   );
 }
 
@@ -310,7 +319,9 @@ function DashboardLayout({
 
       {/* Sidebar - Desktop & Mobile */}
       {!router.pathname.includes("/dashboard/resume/[id]/edit") &&
-        !router.pathname.includes("/dashboard/portfolio/[id]") && (
+        !router.pathname.includes("/dashboard/portfolio/[id]") && 
+        !router.pathname.includes("/dashboard/resume/create") && 
+        (
           <>
             {/* Mobile Toggle Button (Floating) */}
             <button
@@ -322,7 +333,7 @@ function DashboardLayout({
 
             {/* Light Theme Sidebar */}
             <div
-              className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:fixed md:top-0 md:h-screen md:w-56 border-r border-gray-100 overflow-hidden print:hidden flex flex-col ${
+              className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:fixed md:top-0 md:h-screen md:w-60 border-r border-gray-100 overflow-hidden print:hidden flex flex-col ${
                 isMenuOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
@@ -351,7 +362,7 @@ function DashboardLayout({
                   <Link href="/" className="flex items-center group">
                     <img
                       src={getAssetUrl("/logo.png")}
-                      alt="Cloud9"
+                      alt="Cloud9profile"
                       className="h-8 w-auto object-contain"
                     />
                   </Link>
@@ -520,8 +531,9 @@ function DashboardLayout({
       <div
         className={`flex-1 flex flex-col min-w-0 relative ${
           !router.pathname.includes("/dashboard/resume/[id]/edit") &&
+          !router.pathname.includes("/dashboard/resume/create") &&
           !router.pathname.includes("/dashboard/portfolio/[id]")
-            ? "md:ml-72"
+            ? "md:ml-60"
             : ""
         }`}
       >
