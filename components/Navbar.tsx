@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getAssetUrl } from "../lib/common-functions";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
@@ -64,17 +65,27 @@ export default function Navbar() {
                 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
-                <img
-                  src={getAssetUrl("/logo.png")}
-                  alt="Cloud9Profile - AI Resume Builder & Portfolio Creator"
+                <div
                   style={{
+                    position: "relative",
+                    width: "40px",
                     height: "40px",
-                    width: "auto",
-                    objectFit: "contain",
-                    filter: useWhiteText ? "brightness(0) invert(1)" : "none",
                   }}
-                  className="rounded-lg transition-all"
-                />
+                  className="rounded-lg overflow-hidden"
+                >
+                  <Image
+                    src={getAssetUrl("/logo.png")}
+                    alt="Cloud9Profile - AI Resume Builder & Portfolio Creator"
+                    fill
+                    sizes="40px"
+                    style={{
+                      objectFit: "contain",
+                      filter: useWhiteText ? "brightness(0) invert(1)" : "none",
+                    }}
+                    className="transition-all"
+                    priority
+                  />
+                </div>
               </motion.div>
             </Link>
 

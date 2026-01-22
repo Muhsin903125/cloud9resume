@@ -12,6 +12,7 @@ import ConfirmationModal from "../components/ConfirmationModal";
 import PlanUpgradeModal from "../components/PlanUpgradeModal";
 import OnboardingModal from "../components/OnboardingModal";
 import { useAuth } from "../lib/authUtils";
+import { initMixpanel, trackPageView } from "../lib/mixpanel";
 import {
   DocumentIcon,
   PortfolioIcon,
@@ -38,6 +39,21 @@ export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   // ... useEffects remain the same
+
+  // Initialize Mixpanel and track page views
+  useEffect(() => {
+    initMixpanel();
+
+    const handleRouteChange = (url: string) => {
+      trackPageView(url);
+    };
+
+    router.events.on("routeChangeComplete", handleRouteChange);
+
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router.events]);
 
   const { user, logout, isLoading } = useAuth();
   const [userName, setUserName] = useState<string>("");
@@ -306,7 +322,7 @@ function DashboardLayout({
 
             {/* Light Theme Sidebar */}
             <div
-              className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:fixed md:top-0 md:h-screen md:w-72 border-r border-gray-100 overflow-hidden print:hidden flex flex-col ${
+              className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:fixed md:top-0 md:h-screen md:w-56 border-r border-gray-100 overflow-hidden print:hidden flex flex-col ${
                 isMenuOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >

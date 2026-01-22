@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from "next/document";
+import Script from "next/script";
 import { getAssetUrl } from "../lib/common-functions";
 import { GA_TRACKING_ID } from "../lib/gtag";
 
@@ -12,11 +13,13 @@ export default function Document() {
           content="Cloud9Profile - Create your ATS-friendly resume in minutes."
         />
         {/* Global Site Tag (gtag.js) - Google Analytics */}
-        <script
-          async
+        <Script
+          strategy="afterInteractive"
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
         />
-        <script
+        <Script
+          id="gtag-init"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
