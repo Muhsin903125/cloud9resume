@@ -9,6 +9,17 @@ import { ProfileImageUploader } from "../../../../components/portfolio/ProfileIm
 import { PublishModal } from "../../../../components/portfolio/PublishModal";
 import { CreditConfirmModal } from "../../../../components/modals/CreditConfirmModal";
 import { CREDIT_COSTS, PlanType } from "../../../../lib/subscription";
+import {
+  PlusIcon,
+  UserIcon,
+  BriefcaseIcon,
+  GraduationCapIcon,
+  ZapIcon,
+  LayoutIcon,
+  AwardIcon,
+  DocumentIcon,
+  TemplateIcon,
+} from "../../../../components/Icons";
 
 interface Section {
   id: string;
@@ -56,18 +67,21 @@ export default function PortfolioEditor() {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(
-    "desktop"
+    "desktop",
   );
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiGeneratedHtml, setAiGeneratedHtml] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [userPlan, setUserPlan] = useState<PlanType>("free");
   const [activeTab, setActiveTab] = useState<"content" | "design" | "settings">(
-    "content"
+    "content",
   );
   const [showAIModal, setShowAIModal] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
   const [showConfirmAI, setShowConfirmAI] = useState(false);
+
+  // Validation state
+  const [slugError, setSlugError] = useState("");
 
   useEffect(() => {
     // Optional: Logic to switch tabs automatically if needed
@@ -276,7 +290,7 @@ export default function PortfolioEditor() {
                   (i: any) =>
                     `<li><strong>${i.language}</strong>${
                       i.proficiency ? ` - ${i.proficiency}` : ""
-                    }</li>`
+                    }</li>`,
                 )
                 .join("") +
               `</ul>`;
@@ -292,14 +306,14 @@ export default function PortfolioEditor() {
                   (i: any) => `<li>
                       <div class="font-bold">${i.organization}</div>
                       <div class="text-sm text-gray-600">${i.startDate || ""} ${
-                    i.endDate ? "- " + i.endDate : ""
-                  }</div>
+                        i.endDate ? "- " + i.endDate : ""
+                      }</div>
                       ${
                         i.description
                           ? `<div class="text-sm mt-1">${i.description}</div>`
                           : ""
                       }
-                   </li>`
+                   </li>`,
                 )
                 .join("") +
               `</ul>`;
@@ -326,7 +340,7 @@ export default function PortfolioEditor() {
                   (i: any) =>
                     `<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">${
                       i.name || i
-                    }</span>`
+                    }</span>`,
                 )
                 .join("") +
               `</div>`;
@@ -340,7 +354,7 @@ export default function PortfolioEditor() {
                 data.items
                   .map(
                     (i: any) =>
-                      `<li><strong>${i.name}</strong> - ${i.company || ""}</li>`
+                      `<li><strong>${i.name}</strong> - ${i.company || ""}</li>`,
                   )
                   .join("") +
                 `</ul>`;
@@ -415,13 +429,13 @@ export default function PortfolioEditor() {
 
   const updateSection = (sectionId: string, updates: Partial<Section>) => {
     setSections((prev) =>
-      prev.map((s) => (s.id === sectionId ? { ...s, ...updates } : s))
+      prev.map((s) => (s.id === sectionId ? { ...s, ...updates } : s)),
     );
   };
 
   const toggleVisibility = async (sectionId: string, visible: boolean) => {
     setSections((prev) =>
-      prev.map((s) => (s.id === sectionId ? { ...s, is_visible: visible } : s))
+      prev.map((s) => (s.id === sectionId ? { ...s, is_visible: visible } : s)),
     );
 
     if (!isNewMode) {
@@ -458,10 +472,10 @@ export default function PortfolioEditor() {
         sectionType === "custom"
           ? { title: "New Section", content: "" }
           : sectionType === "personal_info"
-          ? { name: "", email: "", phone: "", location: "" }
-          : sectionType === "summary"
-          ? { text: "" }
-          : { items: [] },
+            ? { name: "", email: "", phone: "", location: "" }
+            : sectionType === "summary"
+              ? { text: "" }
+              : { items: [] },
       order_index: sections.length,
       is_visible: true,
     };
@@ -488,6 +502,7 @@ export default function PortfolioEditor() {
   const saveAllChanges = async () => {
     const token = getAuthToken();
     setSaving(true);
+    setSlugError("");
 
     try {
       if (isNewMode) {
@@ -566,8 +581,10 @@ export default function PortfolioEditor() {
 
         toast.success("Changes saved!");
       }
+      return true; // Return success for chained actions
     } catch (error: any) {
       toast.error(error.message || "Failed to save");
+      return false; // Return failure
     } finally {
       setSaving(false);
     }
@@ -576,6 +593,14 @@ export default function PortfolioEditor() {
   const togglePublish = async () => {
     if (isNewMode) {
       toast.error("Save the portfolio first before publishing");
+      return;
+    }
+
+    if (!portfolioSlug) {
+      toast.error("Set a unique username to publish");
+      setSlugError("Username is required");
+      // Switch to settings
+      setActiveTab("settings");
       return;
     }
 
@@ -598,7 +623,7 @@ export default function PortfolioEditor() {
       if (data.success) {
         setIsPublished(newStatus);
         toast.success(
-          newStatus ? "Portfolio published!" : "Portfolio unpublished"
+          newStatus ? "Portfolio published!" : "Portfolio unpublished",
         );
       } else {
         throw new Error(data.error);
@@ -610,15 +635,56 @@ export default function PortfolioEditor() {
     }
   };
 
+  const handleUpdateAndPublish = async () => {
+    // 1. Validation
+    if (!portfolioSlug) {
+      toast.error("Username is required to publish");
+      setActiveTab("settings");
+      setSlugError("Required");
+      return;
+    }
+
+    // 2. Save Changes
+    const saved = await saveAllChanges();
+    if (!saved) return;
+
+    // 3. Publish if not active, or just notify updated if already active
+    if (!isPublished) {
+      // Logic for first time publish
+      const token = getAuthToken();
+      setPublishing(true);
+      try {
+        const res = await fetch(`/api/portfolios/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ is_active: true }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setIsPublished(true);
+          toast.success("Portfolio updated & published!");
+        } else {
+          toast.error(data.error || "Failed to publish");
+        }
+      } catch (e) {
+        toast.error("Failed to publish");
+      } finally {
+        setPublishing(false);
+      }
+    } else {
+      // Already published, just needed save (which is done)
+      toast.success("Portfolio updated successfully!");
+    }
+  };
+
   const handlePublish = async (username: string, replaceExisting?: string) => {
+    // Legacy support for modal based publish if needed, or redirect to handleUpdateAndPublish logic
+    // Implementation kept for backward compatibility if Modal used
     const token = getAuthToken();
-
-    // If replacing existing, first we need to archive/delete the old one or swap slugs
-    // But for MVP, let's just assume the backend checkUsername logic handles the "ownership" check
-    // and we just update this portfolio with the new slug and active=true
-
     if (replaceExisting) {
-      // First unpublish the existing one
       await fetch(`/api/portfolios/${replaceExisting}`, {
         method: "PATCH",
         headers: {
@@ -628,11 +694,10 @@ export default function PortfolioEditor() {
         body: JSON.stringify({
           is_active: false,
           slug: `${username}-${Date.now()}`,
-        }), // Free up the slug
+        }),
       });
     }
 
-    // Now publish the current one
     const res = await fetch(`/api/portfolios/${id}`, {
       method: "PATCH",
       headers: {
@@ -695,102 +760,135 @@ export default function PortfolioEditor() {
       </Head>
 
       <div className="min-h-screen bg-gray-100 flex flex-col h-screen">
-        {/* Top Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0 z-20 shadow-sm relative">
-          <div className="flex items-center gap-4 w-1/3">
-            <button
-              onClick={() => router.push("/dashboard/portfolio")}
-              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 flex items-center gap-2 text-sm font-medium transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        {/* Responsive Header */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3 shrink-0 z-20 shadow-sm relative">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Left: Back & Title */}
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <button
+                onClick={() => router.push("/dashboard/portfolio")}
+                className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
+                title="Back to Dashboard"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+              </button>
+              <div className="h-6 w-px bg-gray-200 hidden sm:block" />
+              <div className="flex-1 min-w-0">
+                <input
+                  type="text"
+                  value={portfolioTitle}
+                  onChange={(e) => setPortfolioTitle(e.target.value)}
+                  className="block w-full text-base sm:text-lg font-bold text-gray-900 border-none p-0 focus:ring-0 placeholder:text-gray-400 bg-transparent truncate"
+                  placeholder="Portfolio Title"
                 />
-              </svg>
-              Back
-            </button>
-            <div className="h-6 w-px bg-gray-200 mx-2" />
-            <h1 className="text-lg font-bold text-gray-800 truncate">
-              {portfolioTitle}
-            </h1>
-          </div>
+              </div>
+            </div>
 
-          <div className="flex items-center justify-center w-1/3">
-            <button
-              onClick={handleGenerateClick}
-              disabled={isGeneratingAI || sections.length === 0}
-              className="group relative inline-flex items-center justify-center px-6 py-2.5 font-semibold text-white transition-all duration-200 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full hover:from-violet-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-            >
-              {isGeneratingAI ? (
-                <>
-                  <svg
-                    className="w-5 h-5 mr-2 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Building...
-                </>
+            {/* Center: AI Generator */}
+            <div className="w-full sm:w-auto flex justify-center order-3 sm:order-2">
+              <button
+                onClick={handleGenerateClick}
+                disabled={isGeneratingAI || sections.length === 0}
+                className="w-full sm:w-auto group relative inline-flex items-center justify-center px-6 py-2 font-semibold text-white transition-all duration-200 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full hover:from-violet-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm"
+              >
+                {isGeneratingAI ? (
+                  <>
+                    <svg
+                      className="w-4 h-4 mr-2 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Building...
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2 text-base">✨</span>
+                    Generate with AI
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="w-full sm:w-auto flex items-center justify-end gap-2 order-2 sm:order-3">
+              {/* Save Button */}
+              <button
+                onClick={() => saveAllChanges()}
+                disabled={saving}
+                className="flex-1 sm:flex-none px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors whitespace-nowrap"
+              >
+                {saving
+                  ? "Saving..."
+                  : isNewMode
+                    ? "Save Draft"
+                    : "Save Changes"}
+              </button>
+
+              {/* Publish/Update Button */}
+              {isNewMode ? (
+                <button
+                  onClick={() => setShowPublishModal(true)}
+                  disabled={saving || publishing}
+                  className="flex-1 sm:flex-none px-4 py-2 bg-gray-900 text-white border border-transparent rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors whitespace-nowrap"
+                >
+                  Save & Publish
+                </button>
               ) : (
-                <>
-                  <span className="mr-2 text-lg">✨</span>
-                  Generate with AI
-                </>
-              )}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleUpdateAndPublish}
+                    disabled={saving || publishing}
+                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${
+                      isPublished
+                        ? "bg-green-600 text-white border-transparent hover:bg-green-700"
+                        : "bg-blue-600 text-white border-transparent hover:bg-blue-700"
+                    }`}
+                  >
+                    {publishing
+                      ? "Processing..."
+                      : isPublished
+                        ? "Update & Publish"
+                        : "Publish Now"}
+                  </button>
 
-              {sections.length === 0 && (
-                <div className="absolute top-full mt-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg text-center z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                  Import resume first
+                  {isPublished && (
+                    <button
+                      onClick={handleUnpublish}
+                      className="px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-xs font-medium border border-red-200"
+                      title="Unpublish"
+                    >
+                      Stop Hosting
+                    </button>
+                  )}
                 </div>
               )}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-end gap-3 w-1/3">
-            <button
-              onClick={saveAllChanges}
-              disabled={saving}
-              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
-            >
-              {saving ? "Saving..." : "Save Draft"}
-            </button>
-
-            {!isNewMode && (
-              <button
-                onClick={() =>
-                  isPublished ? handleUnpublish() : setShowPublishModal(true)
-                }
-                disabled={publishing}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
-                  isPublished
-                    ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-                    : "bg-gray-900 text-white border-transparent hover:bg-gray-800"
-                }`}
-              >
-                {isPublished ? "Unpublish" : "Publish"}
-              </button>
-            )}
+            </div>
           </div>
         </div>
 
@@ -823,15 +921,15 @@ export default function PortfolioEditor() {
             </div>
 
             {/* Tabs Navigation */}
-            <div className="px-6 border-b border-gray-200 flex items-center gap-6 shrink-0 bg-white">
+            <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-2 shrink-0 bg-white">
               {(["content", "design", "settings"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 text-sm font-medium border-b-2 transition-colors capitalize ${
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all capitalize ${
                     activeTab === tab
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      ? "bg-gray-900 text-white shadow-md shadow-gray-200"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
                   {tab}
@@ -844,28 +942,22 @@ export default function PortfolioEditor() {
               {/* CONTENT TAB */}
               {activeTab === "content" && (
                 <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
-                      Resume Sections
-                    </h3>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 tracking-tight">
+                        Content Sections
+                      </h3>
+                      <p className="text-xs text-gray-500 font-medium">
+                        Manage your portfolio data
+                      </p>
+                    </div>
                     <button
                       onClick={() => setShowAddSection(!showAddSection)}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
                       title="Add Section"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
+                      <PlusIcon size={16} />
+                      <span>Add Section</span>
                     </button>
                   </div>
 
@@ -1125,7 +1217,7 @@ export default function PortfolioEditor() {
                             setPortfolioSlug(
                               e.target.value
                                 .toLowerCase()
-                                .replace(/[^a-z0-9-]/g, "-")
+                                .replace(/[^a-z0-9-]/g, "-"),
                             )
                           }
                           className="flex-1 px-5 py-3.5 bg-white outline-none text-gray-900 font-bold placeholder:text-gray-200 tracking-wide"

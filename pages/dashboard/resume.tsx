@@ -79,7 +79,7 @@ const ResumeDashboard = () => {
         setShowNewModal(false);
         setNewResumeTitle("");
         toast.success("Resume created");
-        router.push(`/dashboard/resume/${response.data.id}/edit`);
+        router.push(`/dashboard/resume/${response.data.id}/templates`);
       } else {
         toast.error(response.error || "Failed to create");
       }
@@ -332,7 +332,7 @@ const ResumeDashboard = () => {
           <ResumeUploader
             onUploadSuccess={(data, resumeId) => {
               setShowImportModal(false);
-              router.push(`/dashboard/resume/${resumeId}/edit`);
+              router.push(`/dashboard/resume/${resumeId}/templates`);
             }}
             onCancel={() => setShowImportModal(false)}
           />

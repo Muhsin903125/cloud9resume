@@ -396,7 +396,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
       </div>
 
       {/* Unified Template Grid + AI Card */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* AI Generator Card */}
         <button
           onClick={onAIGenerate}

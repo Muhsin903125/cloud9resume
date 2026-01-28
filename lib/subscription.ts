@@ -80,7 +80,7 @@ export const CREDIT_COSTS = {
 export function canCreateResource(
   plan: PlanType,
   currentCount: number,
-  resourceType: "resumes" | "portfolios"
+  resourceType: "resumes" | "portfolios",
 ): boolean {
   const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
   const limit = limits[resourceType];
@@ -99,7 +99,7 @@ export function canAddSection(plan: PlanType, sectionType: string): boolean {
 // Helper: Check if user can create cover letters
 export function canCreateCoverLetter(
   plan: PlanType,
-  currentCount: number
+  currentCount: number,
 ): boolean {
   const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
   const limit = limits.cover_letters;

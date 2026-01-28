@@ -90,7 +90,7 @@ Built with **Next.js 16**, **Supabase**, and **Gemini 2.5**, Cloud9Profile offer
 
 Cloud9Profile uses a flexible credit-based system synchronized with 5 distinct plans:
 
-1.  **Free**: 3 resumes, 1 portfolio (30-day trial), basic AI (10 credits included), watermarked PDFs.
+1.  **Free**: 3 resumes, 1 portfolio (30-day trial), basic AI (25 credits included), watermarked PDFs.
 2.  **Starter**: 5 resumes, 1 portfolio, 3 cover letters, watermarked PDFs.
 3.  **Professional**: Unlimited resumes, 5 portfolios, no watermark, DOCX export.
 4.  **Premium**: Unlimited everything, custom domains, Interview Prep, LinkedIn Optimization.
