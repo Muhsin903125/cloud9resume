@@ -814,10 +814,10 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
               mobileTab === "controls" ? "hidden lg:flex" : "flex"
             }`}
           >
-            <div className="bg-white border-b border-gray-200 p-3 flex flex-col sm:flex-row items-center justify-between gap-4 z-20 shadow-sm">
-              <div className="flex items-center gap-6">
-                <div className="flex flex-col gap-1">
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            <div className="bg-white border-b border-gray-200 p-2 md:p-3 flex items-center justify-between gap-2 z-20 shadow-sm shrink-0">
+              <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
+                <div className="flex flex-col gap-1 shrink-0">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:block">
                     Primary Color
                   </div>
                   <div className="flex gap-1.5">
@@ -828,7 +828,7 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
                           setThemeColor(c.value);
                           handleSave(template, c.value);
                         }}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center transition-transform hover:scale-110 focus:outline-none relative ring-1 ring-black/5 ${
+                        className={`w-5 h-5 md:w-5 md:h-5 rounded-full flex items-center justify-center transition-transform hover:scale-110 focus:outline-none relative ring-1 ring-black/5 ${
                           themeColor === c.value
                             ? "ring-2 ring-offset-1 ring-gray-900 scale-110 z-10"
                             : ""
@@ -851,14 +851,15 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
               <button
                 onClick={() => handleDownloadClick("pdf")}
                 disabled={isSaving}
-                className="px-6 py-2 bg-gray-900 hover:bg-black text-white rounded-lg font-bold shadow-lg shadow-gray-900/10 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                className="px-4 md:px-6 py-2 bg-gray-900 hover:bg-black text-white rounded-lg font-bold shadow-lg shadow-gray-900/10 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 text-xs md:text-sm whitespace-nowrap"
               >
                 {isSaving ? (
-                  <span className="animate-pulse">Generating PDF...</span>
+                  <span className="animate-pulse">Generating...</span>
                 ) : (
                   <>
                     <DownloadIcon size={16} />
-                    Download PDF
+                    <span className="hidden md:inline">Download PDF</span>
+                    <span className="md:hidden">Download</span>
                   </>
                 )}
               </button>

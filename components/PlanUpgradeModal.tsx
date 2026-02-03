@@ -347,7 +347,7 @@ export default function PlanUpgradeModal({
                 }`}
               />
               <Button
-                variant="secondary"
+                variant="primary"
                 size="small"
                 onClick={handleApplyCoupon}
                 disabled={
@@ -358,8 +358,8 @@ export default function PlanUpgradeModal({
                 }
                 className={`px-4 py-2 text-xs font-medium rounded-lg transition-all ${
                   couponStatus === "success"
-                    ? "bg-green-600 text-white border-green-500"
-                    : "bg-slate-700 text-slate-200 border-slate-600 hover:bg-slate-600"
+                    ? "!bg-green-600 !text-white !border-green-500"
+                    : "!bg-slate-700 !text-white !border-slate-600 hover:!bg-slate-600"
                 }`}
               >
                 {couponStatus === "loading" ? (
