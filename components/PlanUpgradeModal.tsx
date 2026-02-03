@@ -316,7 +316,7 @@ export default function PlanUpgradeModal({
                 </div>
               </div>
             </div>
-          )))}
+          ))}
         </div>
 
         {/* Coupon Code Section */}
@@ -342,15 +342,20 @@ export default function PlanUpgradeModal({
                   couponStatus === "success"
                     ? "border-green-500/50 bg-green-900/20"
                     : couponStatus === "error"
-                    ? "border-red-500/50 focus:ring-red-500/30"
-                    : "border-slate-700 focus:ring-blue-500/30"
+                      ? "border-red-500/50 focus:ring-red-500/30"
+                      : "border-slate-700 focus:ring-blue-500/30"
                 }`}
               />
               <Button
                 variant="secondary"
                 size="small"
                 onClick={handleApplyCoupon}
-                disabled={loading !== null || couponStatus === "loading" || couponStatus === "success" || !couponCode.trim()}
+                disabled={
+                  loading !== null ||
+                  couponStatus === "loading" ||
+                  couponStatus === "success" ||
+                  !couponCode.trim()
+                }
                 className={`px-4 py-2 text-xs font-medium rounded-lg transition-all ${
                   couponStatus === "success"
                     ? "bg-green-600 text-white border-green-500"
@@ -366,14 +371,16 @@ export default function PlanUpgradeModal({
                 )}
               </Button>
             </div>
-            
+
             {/* Feedback Message */}
             {couponMessage && (
-              <div className={`mt-2 px-3 py-2 rounded-lg text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-200 ${
-                couponStatus === "success"
-                  ? "bg-green-500/10 border border-green-500/20 text-green-300"
-                  : "bg-red-500/10 border border-red-500/20 text-red-300"
-              }`}>
+              <div
+                className={`mt-2 px-3 py-2 rounded-lg text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-200 ${
+                  couponStatus === "success"
+                    ? "bg-green-500/10 border border-green-500/20 text-green-300"
+                    : "bg-red-500/10 border border-red-500/20 text-red-300"
+                }`}
+              >
                 {couponStatus === "success" ? (
                   <CheckIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 ) : (

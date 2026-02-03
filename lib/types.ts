@@ -63,6 +63,7 @@ export interface Portfolio {
   ai_html?: string | null;
   profile_image_url?: string | null;
   is_active: boolean;
+  published_at?: string;
   views?: number;
   created_at: string;
   updated_at: string;
