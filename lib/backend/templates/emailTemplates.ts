@@ -416,3 +416,47 @@ export function exportConfirmationTemplate(
     </html>
   `;
 }
+
+export function creditAdditionTemplate(
+  name: string,
+  creditsAdded: number,
+  totalCredits: number,
+) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>${BASE_STYLE}</style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="wrapper">
+            <div class="card">
+              <img src="${LOGO_URL}" alt="Cloud9Profile" class="logo">
+              <h1>Credits Added!</h1>
+              <p>Hi ${name},</p>
+              <p>Great news! <strong>${creditsAdded} credits</strong> have been added to your account.</p>
+              
+              <div class="info-box" style="text-align: center;">
+                <p style="margin: 0; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">New Balance</p>
+                <p style="margin: 8px 0 0 0; font-size: 32px; font-weight: 800; color: #2563eb;">${totalCredits}</p>
+              </div>
+
+              <div style="margin-top: 24px; text-align: center;">
+                <a href="${APP_URL}/dashboard" class="button">Use Credits</a>
+              </div>
+              
+              <div class="divider"></div>
+              <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">You can use credits for AI generation, ATS checks, and premium exports.</p>
+            </div>
+            <div class="footer">
+              &copy; ${new Date().getFullYear()} Cloud9Profile. All rights reserved.
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}

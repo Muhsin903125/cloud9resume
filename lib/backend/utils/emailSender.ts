@@ -100,6 +100,19 @@ class EmailSender {
     });
   }
 
+  async sendCreditAdditionEmail(
+    email: string,
+    name: string,
+    creditsAdded: number,
+    totalCredits: number,
+  ): Promise<void> {
+    await this.sendEmail({
+      to: email,
+      subject: "Cloud9Profile Credits Added",
+      html: creditAdditionTemplate(name, creditsAdded, totalCredits),
+    });
+  }
+
   async sendATSAnalysisReport(
     email: string,
     name: string,

@@ -195,8 +195,14 @@ const ResumeDashboard = () => {
               {/* Center/Right: Search + Actions */}
               <div className="flex items-center gap-2">
                 {/* Search */}
-                <div className="relative hidden sm:block">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                <div
+                  className={`${
+                    searchOpen
+                      ? "absolute inset-x-0 top-14 p-2 bg-white border-b border-gray-100 z-40 sm:static sm:inset-auto sm:top-auto sm:p-0 sm:bg-transparent sm:border-none"
+                      : "hidden"
+                  } sm:block relative`}
+                >
+                  <span className="absolute left-4 sm:left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <SearchIcon size={14} color="#9CA3AF" />
                   </span>
                   <input
@@ -204,13 +210,30 @@ const ResumeDashboard = () => {
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-48 pl-8 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full sm:w-48 pl-9 sm:pl-8 pr-3 py-2 sm:py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    autoFocus={searchOpen}
                   />
+                  {/* Mobile Close Search */}
+                  <button
+                    onClick={() => setSearchOpen(false)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 sm:hidden text-gray-400"
+                  >
+                    &times;
+                  </button>
                 </div>
+
+                {/* Mobile Search Toggle */}
+                <button
+                  onClick={() => setSearchOpen(!searchOpen)}
+                  className={`sm:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg ${searchOpen ? "bg-gray-100" : ""}`}
+                >
+                  <SearchIcon size={16} />
+                </button>
 
                 <button
                   onClick={() => setShowImportModal(true)}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                  title="Import"
                 >
                   <CloudArrowUpIcon className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Import</span>
