@@ -381,6 +381,31 @@ export const ResumePreviewModal: React.FC<ResumePreviewModalProps> = ({
       window.URL.revokeObjectURL(url);
 
       toast.success(`${format.toUpperCase()} downloaded successfully`);
+
+      // Show watermark removal prompt for free users
+      if (format === "pdf" && !isPaidPlan) {
+        setTimeout(() => {
+          toast(
+            (t) => (
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold text-gray-900">
+                  Downloaded with watermark
+                </p>
+                <button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    setShowUpgradeModal(true);
+                  }}
+                  className="text-blue-600 text-sm font-medium hover:underline text-left"
+                >
+                  Remove watermark with Professional plan →
+                </button>
+              </div>
+            ),
+            { duration: 8000, icon: "✨" },
+          );
+        }, 1000);
+      }
     } catch (error) {
       console.error(error);
       if (!String(error).includes("limit reached")) {

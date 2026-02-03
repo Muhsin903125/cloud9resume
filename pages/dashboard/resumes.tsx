@@ -4,15 +4,23 @@ import Head from "next/head";
 import { Resume } from "../../lib/types";
 import { PlusIcon } from "../../components/Icons";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import PlanUpgradeModal from "../../components/PlanUpgradeModal";
+import { useAuth } from "../../lib/authUtils";
+import { PLAN_LIMITS } from "../../lib/subscription";
 
 const ResumeDashboard = () => {
   const router = useRouter();
+  const { user } = useAuth();
+  const userPlan = (user?.plan || "free") as keyof typeof PLAN_LIMITS;
+  const resumeLimit = PLAN_LIMITS[userPlan]?.resumes || 3;
+
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewModal, setShowNewModal] = useState(false);
   const [newResumeTitle, setNewResumeTitle] = useState("");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     open: boolean;
     id: string | null;
@@ -41,6 +49,13 @@ const ResumeDashboard = () => {
 
   const handleCreateResume = async () => {
     if (!newResumeTitle.trim()) return;
+
+    // Check plan limit
+    if (resumeLimit !== Infinity && resumes.length >= resumeLimit) {
+      setShowNewModal(false); // Close input modal
+      setShowUpgradeModal(true); // Show upgrade modal
+      return;
+    }
 
     try {
       const response = await fetch("/api/resumes", {
@@ -92,7 +107,7 @@ const ResumeDashboard = () => {
     (r) =>
       r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (r.job_title &&
-        r.job_title.toLowerCase().includes(searchQuery.toLowerCase()))
+        r.job_title.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   return (
@@ -123,10 +138,21 @@ const ResumeDashboard = () => {
         {/* Main Content */}
         <main className="max-w-5xl mx-auto px-4 py-8 relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4 mb-6">
-            <div className="w-full sm:w-auto">
+            <div className="w-full sm:w-auto flex items-center gap-3">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Total Resumes: {resumes.length}
+                {resumeLimit !== Infinity && (
+                  <span className="text-gray-400"> / {resumeLimit}</span>
+                )}
               </span>
+              {userPlan === "free" && resumes.length >= resumeLimit - 1 && (
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="text-xs text-blue-600 hover:underline font-medium"
+                >
+                  Unlock unlimited →
+                </button>
+              )}
             </div>
 
             <input
@@ -276,6 +302,13 @@ const ResumeDashboard = () => {
           message="Are you sure you want to delete this resume? This action cannot be undone."
           confirmText="Delete"
           isDestructive={true}
+        />
+        <PlanUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          currentPlan={userPlan}
+          limitedFeature="Unlimited Resumes"
+          errorMessage={`You've reached your resume limit (${resumeLimit} resumes). Upgrade to Professional to create unlimited resumes.`}
         />
       </div>
     </>

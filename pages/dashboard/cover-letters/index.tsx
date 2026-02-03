@@ -7,14 +7,23 @@ import { CoverLetter } from "../../../lib/types";
 import { EnvelopeIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import ConfirmationModal from "../../../components/ConfirmationModal";
+import PlanUpgradeModal from "../../../components/PlanUpgradeModal";
+import { useAuth } from "../../../lib/authUtils";
+import { PLAN_LIMITS } from "../../../lib/subscription";
 
 export default function CoverLettersDashboard() {
   const router = useRouter();
+  const { user } = useAuth();
   const { get, delete: deleteRequest } = useAPIAuth();
+
+  const userPlan = (user?.plan || "free") as keyof typeof PLAN_LIMITS;
+  const coverLetterLimit = PLAN_LIMITS[userPlan]?.cover_letters || 1;
+
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     fetchCoverLetters();
@@ -53,10 +62,22 @@ export default function CoverLettersDashboard() {
     }
   };
 
+  const handleCreateClick = () => {
+    // Check plan limit
+    if (
+      coverLetterLimit !== Infinity &&
+      coverLetters.length >= coverLetterLimit
+    ) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    router.push("/dashboard/cover-letters/create");
+  };
+
   const filteredItems = coverLetters.filter(
     (c) =>
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      c.company_name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -75,7 +96,11 @@ export default function CoverLettersDashboard() {
                   Cover Letters
                 </h1>
                 <p className="text-[10px] text-gray-400">
-                  {coverLetters.length} letter
+                  {coverLetters.length}
+                  {coverLetterLimit !== Infinity && (
+                    <span> /{coverLetterLimit}</span>
+                  )}
+                  {" letter"}
                   {coverLetters.length !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -88,13 +113,13 @@ export default function CoverLettersDashboard() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-48 px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-                <Link
-                  href="/dashboard/cover-letters/create"
+                <button
+                  onClick={handleCreateClick}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   <PlusIcon className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">New Letter</span>
-                </Link>
+                </button>
               </div>
             </div>
           </div>
@@ -118,13 +143,13 @@ export default function CoverLettersDashboard() {
                 Create tailored cover letters for your job applications in
                 seconds.
               </p>
-              <Link
-                href="/dashboard/cover-letters/create"
+              <button
+                onClick={handleCreateClick}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <PlusIcon className="w-4 h-4" />
                 Create Your First Letter
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -188,6 +213,13 @@ export default function CoverLettersDashboard() {
           message="Are you sure you want to delete this cover letter? This action cannot be undone."
           confirmText="Delete"
           isDestructive={true}
+        />
+        <PlanUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          currentPlan={userPlan}
+          limitedFeature="Unlimited Cover Letters"
+          errorMessage={`You've reached your cover letter limit (${coverLetterLimit} letter${coverLetterLimit !== 1 ? "s" : ""}). Upgrade to Professional to create unlimited cover letters.`}
         />
       </div>
     </>

@@ -171,11 +171,11 @@ const UserDetailsPage: NextPage = () => {
                 Quick Actions
               </h3>
               <div className="flex flex-wrap gap-2">
-                {user.plan !== "pro" && (
+                {user.plan !== "professional" && (
                   <Button
                     size="small"
                     className="!text-xs !py-1.5"
-                    onClick={() => handleUpdate({ plan: "pro" })}
+                    onClick={() => handleUpdate({ plan: "professional" })}
                     disabled={updating}
                   >
                     Upgrade to Pro
@@ -216,7 +216,7 @@ const UserDetailsPage: NextPage = () => {
                     onClick={() => {
                       const val = (
                         document.getElementById(
-                          "creditInput"
+                          "creditInput",
                         ) as HTMLInputElement
                       ).value;
                       if (val)

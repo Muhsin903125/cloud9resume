@@ -11,14 +11,14 @@ function getTokenFromHeader(req: NextApiRequest): string | null {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { productId, planId } = req.body;
+    const { productId, planId, discountCode } = req.body;
 
     if (!productId) {
       return res.status(400).json({ error: "productId is required" });
@@ -38,6 +38,15 @@ export default async function handler(
       return res.status(401).json({ error: "Invalid token" });
     }
 
+    // Determine which discount code to use
+    // Priority: Custom coupon > Professional trial code
+    let finalDiscountCode = discountCode;
+
+    // Fallback to professional trial if no custom coupon provided
+    if (!finalDiscountCode && planId === "professional") {
+      finalDiscountCode = process.env.DODO_TRIAL_DISCOUNT_CODE || "TRIAL50";
+    }
+
     const session = await dodoClient.checkoutSessions.create({
       product_cart: [
         {
@@ -52,11 +61,7 @@ export default async function handler(
       return_url: `${
         process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
       }/dashboard?payment=success`,
-      // Apply discount code if it's the professional plan (for the $6.50 trial effect)
-      discount_code:
-        planId === "professional"
-          ? process.env.DODO_TRIAL_DISCOUNT_CODE || "TRIAL50"
-          : undefined,
+      discount_code: finalDiscountCode || undefined,
       metadata: {
         userId: userId,
         planId: planId || "professional",

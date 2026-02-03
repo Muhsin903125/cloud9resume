@@ -11,6 +11,7 @@ import {
   buyCredits,
   fetchPlans,
   Plan,
+  verifyCoupon,
 } from "../lib/plansUtils";
 import { toast } from "react-hot-toast";
 
@@ -34,6 +35,14 @@ export default function PlanUpgradeModal({
   const [loading, setLoading] = useState<string | null>(null);
   const [plans, setPlans] = useState<any[]>([]);
   const [creditsAddonId, setCreditsAddonId] = useState<string | null>(null);
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponStatus, setCouponStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [couponMessage, setCouponMessage] = useState("");
 
   // Fetch plans and IDs on mount
   useEffect(() => {
@@ -61,6 +70,36 @@ export default function PlanUpgradeModal({
     return thisPlanOrder >= currentOrder && plan.id !== "free";
   });
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponMessage("Please enter a coupon code");
+      setCouponStatus("error");
+      return;
+    }
+
+    setCouponStatus("loading");
+    setCouponMessage("");
+
+    try {
+      const result = await verifyCoupon(couponCode);
+      if (result.data?.valid) {
+        setAppliedCoupon(result.data.coupon);
+        setCouponStatus("success");
+        const discountText =
+          result.data.coupon.discount_type === "percentage"
+            ? `${result.data.coupon.discount_value}% off`
+            : `$${result.data.coupon.discount_value} off`;
+        setCouponMessage(`Coupon applied! ${discountText}`);
+      } else {
+        setCouponStatus("error");
+        setCouponMessage("Invalid coupon code");
+      }
+    } catch (error: any) {
+      setCouponStatus("error");
+      setCouponMessage(error.response?.data?.error || "Invalid coupon code");
+    }
+  };
+
   const handleUpgrade = async (productId: string, planId: string) => {
     if (!productId) {
       window.location.href = "/plans";
@@ -68,7 +107,11 @@ export default function PlanUpgradeModal({
     }
     setLoading(planId);
     try {
-      const result = await initiateDodoCheckout(productId, planId);
+      const result = await initiateDodoCheckout(
+        productId,
+        planId,
+        appliedCoupon?.code, // Pass coupon code if applied
+      );
       if (result.data?.url) {
         window.location.href = result.data.url;
       } else {
@@ -142,8 +185,8 @@ export default function PlanUpgradeModal({
                 plan.isComingSoon
                   ? "bg-slate-800/20 border-slate-800 opacity-60"
                   : plan.isPopular
-                  ? "bg-slate-800/60 border-blue-500/30 hover:bg-slate-800 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-900/10"
-                  : "bg-slate-800/40 border-slate-700 hover:bg-slate-800/60 hover:border-slate-600"
+                    ? "bg-slate-800/60 border-blue-500/30 hover:bg-slate-800 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-900/10"
+                    : "bg-slate-800/40 border-slate-700 hover:bg-slate-800/60 hover:border-slate-600"
               }`}
             >
               {plan.isPopular && !plan.isComingSoon && (
@@ -248,8 +291,8 @@ export default function PlanUpgradeModal({
                       plan.isComingSoon
                         ? "bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed"
                         : plan.isPopular
-                        ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:shadow-blue-500/25 border-none text-white shadow-md shadow-blue-900/20"
-                        : "bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white"
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:shadow-blue-500/25 border-none text-white shadow-md shadow-blue-900/20"
+                          : "bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white"
                     }`}
                   >
                     {loading === plan.id ? (
@@ -273,7 +316,73 @@ export default function PlanUpgradeModal({
                 </div>
               </div>
             </div>
-          ))}
+          )))}
+        </div>
+
+        {/* Coupon Code Section */}
+        <div className="border-t border-slate-800/50 pt-4 pb-2">
+          <div className="px-1">
+            <label className="block text-xs font-semibold text-slate-300 mb-2">
+              Have a coupon code?
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => {
+                  setCouponCode(e.target.value.toUpperCase());
+                  if (couponStatus !== "idle") {
+                    setCouponStatus("idle");
+                    setCouponMessage("");
+                  }
+                }}
+                placeholder="Enter code"
+                disabled={couponStatus === "success"}
+                className={`flex-1 px-3 py-2 bg-slate-800 border rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
+                  couponStatus === "success"
+                    ? "border-green-500/50 bg-green-900/20"
+                    : couponStatus === "error"
+                    ? "border-red-500/50 focus:ring-red-500/30"
+                    : "border-slate-700 focus:ring-blue-500/30"
+                }`}
+              />
+              <Button
+                variant="secondary"
+                size="small"
+                onClick={handleApplyCoupon}
+                disabled={loading !== null || couponStatus === "loading" || couponStatus === "success" || !couponCode.trim()}
+                className={`px-4 py-2 text-xs font-medium rounded-lg transition-all ${
+                  couponStatus === "success"
+                    ? "bg-green-600 text-white border-green-500"
+                    : "bg-slate-700 text-slate-200 border-slate-600 hover:bg-slate-600"
+                }`}
+              >
+                {couponStatus === "loading" ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                ) : couponStatus === "success" ? (
+                  <CheckIcon className="w-4 h-4" />
+                ) : (
+                  "Apply"
+                )}
+              </Button>
+            </div>
+            
+            {/* Feedback Message */}
+            {couponMessage && (
+              <div className={`mt-2 px-3 py-2 rounded-lg text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-200 ${
+                couponStatus === "success"
+                  ? "bg-green-500/10 border border-green-500/20 text-green-300"
+                  : "bg-red-500/10 border border-red-500/20 text-red-300"
+              }`}>
+                {couponStatus === "success" ? (
+                  <CheckIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <SparklesIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                )}
+                <span>{couponMessage}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer / Credit Top Up */}

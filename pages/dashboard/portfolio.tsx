@@ -67,13 +67,29 @@ const PortfolioDashboardPage: NextPage = () => {
     }
   };
 
+  // Calculate portfolio expiry for free users
+  const getExpiryInfo = (portfolio: Portfolio) => {
+    if (!portfolio.published_at || user?.plan !== "free") return null;
+
+    const publishedDate = new Date(portfolio.published_at);
+    const expiryDate = new Date(publishedDate);
+    expiryDate.setDate(expiryDate.getDate() + 30);
+
+    const now = new Date();
+    const daysRemaining = Math.ceil(
+      (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    return { expiryDate, daysRemaining, isExpired: daysRemaining <= 0 };
+  };
+
   const handleCreatePortfolio = () => {
     if (
       user &&
       !canCreateResource(
         (user.plan || "free") as PlanType,
         portfolios.length,
-        "portfolios"
+        "portfolios",
       )
     ) {
       setShowUpgradeModal(true);
@@ -260,6 +276,50 @@ const PortfolioDashboardPage: NextPage = () => {
                           </span>
                         </div>
                       </div>
+
+                      {/* Expiry Warning for Free Plan */}
+                      {(() => {
+                        const expiryInfo = getExpiryInfo(p);
+                        if (!expiryInfo) return null;
+
+                        if (expiryInfo.isExpired) {
+                          return (
+                            <div className="mt-2 px-2 py-1 bg-red-50 border border-red-200 rounded text-xs flex items-center justify-between">
+                              <span className="text-red-700 font-medium">
+                                Expired
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowUpgradeModal(true);
+                                }}
+                                className="text-red-600 underline hover:text-red-800"
+                              >
+                                Renew
+                              </button>
+                            </div>
+                          );
+                        } else if (expiryInfo.daysRemaining <= 7) {
+                          return (
+                            <div className="mt-2 px-2 py-1 bg-yellow-50 border border-yellow-200 rounded text-xs flex items-center justify-between">
+                              <span className="text-yellow-700">
+                                Expires in {expiryInfo.daysRemaining} day
+                                {expiryInfo.daysRemaining !== 1 ? "s" : ""}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowUpgradeModal(true);
+                                }}
+                                className="text-yellow-900 underline hover:text-yellow-950 font-medium"
+                              >
+                                Keep forever
+                              </button>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
 
                       <div className="flex gap-2 mt-4">
                         <button

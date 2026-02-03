@@ -49,7 +49,7 @@ export async function useCredit(creditsUsed: number, action: string) {
 export async function addCredits(
   creditsToAdd: number,
   planId: string,
-  paymentIntentId?: string
+  paymentIntentId?: string,
 ) {
   const token = localStorage.getItem("x_user_auth_token");
   if (!token) {
@@ -67,7 +67,11 @@ export async function addCredits(
 }
 
 // Initiate Dodo Checkout
-export async function initiateDodoCheckout(productId: string, planId: string) {
+export async function initiateDodoCheckout(
+  productId: string,
+  planId: string,
+  discountCode?: string,
+) {
   const token = localStorage.getItem("x_user_auth_token");
   if (!token) {
     return {
@@ -79,6 +83,7 @@ export async function initiateDodoCheckout(productId: string, planId: string) {
   return apiClient.post("/payments/create-checkout", {
     productId,
     planId,
+    discountCode,
   });
 }
 
@@ -112,7 +117,7 @@ export const CREDIT_COSTS = {
 export async function verifyCoupon(
   code: string,
   planId?: string,
-  userId?: string
+  userId?: string,
 ) {
   return apiClient.post("/coupons/verify", { code, planId, userId });
 }
