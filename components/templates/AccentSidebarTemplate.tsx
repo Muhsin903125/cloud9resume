@@ -154,7 +154,7 @@ export const AccentSidebarTemplate: React.FC<AccentSidebarTemplateProps> = ({
                     >
                       {typeof skill === "string"
                         ? skill
-                        : skill.name || skill.text}
+                        : skill.name || skill.text || ""}
                     </span>
                   ))}
                 </div>
@@ -168,7 +168,7 @@ export const AccentSidebarTemplate: React.FC<AccentSidebarTemplateProps> = ({
                   ).map((item: any, i: number) => (
                     <div key={i} className="flex flex-col">
                       <span className="font-semibold text-slate-900">
-                        {item.name || item.language || item}
+                        {item.name || item.language || item || ""}
                       </span>
                       {item.level && (
                         <span className="text-slate-500 text-xs">

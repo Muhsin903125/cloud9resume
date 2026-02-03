@@ -15,7 +15,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
   font = "'Inter', sans-serif",
 }) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -62,7 +62,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
               LinkedIn:{" "}
               {personalInfo.linkedin.replace(
                 /^https?:\/\/(www\.)?linkedin\.com\/in\//,
-                ""
+                "",
               )}
             </span>
           )}
@@ -105,7 +105,9 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                               item.institution ||
                               item.name ||
                               item.role ||
-                              item.language}
+                              item.role ||
+                              item.language ||
+                              ""}
                           </h3>
                           <div
                             className="text-sm font-medium"
@@ -118,7 +120,8 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                               item.degree ||
                               item.organization ||
                               item.publisher ||
-                              item.awarder}
+                              item.awarder ||
+                              ""}
                             {item.location && (
                               <span className="text-slate-400 font-normal ml-2">
                                 / {item.location}
@@ -188,7 +191,9 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                                   {skills.map((s, i) => (
                                     <React.Fragment key={i}>
                                       <span>
-                                        {typeof s === "string" ? s : s.name}
+                                        {typeof s === "string"
+                                          ? s
+                                          : s.name || ""}
                                       </span>
                                       {i < skills.length - 1 && (
                                         <span className="text-slate-200">
@@ -227,16 +232,16 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
           };
 
           const experience = sortedSections.find(
-            (s) => s.section_type === "experience"
+            (s) => s.section_type === "experience",
           );
           const skills = sortedSections.find(
-            (s) => s.section_type === "skills"
+            (s) => s.section_type === "skills",
           );
           const education = sortedSections.find(
-            (s) => s.section_type === "education"
+            (s) => s.section_type === "education",
           );
           const summary = sortedSections.find(
-            (s) => s.section_type === "summary"
+            (s) => s.section_type === "summary",
           );
 
           return (
@@ -301,7 +306,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                 <span key={i} className="flex items-center gap-2">
                   {typeof item === "string"
                     ? item
-                    : `${item.language}${
+                    : `${item.language || ""}${
                         item.proficiency ? ` (${item.proficiency})` : ""
                       }`}
                   {i <
@@ -332,7 +337,9 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                   .items || []
               ).map((item: any, i: number) => (
                 <span key={i} className="flex items-center gap-2">
-                  {typeof item === "string" ? item : item.name || item.hobby}
+                  {typeof item === "string"
+                    ? item
+                    : item.name || item.hobby || ""}
                   {i <
                     sections.find((s) => s.section_type === "hobbies")!
                       .section_data.items.length -

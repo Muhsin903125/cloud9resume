@@ -8,7 +8,7 @@ export const MinimalTemplate = ({
   font,
 }: any) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -110,10 +110,10 @@ export const MinimalTemplate = ({
                               typeof s === "string"
                                 ? s
                                 : section_type === "languages"
-                                ? `${s.language}${
-                                    s.proficiency ? ` (${s.proficiency})` : ""
-                                  }`
-                                : s.name || s.language;
+                                  ? `${s.language || ""}${
+                                      s.proficiency ? ` (${s.proficiency})` : ""
+                                    }`
+                                  : s.name || s.language || "";
                             return (
                               <span
                                 key={idx}
@@ -128,7 +128,7 @@ export const MinimalTemplate = ({
                       )}
 
                       {!["summary", "skills", "languages"].includes(
-                        section_type
+                        section_type,
                       ) && (
                         <div className="space-y-6">
                           {(Array.isArray(section_data)
@@ -151,7 +151,8 @@ export const MinimalTemplate = ({
                                     item.title ||
                                     item.school ||
                                     item.institution ||
-                                    item.language}
+                                    item.language ||
+                                    ""}
                                 </div>
                                 <div className="text-gray-600 text-xs mb-1.5">
                                   {item.company ||
@@ -185,7 +186,7 @@ export const MinimalTemplate = ({
                       <p className="text-sm leading-relaxed text-gray-800 text-justify">
                         {
                           sections.find(
-                            (s: any) => s.section_type === "declaration"
+                            (s: any) => s.section_type === "declaration",
                           ).section_data.text
                         }
                       </p>

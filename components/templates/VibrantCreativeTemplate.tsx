@@ -14,7 +14,7 @@ export const VibrantCreativeTemplate = ({
       ?.section_data || {};
 
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
 
   const renderListSection = (section: any) => {
@@ -238,8 +238,8 @@ export const VibrantCreativeTemplate = ({
                 {typeof s === "string"
                   ? s
                   : section_type === "languages"
-                  ? `${s.language}${s.proficiency ? ` (${s.proficiency})` : ""}`
-                  : s.name || s.skill || s.language}
+                    ? `${s.language || ""}${s.proficiency ? ` (${s.proficiency})` : ""}`
+                    : s.name || s.skill || s.language || ""}
               </span>
             ));
           })()}
@@ -270,19 +270,13 @@ export const VibrantCreativeTemplate = ({
         <div className="w-[30%] bg-slate-50 border-r border-slate-100 p-5 flex flex-col gap-6">
           {/* Photo & Name Card */}
           <div className="text-center lg:text-left">
-            {personalInfo.showPhoto !== false && (
+            {personalInfo.showPhoto !== false && personalInfo.photoUrl && (
               <div className="w-24 h-24 mx-auto lg:mx-0 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-slate-100 mb-4 overflow-hidden relative rotate-3 transition-transform hover:rotate-0">
-                {personalInfo.photoUrl ? (
-                  <img
-                    src={personalInfo.photoUrl}
-                    alt={personalInfo.name}
-                    className="w-full h-full object-cover -rotate-3 transition-transform hover:rotate-0"
-                  />
-                ) : (
-                  <span className="text-4xl font-black text-slate-200 -rotate-3">
-                    {personalInfo.name?.[0] || "U"}
-                  </span>
-                )}
+                <img
+                  src={personalInfo.photoUrl}
+                  alt={personalInfo.name}
+                  className="w-full h-full object-cover -rotate-3 transition-transform hover:rotate-0"
+                />
               </div>
             )}
             <h1 className="text-xl font-black text-slate-900 leading-none mb-3 tracking-tight uppercase">
@@ -319,7 +313,7 @@ export const VibrantCreativeTemplate = ({
                       </span>
                       <span className="truncate">{item.val}</span>
                     </div>
-                  )
+                  ),
               )}
             </div>
           </div>
@@ -355,8 +349,8 @@ export const VibrantCreativeTemplate = ({
                         {typeof item === "string"
                           ? item
                           : section_type === "languages"
-                          ? item.language
-                          : item.name}
+                            ? item.language || ""
+                            : item.name || ""}
                       </span>
                     ))}
                   </div>
@@ -373,19 +367,19 @@ export const VibrantCreativeTemplate = ({
           <div className="space-y-6">
             {(() => {
               const summary = sortedSections.find(
-                (s) => s.section_type === "summary"
+                (s) => s.section_type === "summary",
               );
               const experience = sortedSections.find(
-                (s) => s.section_type === "experience"
+                (s) => s.section_type === "experience",
               );
               const skills = sortedSections.find(
-                (s) => s.section_type === "skills"
+                (s) => s.section_type === "skills",
               );
               const education = sortedSections.find(
-                (s) => s.section_type === "education"
+                (s) => s.section_type === "education",
               );
               const projects = sortedSections.find(
-                (s) => s.section_type === "projects"
+                (s) => s.section_type === "projects",
               );
 
               return (
@@ -437,7 +431,7 @@ export const VibrantCreativeTemplate = ({
                   {/* 9. Declaration */}
                   {(() => {
                     const declSection = sortedSections.find(
-                      (s) => s.section_type === "declaration"
+                      (s) => s.section_type === "declaration",
                     );
                     if (!declSection || !declSection.section_data?.text)
                       return null;

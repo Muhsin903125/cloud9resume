@@ -8,7 +8,7 @@ export const TechTemplate = ({
   font,
 }: any) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -111,10 +111,10 @@ export const TechTemplate = ({
                         {typeof s === "string"
                           ? s
                           : section_type === "languages"
-                          ? `${s.language}${
-                              s.proficiency ? ` (${s.proficiency})` : ""
-                            }`
-                          : s.name || s.language}
+                            ? `${s.language || ""}${
+                                s.proficiency ? ` (${s.proficiency})` : ""
+                              }`
+                            : s.name || s.language || ""}
                       </span>
                     ))}
                   </div>
@@ -132,8 +132,8 @@ export const TechTemplate = ({
                       >
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-bold text-sm">
-                            {item.position || item.title} @{" "}
-                            {item.company || item.issuer}
+                            {item.position || item.title || ""} @{" "}
+                            {item.company || item.issuer || ""}
                           </h4>
                           <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                             {item.startDate} &rarr; {item.endDate || "PRESENT"}

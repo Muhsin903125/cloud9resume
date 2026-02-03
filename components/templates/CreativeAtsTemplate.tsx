@@ -16,7 +16,7 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
   hexToRgba,
 }) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -110,7 +110,9 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                               item.institution ||
                               item.name ||
                               item.role ||
-                              item.language}
+                              item.role ||
+                              item.language ||
+                              ""}
                           </h3>
                           <div
                             className="text-xs font-bold uppercase tracking-wider"
@@ -201,7 +203,7 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                                       key={i}
                                       className="text-[11px] font-bold px-2 py-1 rounded-md border-2 border-gray-50 hover:border-pink-50 transition-colors"
                                     >
-                                      {typeof s === "string" ? s : s.name}
+                                      {typeof s === "string" ? s : s.name || ""}
                                     </span>
                                   ))}
                                 </div>
@@ -226,7 +228,7 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                                 : "#fef2f2",
                             }}
                           >
-                            {typeof item === "string" ? item : item.name}
+                            {typeof item === "string" ? item : item.name || ""}
                           </span>
                         ))}
                       </div>
@@ -238,16 +240,16 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
           };
 
           const experience = sortedSections.find(
-            (s) => s.section_type === "experience"
+            (s) => s.section_type === "experience",
           );
           const skills = sortedSections.find(
-            (s) => s.section_type === "skills"
+            (s) => s.section_type === "skills",
           );
           const education = sortedSections.find(
-            (s) => s.section_type === "education"
+            (s) => s.section_type === "education",
           );
           const summary = sortedSections.find(
-            (s) => s.section_type === "summary"
+            (s) => s.section_type === "summary",
           );
 
           return (
@@ -321,7 +323,7 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                 >
                   {typeof item === "string"
                     ? item
-                    : `${item.language}${
+                    : `${item.language || ""}${
                         item.proficiency ? ` (${item.proficiency})` : ""
                       }`}
                 </span>
@@ -357,7 +359,9 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                       : "#fef2f2",
                   }}
                 >
-                  {typeof item === "string" ? item : item.name || item.hobby}
+                  {typeof item === "string"
+                    ? item
+                    : item.name || item.hobby || ""}
                 </span>
               ))}
             </div>

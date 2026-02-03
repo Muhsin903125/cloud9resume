@@ -28,14 +28,14 @@ const PLANS: Record<string, Plan> = {
     displayName: "Free",
     price: 0,
     billingPeriod: "monthly",
-    credits: 5,
+    credits: 25,
     description: "Perfect for trying out Cloud9Profile",
     features: [
       "3 Resumes",
       "1 Portfolio",
       "Portfolio Publishing (30 days)",
       "1 Cover Letter",
-      "5 AI Credits",
+      "25 AI Credits",
       "Basic ATS Checker",
       "Standard Templates",
       "PDF Export (with watermark)",
@@ -116,7 +116,7 @@ const PLANS: Record<string, Plan> = {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -158,7 +158,7 @@ export default async function handler(
       if (userId) {
         const supabaseAdmin = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
         );
 
         const { data: profile } = await supabaseAdmin

@@ -12,7 +12,7 @@ export const ProfessionalAtsTemplate: React.FC<
   ProfessionalAtsTemplateProps
 > = ({ resume, sections, font = "'Merriweather', serif" }) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -52,7 +52,7 @@ export const ProfessionalAtsTemplate: React.FC<
               •{" "}
               {personalInfo.linkedin.replace(
                 /^https?:\/\/(www\.)?linkedin\.com\/in\//,
-                ""
+                "",
               )}
             </span>
           )}
@@ -87,7 +87,8 @@ export const ProfessionalAtsTemplate: React.FC<
                             item.institution ||
                             item.name ||
                             item.role ||
-                            item.language}
+                            item.language ||
+                            ""}
                         </h3>
                         <span className="text-[11px] font-bold uppercase">
                           {item.startDate ? `${item.startDate} — ` : ""}
@@ -158,7 +159,7 @@ export const ProfessionalAtsTemplate: React.FC<
                                 <span>
                                   {skills
                                     .map((s) =>
-                                      typeof s === "string" ? s : s.name
+                                      typeof s === "string" ? s : s.name,
                                     )
                                     .join(", ")}
                                 </span>
@@ -174,7 +175,7 @@ export const ProfessionalAtsTemplate: React.FC<
                       <p className="leading-relaxed">
                         {items
                           .map((item: any) =>
-                            typeof item === "string" ? item : item.name
+                            typeof item === "string" ? item : item.name,
                           )
                           .join(", ")}
                       </p>
@@ -186,16 +187,16 @@ export const ProfessionalAtsTemplate: React.FC<
           };
 
           const experience = sortedSections.find(
-            (s) => s.section_type === "experience"
+            (s) => s.section_type === "experience",
           );
           const skills = sortedSections.find(
-            (s) => s.section_type === "skills"
+            (s) => s.section_type === "skills",
           );
           const education = sortedSections.find(
-            (s) => s.section_type === "education"
+            (s) => s.section_type === "education",
           );
           const summary = sortedSections.find(
-            (s) => s.section_type === "summary"
+            (s) => s.section_type === "summary",
           );
 
           return (
@@ -254,7 +255,7 @@ export const ProfessionalAtsTemplate: React.FC<
                 )
                   .map((item: any) => {
                     if (typeof item === "string") return item;
-                    return `${item.language}${
+                    return `${item.language || ""}${
                       item.proficiency ? ` (${item.proficiency})` : ""
                     }`;
                   })
@@ -277,7 +278,7 @@ export const ProfessionalAtsTemplate: React.FC<
                     .section_data.items || []
                 )
                   .map((item: any) =>
-                    typeof item === "string" ? item : item.name || item.hobby
+                    typeof item === "string" ? item : item.name || item.hobby,
                   )
                   .join(" • ")}
               </p>

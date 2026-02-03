@@ -8,7 +8,7 @@ export const BoldTemplate = ({
   font,
 }: any) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -109,17 +109,17 @@ export const BoldTemplate = ({
                       {typeof s === "string"
                         ? s
                         : section_type === "languages"
-                        ? `${s.language}${
-                            s.proficiency ? ` (${s.proficiency})` : ""
-                          }`
-                        : s.name || s.language}
+                          ? `${s.language || ""}${
+                              s.proficiency ? ` (${s.proficiency})` : ""
+                            }`
+                          : s.name || s.language || ""}
                     </span>
                   ))}
                 </div>
               )}
 
               {!["summary", "skills", "languages", "declaration"].includes(
-                section_type
+                section_type,
               ) && (
                 <div
                   className="space-y-10 border-l-4 pl-8"

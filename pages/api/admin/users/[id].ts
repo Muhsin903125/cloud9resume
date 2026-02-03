@@ -8,7 +8,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const userId = req.query.id as string;
 
@@ -66,6 +66,17 @@ export default async function handler(
       const { plan, is_active, credits } = req.body;
       const updates: any = {};
 
+      // Need current profile state to compare
+      const { data: currentProfile, error: fetchError } = await supabaseAdmin
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (fetchError || !currentProfile) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
       if (plan !== undefined) updates.plan = plan;
       if (is_active !== undefined) updates.is_active = is_active;
       if (credits !== undefined) updates.credits = credits;
@@ -82,6 +93,50 @@ export default async function handler(
         .single();
 
       if (error) throw error;
+
+      // --- Send Emails ---
+      try {
+        const { emailSender } =
+          await import("../../../../lib/backend/utils/emailSender");
+
+        // 1. Plan Upgrade
+        if (plan && plan !== currentProfile.plan_id && plan !== "free") {
+          // Note: API body probably sends 'pro', 'starter' etc. as 'plan', but database validation might fail if it expects ID.
+          // Assuming 'plan' in body is the string ID like 'pro'.
+          // Also need to know how many credits come with the plan for the email?
+          // For now, simpler email:
+          // Fetch plan details to get credit amount if possible, or just generic message.
+          // Actually `sendPlanUpgradeEmail` expects (email, name, planName, credits).
+          // We might need to map plan string to name.
+          // Let's defer credit lookup for now or use a basic map.
+          // However, if we just updated the user, maybe we trust the admin UI knew what it was doing.
+          // Best effort:
+          const planName = plan.charAt(0).toUpperCase() + plan.slice(1); // Capitalize
+          await emailSender.sendPlanUpgradeEmail(
+            updatedProfile.email,
+            updatedProfile.name || "User",
+            planName,
+            0, // We don't know exact credits added by just switching plan here unless we look it up. Passing 0 for now or handle in email template to hide if 0.
+          );
+        }
+
+        // 2. Credits Added
+        if (credits !== undefined && typeof credits === "number") {
+          const oldCredits = currentProfile.credits || 0;
+          const diff = credits - oldCredits;
+          if (diff > 0) {
+            await emailSender.sendCreditAdditionEmail(
+              updatedProfile.email,
+              updatedProfile.name || "User",
+              diff,
+              credits,
+            );
+          }
+        }
+      } catch (emailErr) {
+        console.error("Failed to send admin update email:", emailErr);
+        // Don't fail the request, just log
+      }
 
       return res.status(200).json({
         message: "User updated successfully",

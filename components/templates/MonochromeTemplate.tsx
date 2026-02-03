@@ -89,7 +89,7 @@ export const MonochromeTemplate: React.FC<MonochromeTemplateProps> = ({
                       <span>
                         {typeof skill === "string"
                           ? skill
-                          : skill.name || skill.text}
+                          : skill.name || skill.text || ""}
                       </span>
                     </div>
                   ))}
@@ -123,11 +123,14 @@ export const MonochromeTemplate: React.FC<MonochromeTemplateProps> = ({
                       <div className="col-span-9 border-l border-gray-200 pl-6">
                         <div className="flex justify-between items-baseline mb-2">
                           <h3 className="text-xl font-serif font-bold text-black">
-                            {item.title || item.degree || item.position}
+                            {item.title || item.degree || item.position || ""}
                           </h3>
                         </div>
                         <div className="text-sm font-mono uppercase tracking-wide text-gray-500 mb-3">
-                          {item.company || item.school || item.institution}
+                          {item.company ||
+                            item.school ||
+                            item.institution ||
+                            ""}
                         </div>
 
                         {item.description && (

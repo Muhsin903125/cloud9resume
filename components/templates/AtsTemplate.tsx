@@ -14,7 +14,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
   font = "'Inter', sans-serif",
 }) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -59,7 +59,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
               | LinkedIn:{" "}
               {personalInfo.linkedin.replace(
                 /^https?:\/\/(www\.)?linkedin\.com\/in\//,
-                ""
+                "",
               )}
             </span>
           )}
@@ -96,7 +96,8 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                             item.degree ||
                             item.school ||
                             item.institution ||
-                            item.language}
+                            item.language ||
+                            ""}
                         </h3>
                         <span className="text-sm font-normal">
                           {item.startDate ? `${item.startDate} – ` : ""}
@@ -175,7 +176,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                                     .map((skill: any) =>
                                       typeof skill === "string"
                                         ? skill
-                                        : skill.name
+                                        : skill.name,
                                     )
                                     .join(", ")}
                                 </span>
@@ -191,7 +192,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                       <p>
                         {items
                           .map((item: any) =>
-                            typeof item === "string" ? item : item.name
+                            typeof item === "string" ? item : item.name,
                           )
                           .join(", ")}
                       </p>
@@ -203,16 +204,16 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
           };
 
           const experience = sortedSections.find(
-            (s) => s.section_type === "experience"
+            (s) => s.section_type === "experience",
           );
           const skills = sortedSections.find(
-            (s) => s.section_type === "skills"
+            (s) => s.section_type === "skills",
           );
           const education = sortedSections.find(
-            (s) => s.section_type === "education"
+            (s) => s.section_type === "education",
           );
           const summary = sortedSections.find(
-            (s) => s.section_type === "summary"
+            (s) => s.section_type === "summary",
           );
 
           return (
@@ -300,7 +301,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                     .section_data.items || []
                 )
                   .map((item: any) =>
-                    typeof item === "string" ? item : item.name || item.hobby
+                    typeof item === "string" ? item : item.name || item.hobby,
                   )
                   .join(", ")}
               </p>

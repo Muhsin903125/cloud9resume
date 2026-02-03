@@ -151,7 +151,7 @@ export const TwoColumnProTemplate: React.FC<TwoColumnProTemplateProps> = ({
                     <div key={i}>
                       <div className="flex justify-between items-baseline mb-1">
                         <h3 className="font-bold text-slate-900 text-base">
-                          {item.title || item.position || item.name}
+                          {item.title || item.position || item.name || ""}
                         </h3>
                         <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
                           {[
@@ -210,7 +210,7 @@ export const TwoColumnProTemplate: React.FC<TwoColumnProTemplateProps> = ({
                           <span className="text-sm font-semibold text-slate-700">
                             {typeof skill === "string"
                               ? skill
-                              : skill.name || skill.text}
+                              : skill.name || skill.text || ""}
                           </span>
                         </div>
                         {/* Simple bar for visual flair */}
@@ -239,7 +239,8 @@ export const TwoColumnProTemplate: React.FC<TwoColumnProTemplateProps> = ({
                           {item.degree ||
                             item.name ||
                             item.language ||
-                            item.institution}
+                            item.institution ||
+                            ""}
                         </div>
                         <div className="text-slate-500 text-xs">
                           {item.school || item.level || item.publisher}

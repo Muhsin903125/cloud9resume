@@ -14,11 +14,11 @@ export const CreativeTemplate = ({
       ?.section_data || {};
 
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
 
   const mainSections = sortedSections.filter((s: any) =>
-    ["summary", "experience", "projects"].includes(s.section_type)
+    ["summary", "experience", "projects"].includes(s.section_type),
   );
   const sidebarSections = sortedSections.filter(
     (s: any) =>
@@ -28,7 +28,7 @@ export const CreativeTemplate = ({
         "experience",
         "projects",
         "declaration",
-      ].includes(s.section_type)
+      ].includes(s.section_type),
   );
 
   return (
@@ -97,7 +97,7 @@ export const CreativeTemplate = ({
                     {item.val}
                   </span>
                 </div>
-              )
+              ),
           )}
         </div>
 
@@ -131,10 +131,10 @@ export const CreativeTemplate = ({
                         {typeof s === "string"
                           ? s
                           : section_type === "languages"
-                          ? `${s.language}${
-                              s.proficiency ? ` (${s.proficiency})` : ""
-                            }`
-                          : s.name || s.language}
+                            ? `${s.language}${
+                                s.proficiency ? ` (${s.proficiency})` : ""
+                              }`
+                            : s.name || s.language}
                       </span>
                     ))}
                   </div>

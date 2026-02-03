@@ -8,7 +8,7 @@ export const CompactTemplate = ({
   font,
 }: any) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -94,10 +94,10 @@ export const CompactTemplate = ({
                       {typeof s === "string"
                         ? s
                         : section_type === "languages"
-                        ? `${s.language}${
-                            s.proficiency ? ` (${s.proficiency})` : ""
-                          }`
-                        : s.name || s.language}
+                          ? `${s.language}${
+                              s.proficiency ? ` (${s.proficiency})` : ""
+                            }`
+                          : s.name || s.language || ""}
                     </span>
                   ))}
                 </div>
@@ -113,7 +113,7 @@ export const CompactTemplate = ({
                       <div className="flex justify-between items-baseline">
                         <div className="flex items-baseline gap-2">
                           <h4 className="font-bold">
-                            {item.position || item.title || item.school}
+                            {item.position || item.title || item.school || ""}
                           </h4>
                           <span className="text-gray-500 italic">
                             @ {item.company || item.issuer || item.degree}

@@ -6,6 +6,7 @@ import {
   planUpgradeTemplate,
   atsReportTemplate,
   exportConfirmationTemplate,
+  creditAdditionTemplate,
 } from "../templates/emailTemplates";
 
 interface EmailOptions {
@@ -31,7 +32,7 @@ class EmailSender {
         "Cloud9Profile <reply@cloud9profile.com>";
 
       console.log(
-        `[EmailSender] Sending email from: ${from} to: ${options.to}`
+        `[EmailSender] Sending email from: ${from} to: ${options.to}`,
       );
 
       const response = await this.resend.emails.send({
@@ -66,7 +67,7 @@ class EmailSender {
     email: string,
     name: string,
     planId: string = "free",
-    customCredits?: number
+    customCredits?: number,
   ): Promise<void> {
     await this.sendEmail({
       to: email,
@@ -77,7 +78,7 @@ class EmailSender {
 
   async sendForgotPasswordEmail(
     email: string,
-    resetUrl: string
+    resetUrl: string,
   ): Promise<void> {
     await this.sendEmail({
       to: email,
@@ -90,7 +91,7 @@ class EmailSender {
     email: string,
     name: string,
     planName: string,
-    credits: number
+    credits: number,
   ): Promise<void> {
     await this.sendEmail({
       to: email,
@@ -102,7 +103,7 @@ class EmailSender {
   async sendATSAnalysisReport(
     email: string,
     name: string,
-    analysis: any
+    analysis: any,
   ): Promise<void> {
     const subject = "Your ATS Analysis Report - Cloud9Profile";
     const html = atsReportTemplate(name, analysis);
@@ -118,7 +119,7 @@ class EmailSender {
     email: string,
     resumeTitle: string,
     fileUrl: string,
-    format: string
+    format: string,
   ): Promise<void> {
     const subject = `Your Resume Export is Ready - ${resumeTitle}`;
     const html = exportConfirmationTemplate(resumeTitle, fileUrl, format);
@@ -133,7 +134,7 @@ class EmailSender {
     name: string,
     email: string,
     subject: string,
-    message: string
+    message: string,
   ): Promise<void> {
     const supportEmail = "Support@cloud9profile.com";
     const html = `

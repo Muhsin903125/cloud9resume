@@ -42,7 +42,7 @@ interface PlanDetails {
 const PLAN_DETAILS: Record<string, PlanDetails> = {
   free: {
     name: "Free",
-    credits: 10,
+    credits: 25,
     resumeLimit: 3,
     features: [
       "3 Resumes",
@@ -91,7 +91,7 @@ export function registrationSuccessTemplate(
   name: string,
   email: string,
   planId: string = "free",
-  customCredits?: number
+  customCredits?: number,
 ) {
   const plan = PLAN_DETAILS[planId] || PLAN_DETAILS.free;
   const creditsToShow =
@@ -221,7 +221,7 @@ export function forgotPasswordTemplate(resetUrl: string) {
 export function planUpgradeTemplate(
   name: string,
   planName: string,
-  credits: number
+  credits: number,
 ) {
   return `
     <!DOCTYPE html>
@@ -320,7 +320,7 @@ export function atsReportTemplate(name: string, data: any) {
                   .slice(0, 10)
                   .map(
                     (k: string) =>
-                      `<span class="keyword-tag tag-matched">${k}</span>`
+                      `<span class="keyword-tag tag-matched">${k}</span>`,
                   )
                   .join("")}
                 ${
@@ -340,7 +340,7 @@ export function atsReportTemplate(name: string, data: any) {
                   .slice(0, 10)
                   .map(
                     (k: string) =>
-                      `<span class="keyword-tag tag-missing">${k}</span>`
+                      `<span class="keyword-tag tag-missing">${k}</span>`,
                   )
                   .join("")}
                 ${
@@ -362,7 +362,7 @@ export function atsReportTemplate(name: string, data: any) {
                         typeof r === "string"
                           ? r
                           : r.message || r.recommendation
-                      }</li>`
+                      }</li>`,
                   )
                   .join("")}
               </ul>
@@ -384,7 +384,7 @@ export function atsReportTemplate(name: string, data: any) {
 export function exportConfirmationTemplate(
   resumeTitle: string,
   fileUrl: string,
-  format: string
+  format: string,
 ) {
   return `
     <!DOCTYPE html>

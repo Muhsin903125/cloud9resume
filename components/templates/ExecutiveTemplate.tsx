@@ -9,7 +9,7 @@ export const ExecutiveTemplate = ({
   settings,
 }: any) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -126,7 +126,7 @@ export const ExecutiveTemplate = ({
                                 key={i}
                                 className="bg-gray-50 px-3 py-1 rounded text-[11px] font-semibold text-gray-700 border border-gray-100"
                               >
-                                {typeof s === "string" ? s : s.name}
+                                {typeof s === "string" ? s : s.name || ""}
                               </span>
                             ))}
                           </div>
@@ -147,8 +147,8 @@ export const ExecutiveTemplate = ({
                 {typeof s === "string"
                   ? s
                   : section_type === "languages"
-                  ? `${s.language}${s.proficiency ? ` (${s.proficiency})` : ""}`
-                  : s.name || s.skill || s.language}
+                    ? `${s.language || ""}${s.proficiency ? ` (${s.proficiency})` : ""}`
+                    : s.name || s.skill || s.language || ""}
               </span>
             ));
           })()}
@@ -211,16 +211,16 @@ export const ExecutiveTemplate = ({
       <div className="space-y-8">
         {(() => {
           const experience = sortedSections.find(
-            (s) => s.section_type === "experience"
+            (s) => s.section_type === "experience",
           );
           const skills = sortedSections.find(
-            (s) => s.section_type === "skills"
+            (s) => s.section_type === "skills",
           );
           const education = sortedSections.find(
-            (s) => s.section_type === "education"
+            (s) => s.section_type === "education",
           );
           const summary = sortedSections.find(
-            (s) => s.section_type === "summary"
+            (s) => s.section_type === "summary",
           );
 
           return (
@@ -266,7 +266,7 @@ export const ExecutiveTemplate = ({
         {/* Explicit Languages rendering */}
         {(() => {
           const langSection = sections.find(
-            (s: any) => s.section_type === "languages"
+            (s: any) => s.section_type === "languages",
           );
           return langSection ? renderSkillsSection(langSection) : null;
         })()}
@@ -274,7 +274,7 @@ export const ExecutiveTemplate = ({
         {/* Explicit Interests (Hobbies) rendering */}
         {(() => {
           const hobbySection = sections.find(
-            (s: any) => s.section_type === "hobbies"
+            (s: any) => s.section_type === "hobbies",
           );
           return hobbySection ? renderSkillsSection(hobbySection) : null;
         })()}
@@ -282,7 +282,7 @@ export const ExecutiveTemplate = ({
         {/* Explicit Declaration at Bottom */}
         {(() => {
           const declSection = sections.find(
-            (s: any) => s.section_type === "declaration"
+            (s: any) => s.section_type === "declaration",
           );
           if (!declSection || !declSection.section_data?.text) return null;
           return (

@@ -338,7 +338,7 @@ export default function PlanUpgradeModal({
                 }}
                 placeholder="Enter code"
                 disabled={couponStatus === "success"}
-                className={`flex-1 px-3 py-2 bg-slate-800 border rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
+                className={`flex-1 max-w-[200px] px-3 py-2 bg-slate-800 border rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
                   couponStatus === "success"
                     ? "border-green-500/50 bg-green-900/20"
                     : couponStatus === "error"

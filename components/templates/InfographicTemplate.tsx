@@ -49,7 +49,7 @@ export const InfographicTemplate: React.FC<InfographicTemplateProps> = ({
       ></div>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-1">
         <h3 className="font-bold text-gray-900 text-lg">
-          {item.title || item.position || item.degree}
+          {item.title || item.position || item.degree || ""}
         </h3>
         <span className="text-xs font-bold px-2 py-1.5 rounded-full bg-gray-50 text-gray-500 whitespace-nowrap">
           {[formatDate(item.startDate), formatDate(item.endDate) || "Present"]
@@ -186,7 +186,7 @@ export const InfographicTemplate: React.FC<InfographicTemplateProps> = ({
                   ).map((item: any, i: number) => (
                     <div key={i}>
                       <h3 className="font-bold text-gray-900">
-                        {item.title || item.name}
+                        {item.title || item.name || ""}
                       </h3>
                       {item.description && (
                         <div
@@ -229,7 +229,7 @@ export const InfographicTemplate: React.FC<InfographicTemplateProps> = ({
                     >
                       {typeof skill === "string"
                         ? skill
-                        : skill.name || skill.text}
+                        : skill.name || skill.text || ""}
                     </span>
                   ))}
                 </div>
@@ -261,10 +261,10 @@ export const InfographicTemplate: React.FC<InfographicTemplateProps> = ({
                       className="pb-4 border-b border-gray-50 last:border-0 last:pb-0"
                     >
                       <div className="font-bold text-gray-900 text-sm leading-tight mb-1">
-                        {item.degree || item.school}
+                        {item.degree || item.school || ""}
                       </div>
                       <div className="text-xs text-gray-500 mb-1">
-                        {item.institution || item.school}
+                        {item.institution || item.school || ""}
                       </div>
                       <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
                         {[formatDate(item.startDate), formatDate(item.endDate)]

@@ -62,10 +62,10 @@ export const GeometricCreativeTemplate = ({
                   {typeof s === "string"
                     ? s
                     : section_type === "languages"
-                    ? `${s.language}${
-                        s.proficiency ? ` (${s.proficiency})` : ""
-                      }`
-                    : s.name || s.skill}
+                      ? `${s.language || ""}${
+                          s.proficiency ? ` (${s.proficiency})` : ""
+                        }`
+                      : s.name || s.skill || ""}
                 </span>
               ));
             })()}
@@ -83,7 +83,8 @@ export const GeometricCreativeTemplate = ({
                         item.school ||
                         item.institution ||
                         item.name ||
-                        item.role}
+                        item.role ||
+                        ""}
                     </h4>
                     <span className="text-[9px] font-black text-slate-400 shrink-0 ml-4">
                       {item.startDate ? `${item.startDate} — ` : ""}
@@ -104,7 +105,8 @@ export const GeometricCreativeTemplate = ({
                       item.degree ||
                       item.organization ||
                       item.publisher ||
-                      item.awarder}
+                      item.awarder ||
+                      ""}
                     {item.location && (
                       <span className="w-1 h-1 rounded-full bg-slate-200"></span>
                     )}
@@ -191,22 +193,22 @@ export const GeometricCreativeTemplate = ({
       <div className="grid grid-cols-12 gap-5">
         {(() => {
           const summary = sortedSections.find(
-            (s) => s.section_type === "summary"
+            (s) => s.section_type === "summary",
           );
           const experience = sortedSections.find(
-            (s) => s.section_type === "experience"
+            (s) => s.section_type === "experience",
           );
           const skills = sortedSections.find(
-            (s) => s.section_type === "skills"
+            (s) => s.section_type === "skills",
           );
           const education = sortedSections.find(
-            (s) => s.section_type === "education"
+            (s) => s.section_type === "education",
           );
           const projects = sortedSections.find(
-            (s) => s.section_type === "projects"
+            (s) => s.section_type === "projects",
           );
           const declaration = sortedSections.find(
-            (s) => s.section_type === "declaration"
+            (s) => s.section_type === "declaration",
           );
 
           return (
@@ -248,7 +250,7 @@ export const GeometricCreativeTemplate = ({
               {/* 7. Languages */}
               {(() => {
                 const langSection = sortedSections.find(
-                  (s) => s.section_type === "languages"
+                  (s) => s.section_type === "languages",
                 );
                 return langSection ? renderSection(langSection, false) : null;
               })()}
@@ -256,7 +258,7 @@ export const GeometricCreativeTemplate = ({
               {/* 8. Interests */}
               {(() => {
                 const hobbySection = sortedSections.find(
-                  (s) => s.section_type === "hobbies"
+                  (s) => s.section_type === "hobbies",
                 );
                 return hobbySection ? renderSection(hobbySection, false) : null;
               })()}

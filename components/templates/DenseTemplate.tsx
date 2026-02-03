@@ -10,7 +10,7 @@ export const DenseTemplate = ({
   settings,
 }: any) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -23,11 +23,11 @@ export const DenseTemplate = ({
       "certifications",
       "achievements",
       "education",
-    ].includes(s.section_type)
+    ].includes(s.section_type),
   );
 
   const mainSections = sortedSections.filter((s: any) =>
-    ["summary", "experience", "projects"].includes(s.section_type)
+    ["summary", "experience", "projects"].includes(s.section_type),
   );
 
   return (
@@ -86,7 +86,7 @@ export const DenseTemplate = ({
                     <item.icon size={11} />
                     <span>{item.val}</span>
                   </div>
-                )
+                ),
             )}
             {personalInfo.linkedin && (
               <div className="flex items-center gap-1.5">
@@ -195,7 +195,7 @@ export const DenseTemplate = ({
                         key={idx}
                         className="bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-[2px] text-[8.5pt] font-medium text-gray-700"
                       >
-                        {typeof s === "string" ? s : s.name}
+                        {typeof s === "string" ? s : s.name || ""}
                       </span>
                     ))}
                   </div>
@@ -208,8 +208,8 @@ export const DenseTemplate = ({
                       <div key={idx}>
                         <div className="font-bold text-[9pt] leading-tight text-gray-800">
                           {section_type === "languages"
-                            ? item.language
-                            : item.school || item.degree}
+                            ? item.language || ""
+                            : item.school || item.degree || ""}
                         </div>
                         <div className="text-[8.5pt] text-gray-600 leading-tight mt-0.5">
                           {section_type === "languages"

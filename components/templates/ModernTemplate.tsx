@@ -14,11 +14,11 @@ export const ModernTemplate = ({
       ?.section_data || {};
 
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
 
   const mainSections = sortedSections.filter((s: any) =>
-    ["summary", "experience", "projects"].includes(s.section_type)
+    ["summary", "experience", "projects"].includes(s.section_type),
   );
   const sidebarSections = sortedSections.filter(
     (s: any) =>
@@ -28,7 +28,7 @@ export const ModernTemplate = ({
         "experience",
         "projects",
         "declaration",
-      ].includes(s.section_type)
+      ].includes(s.section_type),
   );
 
   return (
@@ -102,7 +102,7 @@ export const ModernTemplate = ({
                   </div>
                   <span className="break-all">{item.val}</span>
                 </div>
-              )
+              ),
           )}
 
           {personalInfo.linkedin && (
@@ -160,7 +160,7 @@ export const ModernTemplate = ({
                     const val =
                       typeof item === "string"
                         ? item
-                        : `${item.language}${
+                        : `${item.language || ""}${
                             item.proficiency ? ` (${item.proficiency})` : ""
                           }`;
                     return (
@@ -189,7 +189,8 @@ export const ModernTemplate = ({
                           item.title ||
                           item.name ||
                           item.role ||
-                          item.language}
+                          item.language ||
+                          ""}
                       </div>
                       <div className="text-slate-400 text-[10px]">
                         {item.degree ||
@@ -321,7 +322,7 @@ export const ModernTemplate = ({
                       <p className="text-slate-700 leading-relaxed text-[12px] text-justify">
                         {
                           sections.find(
-                            (s: any) => s.section_type === "declaration"
+                            (s: any) => s.section_type === "declaration",
                           ).section_data.text
                         }
                       </p>

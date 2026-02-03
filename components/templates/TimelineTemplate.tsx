@@ -9,7 +9,7 @@ export const TimelineTemplate = ({
   font,
 }: any) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -35,12 +35,15 @@ export const TimelineTemplate = ({
       <div className="w-[80%] p-10">
         {/* Header */}
         <div className="mb-10 relative">
-          <div
-            className="absolute -left-[53px] top-1 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md z-10"
-            style={{ backgroundColor: themeColor }}
-          >
-            <span className="font-bold text-lg">{personalInfo.name?.[0]}</span>
-          </div>
+          {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
+            <div className="absolute -left-[53px] top-1 w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-md z-10 overflow-hidden border-2 border-white">
+              <img
+                src={personalInfo.photoUrl}
+                alt={personalInfo.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
           <h1 className="text-3xl font-bold text-gray-900 mb-1">
             {personalInfo.name || "Your Name"}
@@ -106,10 +109,10 @@ export const TimelineTemplate = ({
                         {typeof s === "string"
                           ? s
                           : section_type === "languages"
-                          ? `${s.language}${
-                              s.proficiency ? ` (${s.proficiency})` : ""
-                            }`
-                          : s.name || s.language}
+                            ? `${s.language || ""}${
+                                s.proficiency ? ` (${s.proficiency})` : ""
+                              }`
+                            : s.name || s.language || ""}
                       </span>
                     ))}
                   </div>
@@ -129,7 +132,7 @@ export const TimelineTemplate = ({
                         ></div>
 
                         <h4 className="font-bold text-gray-900 text-base">
-                          {item.position || item.title || item.school}
+                          {item.position || item.title || item.school || ""}
                         </h4>
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xs font-bold uppercase tracking-wide text-gray-500">
@@ -164,7 +167,7 @@ export const TimelineTemplate = ({
                   <p className="text-sm leading-7 text-gray-700">
                     {
                       sections.find(
-                        (s: any) => s.section_type === "declaration"
+                        (s: any) => s.section_type === "declaration",
                       ).section_data.text
                     }
                   </p>

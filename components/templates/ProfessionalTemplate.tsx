@@ -9,7 +9,7 @@ export const ProfessionalTemplate = ({
   settings,
 }: any) => {
   const sortedSections = [...sections].sort(
-    (a, b) => (a.order_index || 0) - (b.order_index || 0)
+    (a, b) => (a.order_index || 0) - (b.order_index || 0),
   );
   const personalInfo =
     sections.find((s: any) => s.section_type === "personal_info")
@@ -129,10 +129,10 @@ export const ProfessionalTemplate = ({
                         {typeof s === "string"
                           ? s
                           : section_type === "languages"
-                          ? `${s.language}${
-                              s.proficiency ? ` (${s.proficiency})` : ""
-                            }`
-                          : s.name || s.language}
+                            ? `${s.language || ""}${
+                                s.proficiency ? ` (${s.proficiency})` : ""
+                              }`
+                            : s.name || s.language || ""}
                       </span>
                     </div>
                   ))}
@@ -148,7 +148,7 @@ export const ProfessionalTemplate = ({
                     <div key={idx} className="group">
                       <div className="flex justify-between items-baseline mb-1 gap-4">
                         <h4 className="font-bold text-gray-900 text-[15px]">
-                          {item.position || item.title || item.school}
+                          {item.position || item.title || item.school || ""}
                         </h4>
                         <span className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded border border-gray-100 whitespace-nowrap">
                           {item.startDate} – {item.endDate || item.date}
@@ -157,7 +157,7 @@ export const ProfessionalTemplate = ({
 
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-sm font-semibold italic text-gray-600">
-                          {item.company || item.issuer || item.degree}
+                          {item.company || item.issuer || item.degree || ""}
                         </span>
                         {item.location && (
                           <span className="text-xs text-gray-400">
