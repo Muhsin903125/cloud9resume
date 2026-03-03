@@ -7,11 +7,12 @@ import { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { motion } from "framer-motion";
 import "../styles/globals.css";
+import "../lib/env-validation"; // Auto-validate environment variables on startup
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ConfirmationModal from "../components/ConfirmationModal";
 import PlanUpgradeModal from "../components/PlanUpgradeModal";
-import OnboardingModal from "../components/OnboardingModal";
+import OnboardingModal from \"../components/OnboardingModal\";\nimport { ErrorBoundary } from \"../components/ErrorBoundary\";
 import { useAuth } from "../lib/authUtils";
 import { initMixpanel, trackPageView } from "../lib/mixpanel";
 import {
@@ -154,7 +155,9 @@ export default function App({ Component, pageProps }: AppProps) {
             "/dashboard/resume/[id]/edit",
           )}
         >
-          <Component {...pageProps} />
+          <ErrorBoundary>
+            <Component {...pageProps} />
+          </ErrorBoundary>
         </DashboardLayout>
         <CookieBanner />
       </div>
@@ -166,7 +169,9 @@ export default function App({ Component, pageProps }: AppProps) {
     <div className={`${inter.variable} font-sans`}>
       <Toaster />
       {!isNoLayoutPage && <Navbar />}
-      <Component {...pageProps} />
+      <ErrorBoundary>
+        <Component {...pageProps} />
+      </ErrorBoundary>
       {!isNoLayoutPage && <Footer />}
       <CookieBanner />
     </div>

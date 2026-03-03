@@ -1,6 +1,6 @@
 import { UserProfile } from "./types";
 
-export type PlanType = "free" | "starter" | "pro" | "pro_plus" | "enterprise";
+export type PlanType = "free" | "starter" | "pro" | "pro_plus" | "professional" | "premium" | "enterprise";
 
 export const PLAN_LIMITS = {
   free: {
@@ -34,6 +34,8 @@ export const PLAN_LIMITS = {
     portfolioPublishDays: 0, // 0 = unlimited/no expiration
     customDomain: false,
   },
+  // "professional" is the DB-stored alias for "pro"
+  get professional() { return this.pro; },
   pro_plus: {
     resumes: Infinity,
     portfolios: Infinity,
@@ -47,6 +49,8 @@ export const PLAN_LIMITS = {
     interviewPrep: true,
     linkedInOptimization: true,
   },
+  // "premium" is the DB-stored alias for "pro_plus"
+  get premium() { return this.pro_plus; },
   enterprise: {
     resumes: Infinity,
     portfolios: Infinity,

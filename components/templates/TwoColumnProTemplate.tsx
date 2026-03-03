@@ -50,7 +50,7 @@ export const TwoColumnProTemplate: React.FC<TwoColumnProTemplateProps> = ({
 
   return (
     <div
-      className="bg-white min-h-[297mm] w-[210mm] relative p-[15mm]"
+      className="bg-white min-h-[297mm] w-[210mm] relative p-[8mm]"
       style={{ fontFamily: font, lineHeight: "1.6" }}
     >
       {/* Header - Full Width */}
@@ -143,6 +143,11 @@ export const TwoColumnProTemplate: React.FC<TwoColumnProTemplateProps> = ({
                   {section.title}
                 </h2>
 
+                {section.section_type === "description" ? (
+                  <p className="text-sm text-slate-600 leading-relaxed text-justify">
+                    {section.section_data?.text || section.section_data}
+                  </p>
+                ) : (
                 <div className="space-y-6">
                   {(Array.isArray(section.section_data)
                     ? section.section_data
@@ -184,6 +189,7 @@ export const TwoColumnProTemplate: React.FC<TwoColumnProTemplateProps> = ({
                     </div>
                   ))}
                 </div>
+                )}
               </div>
             ))}
         </div>

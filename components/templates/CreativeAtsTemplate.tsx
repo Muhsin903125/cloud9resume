@@ -24,7 +24,7 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
 
   return (
     <div
-      className="bg-white text-gray-800 p-[10mm] mx-auto"
+      className="bg-white text-gray-800 p-[8mm] mx-auto"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -251,6 +251,9 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
           const summary = sortedSections.find(
             (s) => s.section_type === "summary",
           );
+          const description = sortedSections.find(
+            (s) => s.section_type === "description",
+          );
 
           return (
             <>
@@ -259,6 +262,15 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                 <section className="break-inside-avoid">
                   <p className="text-[13px] text-gray-600 leading-relaxed font-medium">
                     {summary.section_data.text || summary.section_data}
+                  </p>
+                </section>
+              )}
+
+              {/* Description */}
+              {description && (
+                <section className="break-inside-avoid">
+                  <p className="text-[13px] text-gray-600 leading-relaxed font-medium">
+                    {description.section_data.text || description.section_data}
                   </p>
                 </section>
               )}
@@ -279,6 +291,7 @@ export const CreativeAtsTemplate: React.FC<CreativeAtsTemplateProps> = ({
                   [
                     "personal_info",
                     "summary",
+                    "description",
                     "experience",
                     "skills",
                     "education",

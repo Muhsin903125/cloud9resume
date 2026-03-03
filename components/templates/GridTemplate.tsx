@@ -18,7 +18,7 @@ export const GridTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-slate-100 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[10mm] text-xs"
+      className="bg-slate-100 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[8mm] text-xs"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -84,7 +84,7 @@ export const GridTemplate = ({
                 {section_type.replace("_", " ")}
               </h3>
 
-              {["summary", "declaration"].includes(section_type) && (
+              {["summary", "description", "declaration"].includes(section_type) && (
                 <p className="leading-relaxed text-slate-600">
                   {section_data.text || section_data}
                 </p>
@@ -112,7 +112,7 @@ export const GridTemplate = ({
                 </div>
               )}
 
-              {!["summary", "skills", "languages", "declaration"].includes(
+              {!["summary", "description", "skills", "languages", "declaration"].includes(
                 section_type,
               ) && (
                 <div className="space-y-4">

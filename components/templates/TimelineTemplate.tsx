@@ -86,7 +86,7 @@ export const TimelineTemplate = ({
                   <div className="h-px bg-gray-200 flex-1"></div>
                 </h3>
 
-                {section_type === "summary" && (
+                {(section_type === "summary" || section_type === "description") && (
                   <div className="relative">
                     <div className="absolute -left-[59px] top-1.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ring-1 ring-gray-200 bg-gray-400"></div>
                     <p className="text-sm leading-7 text-gray-700">
@@ -118,7 +118,7 @@ export const TimelineTemplate = ({
                   </div>
                 )}
 
-                {!["summary", "skills", "languages"].includes(section_type) && (
+                {!["summary", "description", "skills", "languages"].includes(section_type) && (
                   <div className="space-y-8">
                     {(Array.isArray(section_data)
                       ? section_data

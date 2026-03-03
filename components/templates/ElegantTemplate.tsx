@@ -19,7 +19,7 @@ export const ElegantTemplate = ({
     <div
       id="resume-preview-content"
       // Added print styles directly
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto px-[15mm]"
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto px-[8mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -30,7 +30,7 @@ export const ElegantTemplate = ({
       }}
     >
       <table className="w-full">
-        <thead className="h-[12mm] print:h-[12mm] opacity-0">
+        <thead className="h-[8mm] print:h-[8mm] opacity-0">
           <tr>
             <td></td>
           </tr>
@@ -95,7 +95,7 @@ export const ElegantTemplate = ({
                         {section_type.replace("_", " ")}
                       </h3>
 
-                      {section_type === "summary" && (
+                      {(section_type === "summary" || section_type === "description") && (
                         <p className="text-[15px] leading-8 text-center max-w-2xl mx-auto text-gray-700 font-light">
                           {section_data.text || section_data}
                         </p>
@@ -128,7 +128,7 @@ export const ElegantTemplate = ({
                         </div>
                       )}
 
-                      {!["summary", "skills", "languages"].includes(
+                      {!["summary", "description", "skills", "languages"].includes(
                         section_type,
                       ) && (
                         <div className="space-y-10">
@@ -203,7 +203,7 @@ export const ElegantTemplate = ({
             </td>
           </tr>
         </tbody>
-        <tfoot className="h-[12mm] print:h-[12mm] opacity-0">
+        <tfoot className="h-[8mm] print:h-[8mm] opacity-0">
           <tr>
             <td></td>
           </tr>

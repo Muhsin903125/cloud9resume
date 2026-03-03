@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { emailSender } from "../../../lib/backend/utils/emailSender";
 import crypto from "crypto";
+import { applyRateLimit, RATE_LIMITS } from "../../../lib/rate-limit";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -11,6 +12,11 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // Apply rate limiting for password reset attempts
+  if (!applyRateLimit(req, res, RATE_LIMITS.AUTH_FORGOT_PASSWORD, 'forgot-password')) {
+    return; // Rate limit exceeded, response already sent
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }

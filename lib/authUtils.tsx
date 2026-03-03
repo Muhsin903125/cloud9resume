@@ -393,7 +393,7 @@ export function useAuth() {
     const checkAuth = async () => {
       console.log("🔐 useAuth: Checking authentication...");
 
-      // Check for new x_ prefixed tokens first
+      // Use new x_ prefixed tokens only
       const token = localStorage.getItem("x_user_auth_token");
       const userId = localStorage.getItem("x_user_id");
       const userEmail = localStorage.getItem("x_user_email");
@@ -406,8 +406,94 @@ export function useAuth() {
         hasExpiry: !!tokenExpiry,
       });
 
-      // Fallback to old token keys for backward compatibility
-      const oldToken = !token ? localStorage.getItem("auth_token") : null;
+      // If no token or user ID, user is not authenticated
+      if (!token || !userId) {
+        console.log("❌ useAuth: No valid authentication found");
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          isAuthenticated: false,
+        }));
+        return;
+      }
+
+      // Check token expiration if expiry is set
+      if (tokenExpiry) {
+        const currentTime = Date.now();
+        const expiryTime = parseInt(tokenExpiry);
+
+        // Handle both timestamp formats (seconds vs milliseconds)
+        const isExpired =
+          expiryTime > 32503680000000
+            ? currentTime >= expiryTime // milliseconds
+            : currentTime >= expiryTime * 1000; // seconds
+
+        if (isExpired) {
+          console.log("❌ useAuth: Token expired, clearing auth data");
+          localStorage.removeItem("x_user_auth_token");
+          localStorage.removeItem("x_user_id");
+          localStorage.removeItem("x_user_email");
+          localStorage.removeItem("x_token_expiry");
+          setAuthState((prev) => ({
+            ...prev,
+            isLoading: false,
+            isAuthenticated: false,
+          }));
+          return;
+        }
+      }
+
+      try {
+        console.log("✅ useAuth: Found valid JWT token, authenticating user");
+
+        let plan: "free" | "starter" | "pro" | "pro_plus" | "enterprise" = "free";
+        let credits = 0;
+        let isAdmin = false;
+        let onboardingCompleted: boolean | undefined = undefined;
+
+        try {
+          // Fetch fresh profile data
+          const profileRes = await apiClient.get("/credits");
+          if (profileRes.data && profileRes.data.success) {
+            plan = profileRes.data.data.stats.plan;
+            credits = profileRes.data.data.stats.current;
+            isAdmin = profileRes.data.data.stats.isAdmin || false;
+            onboardingCompleted = profileRes.data.data.stats.onboarding_completed;
+
+            // Persist isAdmin
+            localStorage.setItem("x_user_is_admin", isAdmin.toString());
+
+            console.log("✅ useAuth: Fresh profile loaded", {
+              plan,
+              credits,
+              isAdmin,
+            });
+          }
+        } catch (e) {
+          console.warn("⚠️ useAuth: Failed to fetch fresh profile", e);
+          // Fallback to local storage if API fails
+          isAdmin = localStorage.getItem("x_user_is_admin") === "true";
+        }
+
+        setAuthState({
+          user: {
+            id: userId,
+            email: userEmail || "",
+            name: localStorage.getItem("user_name") || undefined,
+            picture: localStorage.getItem("user_picture") || undefined,
+            profile: {
+              first_name: "",
+              last_name: "",
+              credits: credits,
+              onboarding_completed: onboardingCompleted,
+            },
+            plan: plan,
+            is_admin: isAdmin,
+          },
+          session: null,
+          isLoading: false,
+          isAuthenticated: true,
+        });
       const oldUserId = !userId ? localStorage.getItem("user_id") : null;
 
       const authToken = token || oldToken;
@@ -579,28 +665,8 @@ export function useAuth() {
               isAuthenticated: false,
             }));
           }
-        } else if (authUserId) {
-          console.log("✅ useAuth: Found user ID only, trusting for OAuth");
-          // OAuth user (only has user_id, not a full session)
-          // Trust the user_id for now and assume user is authenticated
-          setAuthState({
-            user: {
-              id: authUserId,
-              email:
-                localStorage.getItem("x_user_email") ||
-                localStorage.getItem("user_email") ||
-                "",
-              name: localStorage.getItem("user_name") || undefined,
-              picture: localStorage.getItem("user_picture") || undefined,
-              profile: undefined,
-            },
-            session: null,
-            isLoading: false,
-            isAuthenticated: true,
-          });
-        }
       } catch (error) {
-        console.error("Auth check error:", error);
+        console.error("❌ useAuth: Authentication check failed:", error);
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,

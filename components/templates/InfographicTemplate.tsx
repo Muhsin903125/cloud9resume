@@ -71,7 +71,7 @@ export const InfographicTemplate: React.FC<InfographicTemplateProps> = ({
 
   return (
     <div
-      className="bg-slate-50 min-h-[297mm] w-[210mm] relative flex flex-col items-center p-[15mm]"
+      className="bg-slate-50 min-h-[297mm] w-[210mm] relative flex flex-col items-center p-[8mm]"
       style={{ fontFamily: font, lineHeight: "1.6" }}
     >
       {/* Header Block */}
@@ -179,6 +179,11 @@ export const InfographicTemplate: React.FC<InfographicTemplateProps> = ({
                 <h2 className="text-lg font-black text-gray-900 uppercase tracking-wide mb-4">
                   {section.title}
                 </h2>
+                {section.section_type === "description" ? (
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {section.section_data?.text || section.section_data}
+                  </p>
+                ) : (
                 <div className="space-y-6">
                   {(Array.isArray(section.section_data)
                     ? section.section_data
@@ -197,6 +202,7 @@ export const InfographicTemplate: React.FC<InfographicTemplateProps> = ({
                     </div>
                   ))}
                 </div>
+                )}
               </div>
             ))}
         </div>

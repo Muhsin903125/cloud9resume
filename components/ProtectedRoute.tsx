@@ -1,7 +1,6 @@
 import { useEffect, ReactNode, useState } from "react";
 import { useRouter } from "next/router";
-import { hasValidToken } from "../lib/auth-utils";
-import { clearAllTokens } from "../lib/token-keys";
+import { useAuth } from "../lib/authUtils";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,42 +8,42 @@ interface ProtectedRouteProps {
 }
 
 /**
- * ProtectedRoute component that checks for valid access token
- * If token is missing/invalid, redirects to login with returnUrl
- *
- * Usage:
- * <ProtectedRoute redirectTo="/login">
- *   <YourComponent />
- * </ProtectedRoute>
+ * ProtectedRoute component that checks for authentication using the main auth system
+ * If not authenticated, redirects to login with returnUrl
  */
 export function ProtectedRoute({
   children,
   redirectTo = "/login",
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { isAuthenticated, isLoading } = useAuth();
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
-    // Check if access token exists and is valid (not expired)
-    const isValid = hasValidToken();
-
-    if (!isValid) {
-      // No valid token - clear any stored data and redirect to login with returnUrl
-      clearAllTokens();
+    if (isLoading) return; // Still loading auth state
+    
+    setHasChecked(true);
+    
+    if (!isAuthenticated) {
+      // Store return URL for redirect after login
       const returnUrl = router.asPath;
-      router.push(`${redirectTo}?returnUrl=${encodeURIComponent(returnUrl)}`);
-      return;
+      const loginUrl = `${redirectTo}?returnUrl=${encodeURIComponent(returnUrl)}`;
+      router.replace(loginUrl);
     }
+  }, [isAuthenticated, isLoading, router, redirectTo]);
 
-    setIsAuthenticated(true);
-  }, [router, redirectTo]);
+  }, [isAuthenticated, isLoading, router, redirectTo]);
 
-  // While checking authentication, show nothing
-  if (isAuthenticated === null) {
-    return <div>Loading...</div>;
+  // While checking authentication, show loading
+  if (isLoading || !hasChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  // Not authenticated - will redirect
+  // Not authenticated - will redirect (don't render anything)
   if (!isAuthenticated) {
     return null;
   }

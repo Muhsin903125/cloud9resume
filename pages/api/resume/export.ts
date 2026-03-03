@@ -1,7 +1,32 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import ReactDOMServer from "react-dom/server";
 import React from "react";
+
+/**
+ * Get browser instance — uses @sparticuz/chromium on Vercel,
+ * falls back to locally-installed puppeteer in dev.
+ */
+async function getBrowser() {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    // Serverless: use @sparticuz/chromium
+    return puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+  }
+
+  // Local dev: use full puppeteer which bundles its own Chromium
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fullPuppeteer = require("puppeteer");
+  return fullPuppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+}
 import { ResumeRenderer } from "../../../components/ResumeRenderer";
 import jwt from "jsonwebtoken";
 import { createClient } from "@supabase/supabase-js";
@@ -16,6 +41,11 @@ import {
   AlignmentType,
   BorderStyle,
 } from "docx";
+
+// Vercel serverless function config
+export const config = {
+  maxDuration: 300, // Increased to 5 minutes for complex resumes
+};
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,12 +67,16 @@ export default async function handler(
 
   // Auth & Plan Check
   let hasWatermark = true;
+  let userId: string | null = null;
+  let userPlan: string = "free"; 
+  let creditCost = 0;
+
   const token = req.headers.authorization?.split(" ")[1];
 
   if (token) {
     try {
       const decoded = jwt.decode(token) as any;
-      const userId = decoded?.sub || decoded?.userId;
+      userId = decoded?.sub || decoded?.userId;
 
       if (userId) {
         const { data: profile } = await supabase
@@ -52,34 +86,20 @@ export default async function handler(
           .single();
 
         if (profile) {
-          const userPlan = profile.plan || "free";
+          userPlan = profile.plan || "free";
           const planLimits =
             PLAN_LIMITS[userPlan as keyof typeof PLAN_LIMITS] ||
             PLAN_LIMITS.free;
           hasWatermark = planLimits.hasWatermark;
 
-          const downloadCost = CREDIT_COSTS.resume_download_pdf;
+          creditCost = CREDIT_COSTS.resume_download_pdf;
 
-          // Check if user has sufficient credits
-          if ((profile.credits || 0) < downloadCost) {
+          // Check if user has sufficient credits (but don't deduct yet)
+          if ((profile.credits || 0) < creditCost) {
             return res.status(403).json({
-              error: `Insufficient credits. Download costs ${downloadCost} credits.`,
+              error: `Insufficient credits. Download costs ${creditCost} credits.`,
             });
           }
-
-          // Deduct credits
-          await supabase.rpc("deduct_credits", {
-            p_user_id: userId,
-            p_amount: downloadCost,
-          });
-
-          // Log credit usage
-          await supabase.from("credit_usage").insert({
-            user_id: userId,
-            credits_used: downloadCost,
-            action: "resume_download_pdf",
-            description: `Resume Download (${format.toUpperCase()})`,
-          });
         }
       }
     } catch (e) {
@@ -268,32 +288,59 @@ export default async function handler(
     if (format === "pdf") {
       let browser;
       try {
-        browser = await puppeteer.launch({
-          headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        });
+        console.log("🔍 Starting PDF generation for resume");
+        browser = await getBrowser();
         const page = await browser.newPage();
 
-        // setContent with increased timeout
+        // Optimize page for faster rendering
+        await page.setDefaultNavigationTimeout(30000);
+        await page.setDefaultTimeout(30000);
+        
+        // Disable unnecessary resources for faster loading
+        await page.setRequestInterception(true);
+        page.on('request', (req) => {
+          if(req.resourceType() === 'stylesheet' && req.url().includes('tailwindcss')) {
+            req.continue();
+          } else if(['image', 'stylesheet', 'font'].includes(req.resourceType())){
+            req.continue();
+          } else {
+            req.continue();
+          }
+        });
+
+        // setContent with optimized timeout
+        console.log("🔍 Loading HTML content into browser");
         await page.setContent(fullHtml, {
-          waitUntil: "domcontentloaded", // Changed from networkidle0 for faster loading
-          timeout: 120000, // Increased to 120 seconds
+          waitUntil: "domcontentloaded", 
+          timeout: 60000, // 1 minute timeout for content loading
         });
 
-        // Explicitly wait for fonts to be ready
+        // Wait for fonts to be ready with timeout
+        console.log("🔍 Waiting for fonts to load");
         await page.evaluate(async () => {
-          await document.fonts.ready;
+          const fontPromise = document.fonts.ready;
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Font loading timeout')), 10000)
+          );
+          
+          try {
+            await Promise.race([fontPromise, timeoutPromise]);
+          } catch (e) {
+            console.warn('Font loading timed out, proceeding anyway');
+          }
         });
 
+        console.log("🔍 Generating PDF");
         const pdfBuffer = await page.pdf({
           format: "A4",
           printBackground: true,
           margin: {
             top: "0mm",
-            bottom: "0mm",
+            bottom: "0mm", 
             left: "0mm",
             right: "0mm",
           },
+          timeout: 60000, // 1 minute timeout for PDF generation
         });
 
         await browser.close();
@@ -323,6 +370,31 @@ export default async function handler(
           }
 
           finalPdfBytes = await pdfDoc.save();
+        }
+
+        console.log("✅ PDF generation successful");
+        
+        // Deduct credits only after successful PDF generation
+        if (userId && creditCost > 0) {
+          try {
+            await supabase.rpc("deduct_credits", {
+              p_user_id: userId,
+              p_amount: creditCost,
+            });
+
+            // Log credit usage
+            await supabase.from("credit_usage").insert({
+              user_id: userId,
+              credits_used: creditCost,
+              action: "resume_download_pdf",
+              description: `Resume Download (${format.toUpperCase()})`,
+            });
+            
+            console.log(`✅ Deducted ${creditCost} credits for PDF download`);
+          } catch (e) {
+            console.error("Warning: Failed to deduct credits after successful PDF generation:", e);
+            // Don't fail the request if credit deduction fails, user already got the PDF
+          }
         }
 
         res.setHeader("Content-Type", "application/pdf");

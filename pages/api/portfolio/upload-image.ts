@@ -43,6 +43,10 @@ export default async function handler(
     const form = formidable({
       maxFileSize: 5 * 1024 * 1024, // 5MB limit
       allowEmptyFiles: false,
+      filter: function ({ mimetype }) {
+        // Only allow image files
+        return !!(mimetype && mimetype.includes("image"));
+      },
     });
 
     const [fields, files] = await form.parse(req);
@@ -90,15 +94,25 @@ export default async function handler(
     }
 
     const file = uploadedFiles[0];
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!file.mimetype || !allowedTypes.includes(file.mimetype)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed" 
+      });
+    }
+    
     const fileBuffer = fs.readFileSync(file.filepath);
     const fileExt = path.extname(file.originalFilename || "image.jpg");
     const fileName = `${userId}/${portfolioId}/${sectionType}_${
       itemIndex || "0"
     }_${Date.now()}${fileExt}`;
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage - using portfolio bucket instead of avatars
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("avatars")
+      .from("portfolio")
       .upload(fileName, fileBuffer, {
         contentType: file.mimetype || "image/jpeg",
         upsert: true,
@@ -117,7 +131,7 @@ export default async function handler(
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from("avatars")
+      .from("portfolio")
       .getPublicUrl(fileName);
 
     return res.status(200).json({

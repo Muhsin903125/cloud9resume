@@ -18,13 +18,14 @@ export const ModernTemplate = ({
   );
 
   const mainSections = sortedSections.filter((s: any) =>
-    ["summary", "experience", "projects"].includes(s.section_type),
+    ["summary", "description", "experience", "projects"].includes(s.section_type),
   );
   const sidebarSections = sortedSections.filter(
     (s: any) =>
       ![
         "personal_info",
         "summary",
+        "description",
         "experience",
         "projects",
         "declaration",
@@ -45,7 +46,7 @@ export const ModernTemplate = ({
     >
       {/* SIDEBAR (30%) */}
       <div
-        className="w-[30%] text-white p-6 flex flex-col gap-6 print:text-white relative"
+        className="w-[30%] text-white p-4 flex flex-col gap-4 print:text-white relative"
         style={{
           backgroundColor: "#1e293b",
           // Helper for print background extension
@@ -216,14 +217,14 @@ export const ModernTemplate = ({
       {/* MAIN CONTENT (70%) */}
       <div className="w-[70%] bg-white relative">
         <table className="w-full">
-          <thead className="h-[12mm] print:h-[12mm] opacity-0">
+          <thead className="h-[8mm] print:h-[8mm] opacity-0">
             <tr>
               <td></td>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="px-8 py-8 align-top">
+              <td className="px-6 py-6 align-top">
                 {mainSections.map((section: any) => {
                   const { section_type, section_data } = section;
                   if (
@@ -233,7 +234,7 @@ export const ModernTemplate = ({
                     return null;
 
                   return (
-                    <div key={section.id} className="mb-7 break-inside-avoid">
+                    <div key={section.id} className="mb-5 break-inside-avoid">
                       <h3
                         className="text-sm font-bold text-slate-900 border-b-2 border-slate-100 pb-1.5 mb-4 uppercase tracking-wider flex items-center gap-2"
                         style={{ borderColor: hexToRgba(themeColor, 0.2) }}
@@ -243,7 +244,7 @@ export const ModernTemplate = ({
                         </span>
                       </h3>
 
-                      {section_type === "summary" ? (
+                      {(section_type === "summary" || section_type === "description") ? (
                         <p className="text-slate-700 leading-relaxed text-[12px] text-justify">
                           {section_data.text || section_data}
                         </p>
@@ -331,7 +332,7 @@ export const ModernTemplate = ({
               </td>
             </tr>
           </tbody>
-          <tfoot className="h-[12mm] print:h-[12mm] opacity-0">
+          <tfoot className="h-[8mm] print:h-[8mm] opacity-0">
             <tr>
               <td></td>
             </tr>

@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
-import { storeAuthData, getReturnUrl } from "../lib/auth-utils";
-import { USER_AUTH_TOKEN_KEY, USER_ID_KEY } from "../lib/token-keys";
+import { signIn, useAuth } from \"../lib/authUtils\";
+
 import { colors } from "../lib/constants";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, EyeSlashIcon } from \"@heroicons/react/24/outline\";\nimport toast from \"react-hot-toast\";
 
 /**
  * Login page with token generation

@@ -83,7 +83,7 @@ const PortfolioDashboardPage: NextPage = () => {
     return { expiryDate, daysRemaining, isExpired: daysRemaining <= 0 };
   };
 
-  const handleCreatePortfolio = () => {
+  const handleCreatePortfolio = async () => {
     if (
       user &&
       !canCreateResource(
@@ -95,8 +95,30 @@ const PortfolioDashboardPage: NextPage = () => {
       setShowUpgradeModal(true);
       return;
     }
-    // Go directly to unified editor in new mode
-    router.push("/dashboard/portfolio/new/edit");
+    
+    try {
+      setLoading(true);
+      
+      // Create a new portfolio first
+      const response = await post('/api/portfolios', {
+        title: 'New Portfolio',
+        description: '',
+        template: 'card', // Default template
+        visibility: 'private',
+      });
+      
+      if (response.success && response.data?.id) {
+        // Redirect to edit the newly created portfolio
+        router.push(`/dashboard/portfolio/${response.data.id}/edit`);
+      } else {
+        toast.error('Failed to create portfolio');
+      }
+    } catch (error) {
+      console.error('Portfolio creation error:', error);
+      toast.error('Failed to create portfolio');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {

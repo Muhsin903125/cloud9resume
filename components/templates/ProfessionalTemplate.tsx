@@ -19,7 +19,7 @@ export const ProfessionalTemplate = ({
     <div
       id="resume-preview-content"
       // Added print styles directly to ensure they apply
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[12mm]"
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[8mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -29,21 +29,21 @@ export const ProfessionalTemplate = ({
     >
       {/* Header */}
       <header
-        className="border-b-4 pb-4 mb-5"
+        className="border-b-4 pb-3 mb-4"
         style={{ borderColor: themeColor }}
       >
-        <div className="flex justify-between items-start gap-5">
-          <div className="flex gap-4 items-center flex-1">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex gap-3 items-center flex-1">
             {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
               <img
                 src={personalInfo.photoUrl}
                 alt={personalInfo.name}
-                className="w-20 h-20 rounded-xl object-cover shadow-sm border border-gray-100"
+                className="w-16 h-16 rounded-xl object-cover shadow-sm border border-gray-100"
               />
             )}
             <div className="flex-1 min-w-0">
               <h1
-                className="text-2xl font-extrabold uppercase tracking-tight mb-1 break-words"
+                className="text-xl font-extrabold uppercase tracking-tight mb-1 break-words"
                 style={{ color: themeColor }}
               >
                 {personalInfo.name || "Your Name"}
@@ -82,7 +82,7 @@ export const ProfessionalTemplate = ({
       </header>
 
       {/* Content */}
-      <div className="space-y-8">
+      <div className="space-y-5">
         {sortedSections.map((section: any) => {
           if (section.section_type === "personal_info") return null;
           const { section_type, section_data } = section;
@@ -95,7 +95,7 @@ export const ProfessionalTemplate = ({
           return (
             <div key={section.id} className="break-inside-avoid">
               {/* Section Header */}
-              <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center gap-4 mb-3">
                 <h3
                   className="text-sm font-bold uppercase tracking-widest min-w-fit px-3 py-1 rounded"
                   style={{
@@ -108,7 +108,7 @@ export const ProfessionalTemplate = ({
                 <div className="h-px bg-gray-200 flex-1"></div>
               </div>
 
-              {section_type === "summary" && (
+              {(section_type === "summary" || section_type === "description") && (
                 <p className="text-sm leading-7 text-justify text-gray-700 font-medium">
                   {section_data.text || section_data}
                 </p>
@@ -139,7 +139,7 @@ export const ProfessionalTemplate = ({
                 </div>
               )}
 
-              {!["summary", "skills", "languages"].includes(section_type) && (
+              {!["summary", "description", "skills", "languages"].includes(section_type) && (
                 <div className="space-y-6">
                   {(Array.isArray(section_data)
                     ? section_data

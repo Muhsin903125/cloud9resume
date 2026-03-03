@@ -22,18 +22,17 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
 
   return (
     <div
-      className="bg-white text-black p-[10mm] mx-auto"
+      className="bg-white text-black p-[8mm] mx-auto"
       style={{
         width: "210mm",
         minHeight: "297mm",
         fontFamily: font,
-        lineHeight: "1.5",
+        lineHeight: "1.4",
         color: "#000000",
       }}
     >
-      {/* Header / Personal Info */}
-      <header className="border-b-2 border-black pb-2 mb-4 text-center">
-        <h1 className="text-2xl font-bold uppercase tracking-wide mb-1 text-black">
+      <header className="border-b-2 border-black pb-2 mb-3 text-center">
+        <h1 className="text-xl font-bold uppercase tracking-wide mb-1 text-black">
           {personalInfo.name ||
             personalInfo.fullName ||
             resume.title ||
@@ -67,7 +66,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
       </header>
 
       {/* Sections */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Helper for List-based sections */}
         {(() => {
           const renderListSection = (section: any) => {
@@ -81,12 +80,12 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
             return (
               <section key={section.id} className="break-inside-avoid">
                 <h2
-                  className="text-lg font-bold uppercase border-b border-black mb-3 pb-1 text-black"
+                  className="text-lg font-bold uppercase border-b border-black mb-2 pb-1 text-black"
                   style={{ letterSpacing: "0.05em" }}
                 >
                   {section.title || section_type.replace("_", " ")}
                 </h2>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {items.map((item: any, idx: number) => (
                     <div key={idx}>
                       <div className="flex justify-between items-baseline font-bold text-sm text-black">
@@ -215,6 +214,9 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
           const summary = sortedSections.find(
             (s) => s.section_type === "summary",
           );
+          const description = sortedSections.find(
+            (s) => s.section_type === "description",
+          );
 
           return (
             <>
@@ -223,6 +225,15 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                 <section className="break-inside-avoid">
                   <p className="whitespace-pre-wrap text-sm text-black text-justify">
                     {summary.section_data.text || summary.section_data}
+                  </p>
+                </section>
+              )}
+
+              {/* Description */}
+              {description && (
+                <section className="break-inside-avoid">
+                  <p className="whitespace-pre-wrap text-sm text-black text-justify">
+                    {description.section_data.text || description.section_data}
                   </p>
                 </section>
               )}
@@ -242,6 +253,7 @@ export const AtsTemplate: React.FC<AtsTemplateProps> = ({
                 if (
                   [
                     "summary",
+                    "description",
                     "experience",
                     "skills",
                     "education",

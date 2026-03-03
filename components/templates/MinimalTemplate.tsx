@@ -17,7 +17,7 @@ export const MinimalTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-white text-gray-900 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto px-[15mm]"
+      className="bg-white text-gray-900 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto px-[8mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -27,7 +27,7 @@ export const MinimalTemplate = ({
       }}
     >
       <table className="w-full">
-        <thead className="h-[12mm] print:h-[12mm] opacity-0">
+        <thead className="h-[8mm] print:h-[8mm] opacity-0">
           <tr>
             <td></td>
           </tr>
@@ -36,11 +36,11 @@ export const MinimalTemplate = ({
           <tr>
             <td className="align-top">
               <header
-                className="mb-8 border-b pb-6"
+                className="mb-5 border-b pb-4"
                 style={{ borderColor: hexToRgba(themeColor, 0.1) }}
               >
                 <h1
-                  className="text-3xl font-bold mb-0.5 tracking-tight"
+                  className="text-2xl font-bold mb-0.5 tracking-tight"
                   style={{ color: themeColor }}
                 >
                   {personalInfo.name || "Your Name"}
@@ -71,7 +71,7 @@ export const MinimalTemplate = ({
                 </div>
               </header>
 
-              <div className="grid grid-cols-1 gap-8">
+              <div className="grid grid-cols-1 gap-5">
                 {sortedSections.map((section: any) => {
                   if (section.section_type === "personal_info") return null;
                   const { section_type, section_data } = section;
@@ -87,13 +87,13 @@ export const MinimalTemplate = ({
                   return (
                     <div key={section.id} className="break-inside-avoid">
                       <h3
-                        className="font-bold text-xs uppercase tracking-widest mb-4"
+                        className="font-bold text-xs uppercase tracking-widest mb-3"
                         style={{ color: hexToRgba(themeColor, 0.7) }}
                       >
                         {section_type.replace("_", " ")}
                       </h3>
 
-                      {section_type === "summary" && (
+                      {(section_type === "summary" || section_type === "description") && (
                         <p className="text-sm leading-relaxed text-gray-800 text-justify">
                           {section_data.text || section_data}
                         </p>
@@ -127,7 +127,7 @@ export const MinimalTemplate = ({
                         </div>
                       )}
 
-                      {!["summary", "skills", "languages"].includes(
+                      {!["summary", "description", "skills", "languages"].includes(
                         section_type,
                       ) && (
                         <div className="space-y-6">
@@ -196,7 +196,7 @@ export const MinimalTemplate = ({
             </td>
           </tr>
         </tbody>
-        <tfoot className="h-[12mm] print:h-[12mm] opacity-0">
+        <tfoot className="h-[8mm] print:h-[8] opacity-0">
           <tr>
             <td></td>
           </tr>

@@ -160,7 +160,7 @@ export const ExecutiveTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[10mm]"
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[8mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -169,11 +169,11 @@ export const ExecutiveTemplate = ({
       }}
     >
       <div
-        className="w-full h-3 mb-10"
+        className="w-full h-3 mb-6"
         style={{ backgroundColor: themeColor }}
       ></div>
 
-      <header className="text-center mb-8">
+      <header className="text-center mb-6">
         {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
           <img
             src={personalInfo.photoUrl}
@@ -222,6 +222,9 @@ export const ExecutiveTemplate = ({
           const summary = sortedSections.find(
             (s) => s.section_type === "summary",
           );
+          const description = sortedSections.find(
+            (s) => s.section_type === "description",
+          );
 
           return (
             <>
@@ -229,6 +232,13 @@ export const ExecutiveTemplate = ({
               {summary && (
                 <p className="text-sm leading-8 text-center text-gray-700 italic max-w-3xl mx-auto px-4 whitespace-pre-wrap">
                   "{summary.section_data.text || summary.section_data}"
+                </p>
+              )}
+
+              {/* Description */}
+              {description && (
+                <p className="text-sm leading-8 text-center text-gray-700 max-w-3xl mx-auto px-4 whitespace-pre-wrap">
+                  {description.section_data.text || description.section_data}
                 </p>
               )}
 
@@ -247,6 +257,7 @@ export const ExecutiveTemplate = ({
                 if (
                   [
                     "summary",
+                    "description",
                     "experience",
                     "skills",
                     "education",

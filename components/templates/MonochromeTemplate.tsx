@@ -28,11 +28,11 @@ export const MonochromeTemplate: React.FC<MonochromeTemplateProps> = ({
 
   return (
     <div
-      className="bg-white min-h-[297mm] w-[210mm] relative p-[20mm] text-black"
+      className="bg-white min-h-[297mm] w-[210mm] relative p-[8mm] text-black"
       style={{ fontFamily: font, lineHeight: "1.5" }}
     >
       {/* Header - Centered, Classic Typography */}
-      <header className="text-center mb-12 border-b-4 border-black pb-8">
+      <header className="text-center mb-6 border-b-4 border-black pb-4">
         <h1 className="text-6xl font-serif text-black tracking-tight mb-4 lowercase">
           {personalInfo.name || "your name"}
         </h1>
@@ -97,7 +97,13 @@ export const MonochromeTemplate: React.FC<MonochromeTemplateProps> = ({
               )}
 
               {/* Standard List Items */}
-              {section.section_type !== "skills" && (
+              {section.section_type === "description" && (
+                <p className="text-lg leading-relaxed font-serif text-gray-800 text-justify">
+                  {section.section_data?.text || section.section_data}
+                </p>
+              )}
+
+              {section.section_type !== "skills" && section.section_type !== "description" && (
                 <div className="space-y-8">
                   {(Array.isArray(section.section_data)
                     ? section.section_data

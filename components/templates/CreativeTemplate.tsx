@@ -18,13 +18,14 @@ export const CreativeTemplate = ({
   );
 
   const mainSections = sortedSections.filter((s: any) =>
-    ["summary", "experience", "projects"].includes(s.section_type),
+    ["summary", "description", "experience", "projects"].includes(s.section_type),
   );
   const sidebarSections = sortedSections.filter(
     (s: any) =>
       ![
         "personal_info",
         "summary",
+        "description",
         "experience",
         "projects",
         "declaration",
@@ -43,7 +44,7 @@ export const CreativeTemplate = ({
     >
       {/* Left Sidebar (35%) - Dynamic Checkered/Artistic BG concept or just bold color */}
       <div
-        className="w-[35%] p-6 flex flex-col gap-4 text-white relative overflow-hidden"
+        className="w-[35%] p-4 flex flex-col gap-3 text-white relative overflow-hidden"
         style={{ backgroundColor: themeColor }}
       >
         {/* Artistic shapes overlay - simplified for PDF */}
@@ -52,7 +53,7 @@ export const CreativeTemplate = ({
 
         <div className="relative z-10 text-center">
           {personalInfo.showPhoto !== false && (
-            <div className="w-28 h-28 mx-auto bg-white/10 rounded-full flex items-center justify-center border-3 border-white/20 mb-4 overflow-hidden relative shadow-lg">
+            <div className="w-24 h-24 mx-auto bg-white/10 rounded-full flex items-center justify-center border-3 border-white/20 mb-3 overflow-hidden relative shadow-lg">
               {personalInfo.photoUrl ? (
                 <img
                   src={personalInfo.photoUrl}
@@ -80,7 +81,7 @@ export const CreativeTemplate = ({
         </div>
 
         {/* Contact Info */}
-        <div className="relative z-10 space-y-2 text-xs font-medium opacity-95">
+        <div className="relative z-10 space-y-1.5 text-xs font-medium opacity-95">
           {[
             { icon: MailIcon, val: personalInfo.email },
             { icon: PhoneIcon, val: personalInfo.phone },
@@ -102,7 +103,7 @@ export const CreativeTemplate = ({
         </div>
 
         {/* Sidebar Sections (Skills, Education, etc) */}
-        <div className="relative z-10 flex-1 space-y-4">
+        <div className="relative z-10 flex-1 space-y-3">
           {sidebarSections.map((section: any) => {
             const { section_type, section_data } = section;
             if (
@@ -172,7 +173,7 @@ export const CreativeTemplate = ({
       </div>
 
       {/* Right Content */}
-      <div className="flex-1 p-6 bg-white">
+      <div className="flex-1 p-4 bg-white">
         {mainSections.map((section: any) => {
           const { section_type, section_data } = section;
           if (
@@ -188,7 +189,7 @@ export const CreativeTemplate = ({
                 {section_type.replace("_", " ")}
               </h3>
 
-              {section_type === "summary" ? (
+              {(section_type === "summary" || section_type === "description") ? (
                 <p className="text-[13px] text-gray-600 leading-relaxed font-medium text-justify">
                   {section_data.text || section_data}
                 </p>

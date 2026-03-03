@@ -20,7 +20,7 @@ export const ProfessionalAtsTemplate: React.FC<
 
   return (
     <div
-      className="bg-white text-black p-[10mm] mx-auto"
+      className="bg-white text-black p-[8mm] mx-auto"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -198,6 +198,9 @@ export const ProfessionalAtsTemplate: React.FC<
           const summary = sortedSections.find(
             (s) => s.section_type === "summary",
           );
+          const description = sortedSections.find(
+            (s) => s.section_type === "description",
+          );
 
           return (
             <>
@@ -206,6 +209,15 @@ export const ProfessionalAtsTemplate: React.FC<
                 <section className="break-inside-avoid">
                   <p className="text-[13px] leading-relaxed text-justify whitespace-pre-wrap">
                     {summary.section_data.text || summary.section_data}
+                  </p>
+                </section>
+              )}
+
+              {/* Description */}
+              {description && (
+                <section className="break-inside-avoid">
+                  <p className="text-[13px] leading-relaxed text-justify whitespace-pre-wrap">
+                    {description.section_data.text || description.section_data}
                   </p>
                 </section>
               )}
@@ -225,6 +237,7 @@ export const ProfessionalAtsTemplate: React.FC<
                 if (
                   [
                     "summary",
+                    "description",
                     "experience",
                     "skills",
                     "education",

@@ -41,7 +41,7 @@ export const GeometricCreativeTemplate = ({
             : section_type.replace("_", " ")}
         </div>
 
-        {section_type === "summary" || section_type === "declaration" ? (
+        {section_type === "summary" || section_type === "description" || section_type === "declaration" ? (
           <p className="text-xs text-slate-600 leading-relaxed font-bold mt-2">
             {section_data.text || section_data}
           </p>
@@ -146,7 +146,7 @@ export const GeometricCreativeTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-slate-50 w-full shadow-sm print:shadow-none mx-auto p-[10mm]"
+      className="bg-slate-50 w-full shadow-sm print:shadow-none mx-auto p-[8mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -234,6 +234,7 @@ export const GeometricCreativeTemplate = ({
                 if (
                   [
                     "summary",
+                    "description",
                     "experience",
                     "skills",
                     "education",

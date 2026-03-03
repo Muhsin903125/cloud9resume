@@ -251,7 +251,7 @@ export const VibrantCreativeTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-white w-full shadow-sm print:shadow-none mx-auto flex overflow-hidden lg:flex-row flex-col p-[10mm]"
+      className="bg-white w-full shadow-sm print:shadow-none mx-auto flex overflow-hidden lg:flex-row flex-col p-[8mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -369,6 +369,9 @@ export const VibrantCreativeTemplate = ({
               const summary = sortedSections.find(
                 (s) => s.section_type === "summary",
               );
+              const description = sortedSections.find(
+                (s) => s.section_type === "description",
+              );
               const experience = sortedSections.find(
                 (s) => s.section_type === "experience",
               );
@@ -393,6 +396,15 @@ export const VibrantCreativeTemplate = ({
                     </section>
                   )}
 
+                  {/* Description */}
+                  {description && (
+                    <section className="break-inside-avoid">
+                      <p className="text-[13px] text-slate-600 leading-relaxed font-medium text-justify">
+                        {description.section_data.text || description.section_data}
+                      </p>
+                    </section>
+                  )}
+
                   {/* 2. Experience */}
                   {experience && renderListSection(experience)}
 
@@ -412,6 +424,7 @@ export const VibrantCreativeTemplate = ({
                       [
                         "personal_info",
                         "summary",
+                        "description",
                         "experience",
                         "skills",
                         "education",

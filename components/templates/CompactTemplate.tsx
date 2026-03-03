@@ -18,7 +18,7 @@ export const CompactTemplate = ({
     <div
       id="resume-preview-content"
       // Smaller font size base for compactness
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[10mm] text-[10px]"
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[6mm] text-[10px]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -26,7 +26,7 @@ export const CompactTemplate = ({
         fontFamily: font || "inherit",
       }}
     >
-      <header className="flex justify-between items-center border-b border-gray-300 pb-3 mb-4">
+      <header className="flex justify-between items-center border-b border-gray-300 pb-2 mb-3">
         <div>
           <h1
             className="text-xl font-bold uppercase"
@@ -75,7 +75,7 @@ export const CompactTemplate = ({
                 {section_type.replace("_", " ")}
               </h3>
 
-              {section_type === "summary" && (
+              {(section_type === "summary" || section_type === "description") && (
                 <p className="leading-snug text-justify text-gray-800">
                   {section_data.text || section_data}
                 </p>
@@ -103,7 +103,7 @@ export const CompactTemplate = ({
                 </div>
               )}
 
-              {!["summary", "skills", "languages"].includes(section_type) && (
+              {!["summary", "description", "skills", "languages"].includes(section_type) && (
                 <div className="space-y-2.5">
                   {(Array.isArray(section_data)
                     ? section_data

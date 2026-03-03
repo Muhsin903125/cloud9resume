@@ -117,6 +117,7 @@ const ResumeEditor = () => {
   const baseSectionTypes = [
     { id: "personal_info", label: "Contact", Icon: UserIcon },
     { id: "summary", label: "Summary", Icon: DocumentIcon },
+    { id: "description", label: "Description", Icon: DocumentIcon },
     { id: "experience", label: "Experience", Icon: BriefcaseIcon },
     { id: "education", label: "Education", Icon: GraduationCapIcon },
     { id: "skills", label: "Skills", Icon: ZapIcon },
@@ -893,6 +894,8 @@ const ResumeEditor = () => {
                         "Manage your contact details and professional profile."}
                       {activeTab === "summary" &&
                         "Write a compelling professional summary that highlights your strengths."}
+                      {activeTab === "description" &&
+                        "Add a brief description about yourself, your role, or your career objective."}
                       {activeTab === "experience" &&
                         "List your professional work history, starting with your most recent role."}
                       {activeTab === "education" &&
@@ -2259,6 +2262,19 @@ const renderSectionForm = (
           >
             <AwardIcon size={16} /> Add Achievement
           </button>
+        </div>
+      );
+
+    case "description":
+      return (
+        <div className="animate-fade-in-up space-y-2">
+          <Textarea
+            label="Description"
+            value={data.text}
+            rows={8}
+            onChange={(e: any) => handleChange("text", e.target.value)}
+            placeholder="Write a brief description about yourself, your career goals, or the role you're seeking..."
+          />
         </div>
       );
 

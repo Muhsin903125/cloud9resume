@@ -26,7 +26,7 @@ export const ClassicTemplate = ({
     return (
       <div key={section.id} className="break-inside-avoid">
         <h3
-          className="font-bold text-lg border-b pb-1.5 mb-4 uppercase"
+          className="font-bold text-lg border-b pb-1 mb-3 uppercase"
           style={{
             borderColor: hexToRgba ? hexToRgba(themeColor, 0.3) : "#e5e7eb",
             color: themeColor,
@@ -35,7 +35,7 @@ export const ClassicTemplate = ({
           {section.title || section_type.replace("_", " ")}
         </h3>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {items.map((item: any, idx: number) => (
             <div key={idx} className="group">
               <div className="flex justify-between font-bold text-[15px] mb-0.5">
@@ -154,7 +154,7 @@ export const ClassicTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-white text-gray-900 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto px-[10mm]"
+      className="bg-white text-gray-900 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto px-[8mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -162,7 +162,7 @@ export const ClassicTemplate = ({
       }}
     >
       <table className="w-full">
-        <thead className="h-[12mm] print:h-[12mm] opacity-0">
+        <thead className="h-[8mm] print:h-[8mm] opacity-0">
           <tr>
             <td></td>
           </tr>
@@ -171,18 +171,18 @@ export const ClassicTemplate = ({
           <tr>
             <td className="align-top">
               <header
-                className="text-center border-b-2 pb-3 mb-4"
+                className="text-center border-b-2 pb-2 mb-3"
                 style={{ borderColor: themeColor }}
               >
                 {personalInfo.photoUrl && personalInfo.showPhoto !== false && (
                   <img
                     src={personalInfo.photoUrl}
                     alt={personalInfo.name}
-                    className="w-20 h-20 mx-auto rounded-full object-cover mb-3 border border-gray-200"
+                    className="w-16 h-16 mx-auto rounded-full object-cover mb-2 border border-gray-200"
                   />
                 )}
                 <h1
-                  className="text-2xl font-bold mb-1 uppercase tracking-wide"
+                  className="text-xl font-bold mb-1 uppercase tracking-wide"
                   style={{ color: themeColor }}
                 >
                   {personalInfo.name || "Your Name"}
@@ -209,7 +209,7 @@ export const ClassicTemplate = ({
                 </div>
               </header>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {(() => {
                   const experience = sortedSections.find(
                     (s) => s.section_type === "experience",
@@ -223,6 +223,9 @@ export const ClassicTemplate = ({
                   const summary = sortedSections.find(
                     (s) => s.section_type === "summary",
                   );
+                  const description = sortedSections.find(
+                    (s) => s.section_type === "description",
+                  );
 
                   return (
                     <>
@@ -230,6 +233,13 @@ export const ClassicTemplate = ({
                       {summary && (
                         <p className="leading-relaxed text-sm text-justify text-gray-800 whitespace-pre-wrap">
                           {summary.section_data.text || summary.section_data}
+                        </p>
+                      )}
+
+                      {/* Description */}
+                      {description && (
+                        <p className="leading-relaxed text-sm text-justify text-gray-800 whitespace-pre-wrap">
+                          {description.section_data.text || description.section_data}
                         </p>
                       )}
 
@@ -248,6 +258,7 @@ export const ClassicTemplate = ({
                         if (
                           [
                             "summary",
+                            "description",
                             "experience",
                             "skills",
                             "education",
@@ -312,7 +323,7 @@ export const ClassicTemplate = ({
             </td>
           </tr>
         </tbody>
-        <tfoot className="h-[12mm] print:h-[12mm] opacity-0">
+        <tfoot className="h-[8mm] print:h-[8mm] opacity-0">
           <tr>
             <td></td>
           </tr>

@@ -23,7 +23,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
 
   return (
     <div
-      className="bg-white text-slate-900 p-[12mm] mx-auto"
+      className="bg-white text-slate-900 p-[8mm] mx-auto"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -243,6 +243,9 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
           const summary = sortedSections.find(
             (s) => s.section_type === "summary",
           );
+          const description = sortedSections.find(
+            (s) => s.section_type === "description",
+          );
 
           return (
             <>
@@ -251,6 +254,15 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                 <section className="break-inside-avoid">
                   <p className="text-xs text-slate-600 leading-snug text-justify whitespace-pre-wrap">
                     {summary.section_data.text || summary.section_data}
+                  </p>
+                </section>
+              )}
+
+              {/* Description */}
+              {description && (
+                <section className="break-inside-avoid">
+                  <p className="text-xs text-slate-600 leading-snug text-justify whitespace-pre-wrap">
+                    {description.section_data.text || description.section_data}
                   </p>
                 </section>
               )}
@@ -270,6 +282,7 @@ export const ModernAtsTemplate: React.FC<ModernAtsTemplateProps> = ({
                 if (
                   [
                     "summary",
+                    "description",
                     "experience",
                     "skills",
                     "education",

@@ -27,7 +27,7 @@ export const DenseTemplate = ({
   );
 
   const mainSections = sortedSections.filter((s: any) =>
-    ["summary", "experience", "projects"].includes(s.section_type),
+    ["summary", "description", "experience", "projects"].includes(s.section_type),
   );
 
   return (
@@ -125,7 +125,7 @@ export const DenseTemplate = ({
                   {section_type.replace("_", " ")}
                 </h3>
 
-                {["summary", "declaration"].includes(section_type) ? (
+                {["summary", "description", "declaration"].includes(section_type) ? (
                   <p className="text-justify leading-relaxed">
                     {section_data.text || section_data}
                   </p>

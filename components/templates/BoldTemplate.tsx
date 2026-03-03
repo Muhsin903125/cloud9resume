@@ -18,16 +18,16 @@ export const BoldTemplate = ({
     <div
       id="resume-preview-content"
       // Using Slate 900 as base text color instead of pure black
-      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[15mm] text-slate-900"
+      className="bg-white w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[8mm] text-slate-900"
       style={{
         width: "210mm",
         minHeight: "297mm",
         fontFamily: font || "inherit",
       }}
     >
-      <header className="mb-14">
+      <header className="mb-8">
         <h1
-          className="text-7xl font-black uppercase tracking-tighter leading-none mb-5"
+          className="text-5xl font-black uppercase tracking-tighter leading-none mb-3"
           style={{ color: themeColor }}
         >
           {personalInfo.name || "Your Name"}
@@ -76,7 +76,7 @@ export const BoldTemplate = ({
                 {section_type.replace("_", " ")}
               </h3>
 
-              {["summary", "declaration"].includes(section_type) && (
+              {["summary", "description", "declaration"].includes(section_type) && (
                 <p className="text-base font-medium leading-8 max-w-3xl text-slate-700 text-justify">
                   {section_data.text || section_data}
                 </p>

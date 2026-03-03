@@ -17,7 +17,7 @@ export const TechTemplate = ({
   return (
     <div
       id="resume-preview-content"
-      className="bg-slate-50 text-gray-900 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[15mm]"
+      className="bg-slate-50 text-gray-900 w-full min-h-[1000px] shadow-sm print:shadow-none mx-auto p-[8mm]"
       style={{
         width: "210mm",
         minHeight: "297mm",
@@ -91,9 +91,9 @@ export const TechTemplate = ({
               </h3>
 
               <div className="pl-4 border-l-2 border-gray-200 ml-1.5">
-                {section_type === "summary" && (
+                {(section_type === "summary" || section_type === "description") && (
                   <p className="text-xs leading-relaxed text-gray-700">
-                    "{section_data.text || section_data}"
+                    {section_data.text || section_data}
                   </p>
                 )}
 
@@ -120,7 +120,7 @@ export const TechTemplate = ({
                   </div>
                 )}
 
-                {!["summary", "skills", "languages"].includes(section_type) && (
+                {!["summary", "description", "skills", "languages"].includes(section_type) && (
                   <div className="space-y-6">
                     {(Array.isArray(section_data)
                       ? section_data

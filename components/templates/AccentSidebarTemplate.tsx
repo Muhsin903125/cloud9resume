@@ -54,7 +54,7 @@ export const AccentSidebarTemplate: React.FC<AccentSidebarTemplateProps> = ({
       ></div>
 
       {/* Sidebar Content */}
-      <div className="w-[70mm] p-8 shrink-0 relative z-10 flex flex-col gap-8 border-r border-gray-100">
+      <div className="w-[70mm] p-6 shrink-0 relative z-10 flex flex-col gap-6 border-r border-gray-100">
         {/* Photo */}
         {personalInfo.photo && (
           <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-lg">
@@ -227,6 +227,11 @@ export const AccentSidebarTemplate: React.FC<AccentSidebarTemplateProps> = ({
                 <div className="flex-1 h-px bg-slate-200"></div>
               </div>
 
+              {section.section_type === "description" ? (
+                <p className="text-sm text-slate-600 leading-relaxed text-justify">
+                  {section.section_data?.text || section.section_data}
+                </p>
+              ) : (
               <div className="space-y-6">
                 {(Array.isArray(section.section_data)
                   ? section.section_data
@@ -273,6 +278,7 @@ export const AccentSidebarTemplate: React.FC<AccentSidebarTemplateProps> = ({
                   </div>
                 ))}
               </div>
+              )}
             </div>
           ))}
       </div>
