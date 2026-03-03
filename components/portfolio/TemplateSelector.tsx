@@ -139,10 +139,10 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   const canUsePremium = userPlan !== "free";
 
-  // Sort templates: Premium first, then by name
+  // Sort templates: Free first, then premium
   const sortedTemplates = [...PORTFOLIO_TEMPLATES].sort((a, b) => {
-    if (a.isPremium && !b.isPremium) return -1;
-    if (!a.isPremium && b.isPremium) return 1;
+    if (a.isPremium && !b.isPremium) return 1;
+    if (!a.isPremium && b.isPremium) return -1;
     return a.name.localeCompare(b.name);
   });
 
@@ -378,11 +378,11 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-8 p-1">
+    <div className="space-y-5">
       {/* Header Info */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-          Choose Workspace Design
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          Choose Design
         </h3>
         {!canUsePremium && (
           <a
@@ -390,79 +390,16 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
             className="text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1"
           >
             <SparklesIcon className="w-3 h-3" />
-            Upgrade for all templates
+            Unlock premium
           </a>
         )}
       </div>
 
-      {/* Unified Template Grid + AI Card */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* AI Generator Card */}
-        <button
-          onClick={onAIGenerate}
-          disabled={isGenerating}
-          className={`relative p-3 rounded-2xl border-2 transition-all duration-500 text-left group overflow-hidden ${
-            isGenerating
-              ? "border-purple-200 bg-purple-50/30"
-              : "border-purple-500/20 hover:border-purple-500 bg-gradient-to-br from-white to-purple-50/50 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1"
-          }`}
-        >
-          <div className="h-24 rounded-lg bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex flex-col items-center justify-center relative overflow-hidden">
-            {/* Sparkles effect */}
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_50%,_white_1px,_transparent_1px)] bg-[length:20px_20px] animate-pulse"></div>
-
-            <div className="relative z-10 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
-              <SparklesIcon className="w-7 h-7 text-white" />
-            </div>
-
-            {!resumeData && (
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center p-4 text-center">
-                <p className="text-[10px] font-bold text-white leading-tight">
-                  Import Resume First
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-black text-gray-900 tracking-tight group-hover:text-purple-600 transition-colors">
-                AI Agent Design
-              </h4>
-              <div className="w-5 h-5 bg-purple-100 rounded-full flex items-center justify-center">
-                <span className="text-[10px]">✨</span>
-              </div>
-            </div>
-            <p className="text-[10px] text-gray-500 mt-1 font-medium leading-tight">
-              Let AI build a unique design from your data.
-            </p>
-          </div>
-
-          {/* New Tag */}
-          <div className="absolute top-2 left-2 px-2 py-0.5 bg-black text-white text-[8px] font-black rounded-full shadow-lg border border-white/10 uppercase tracking-widest z-20">
-            Next Gen
-          </div>
-        </button>
-
+      {/* Template Grid - 2 columns for sidebar */}
+      <div className="grid grid-cols-2 gap-3">
         {sortedTemplates.map((template) => (
           <TemplateCard key={template.id} template={template} />
         ))}
-      </div>
-
-      {/* Image Upload Hint - Moved to bottom for cleaner look */}
-      <div className="flex items-center gap-3 p-5 bg-blue-50/30 rounded-2xl border border-blue-100/50 mt-8">
-        <div className="w-12 h-12 bg-white rounded-xl border border-blue-100 flex items-center justify-center shadow-sm">
-          <PhotoIcon className="w-6 h-6 text-blue-500" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm text-gray-800 font-bold">
-            Looking for more visual impact?
-          </p>
-          <p className="text-xs text-gray-500">
-            Upload project screenshots and certificates in the Content tab to
-            make these templates truly shine.
-          </p>
-        </div>
       </div>
     </div>
   );
